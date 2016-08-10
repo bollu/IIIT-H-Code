@@ -1,5 +1,6 @@
 //for malloc and free
 #include <stdlib.h>
+#include <assert.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -15,7 +16,7 @@
 #include <unistd.h>
 
 #define min(x, y) ((x) < (y)  ? (x) : (y))
-static const size_t READ_BLOCK_SIZE = 10 * 1024;
+static const size_t READ_BLOCK_SIZE = 1024 * 1024 * 20;
 char buffer[READ_BLOCK_SIZE];
 
 typedef int FILE_DESC;
@@ -47,8 +48,8 @@ FILE_DESC open_input_file(const char *input_filepath) {
     return inputfile;
 }
 
-void reverse_buffer(char *buf, int len) {
-    for (int i = 0; i < len / 2; i++) {
+void reverse_buffer(char *buf, size_t len) {
+    for (size_t i = 0; i < len / 2; i++) {
         char temp = buf[i];
         buf[i] = buf[len - 1 - i];
         buf[len - 1 - i] = temp;
@@ -72,34 +73,25 @@ int main(int argc, char **argv) {
     if (outputfile == -1) {
         error_printf("ERROR: unable to open output file...");
     }
-    //go to start
-    lseek(inputfile, SEEK_SET, 0);
-    //go to end of file
-    const int offset_in_bytes = lseek(inputfile, SEEK_END, 0);
-    if(offset_in_bytes == -1) {
-        error_printf("ERROR: unable to seek to end of file");
-        return 1;
-    }
-    printf("offset in bytes: %d", offset_in_bytes);
+    //go to end
+    const size_t TOTAL_BYTES = lseek(inputfile, 0, SEEK_END);
+    printf("total: %zu", TOTAL_BYTES);
     
-    int bytes_left = offset_in_bytes;
-    while (bytes_left > 0) {
-        int bytes_to_read = min(bytes_left, READ_BLOCK_SIZE);
-        //rewind by BYTES_TO_READ
-        lseek(inputfile, SEEK_CUR, -bytes_to_read);
-        
-        const int bytes_actually_read = read(inputfile, buffer, READ_BLOCK_SIZE);
-        if (bytes_to_read != bytes_actually_read) {
-            printf("to read: %d | actually read: %d", bytes_to_read, bytes_actually_read);
-            error_printf("ERROR: read less bytes than asked for");
-            return 1;
-        }
-        reverse_buffer(buffer, READ_BLOCK_SIZE);
-        bytes_left -= bytes_to_read;
+    size_t to_read = TOTAL_BYTES;
+    while (to_read > 0) {
+        size_t reading_size = min(to_read, READ_BLOCK_SIZE);
+        //go a character back
+        lseek(inputfile, -reading_size, SEEK_CUR);
+        const size_t bytes_read = read(inputfile, buffer, reading_size);
+        //rewind whatever youve read
+        assert(bytes_read == reading_size);
+        lseek(inputfile, -bytes_read, SEEK_CUR);
+        to_read -= bytes_read;
+        reverse_buffer(buffer, bytes_read);
 
-        const int bytes_written = write(outputfile, buffer, bytes_actually_read);
+        const size_t bytes_written = write(outputfile, buffer, bytes_read);
     
-        if (bytes_written != bytes_actually_read) {
+        if (bytes_written != bytes_read) {
             error_printf("ERROR: wrote less bytes than asked for");
             return 1;
         }
