@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <stdio.h>
 #include <string.h>
 
 // mkdir
@@ -24,20 +23,23 @@ void debug_printf(const char *str) {
     write(1, str, strlen(str));
 }
 
-void error_printf(const char *str) {
+void error_print(const char *str) {
     write(2, str, strlen(str));
 }
 
 FILE_DESC create_output_file(const char* outfile_name) {
     if (mkdir("Assignment", 0777) == -1) {
-         error_printf("unable to create assignment folder");
+         error_print("ERROR: unable to create folder Assignment/. Maybe folder already"
+                      " exists? If so, please delete it\n");
          return -1;
     };
     char *outpath = (char *)malloc(strlen("Assignment/") + strlen(outfile_name) + 1);
-    sprintf(outpath, "Assignment/%s", outfile_name);
+    outpath[0]= '\0';
+    strcat(outpath, "Assignment/");
+    strcat(outpath, outfile_name);
+
     const FILE_DESC outfile = open(outpath, O_WRONLY | O_CREAT | O_TRUNC);
     fchmod(outfile, 0777);
-
     free(outpath);
 
     return outfile;
@@ -57,7 +59,7 @@ void reverse_buffer(char *buf, size_t len) {
 }
 int main(int argc, char **argv) {
     if (argc < 2) {
-        error_printf("ERROR: Need input file path and out file path as command line parameter."
+        error_print("ERROR: Need input file path and out file path as command line parameter."
                     "\nUSAGE: progname <infile path> <outfile path>"
                     "\nQuitting...");
         return 1;
@@ -67,15 +69,16 @@ int main(int argc, char **argv) {
     const FILE_DESC outputfile = create_output_file(argv[2]);
 
     if (inputfile == -1) {
-        error_printf("ERROR: unable to open input file...");
+        error_print("ERROR: unable to open input file...");
+        return 1;
     }
     
     if (outputfile == -1) {
-        error_printf("ERROR: unable to open output file...");
+        error_print("ERROR: unable to open output file...");
+        return 1;
     }
     //go to end
     const size_t TOTAL_BYTES = lseek(inputfile, 0, SEEK_END);
-    printf("total: %zu", TOTAL_BYTES);
     
     size_t to_read = TOTAL_BYTES;
     while (to_read > 0) {
@@ -92,7 +95,7 @@ int main(int argc, char **argv) {
         const size_t bytes_written = write(outputfile, buffer, bytes_read);
     
         if (bytes_written != bytes_read) {
-            error_printf("ERROR: wrote less bytes than asked for");
+            error_print("ERROR: wrote less bytes than asked for");
             return 1;
         }
 
