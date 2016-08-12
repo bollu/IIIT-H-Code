@@ -20,35 +20,50 @@ char in_buffer[READ_BLOCK_SIZE];
 char out_buffer[READ_BLOCK_SIZE];
 
 typedef int FILE_DESC;
-void debug_printf(const char *str) {
+
+void print_string(const char *str) {
     write(1, str, strlen(str));
 }
 
-void error_print(const char *str) {
-    write(2, str, strlen(str));
+void print_bool(int b) {
+    if (b) {
+        write(1, "true", 4);
+    }
+    else {
+        write(1, "false", 5);
+    }
 }
 
 
 int check_assign_folder_exists(const char *foldername) {
     struct stat s;
-    if (stat(foldername, &s)) {
+    if (stat(foldername, &s) == 0) {
         return S_ISDIR(s.st_mode);
     }
     return 0;
 }
 
-FILE_DESC open_out_file(const char* outfile_name) {
+FILE_DESC open_output_file(const char* outfile_name) {
+    print_string("*** File and Folder Existence ***");
     if (!check_assign_folder_exists("Assignment")) {
-         error_print("ERROR: unable to find folder Assignment/ in"
-                     " current working directory. Maybe folder already"
-                      " exists? If so, please delete it\n");
-         return -1;
-    };
+        print_string("\n* assignment folder exists: False");
+        return -1;
+    } else {
+        print_string("\n* assignment folder exists: True");
+    }
 
     char *outpath = (char *)malloc(strlen("Assignment/") + strlen(outfile_name) + 1);
     outpath[0]= '\0';
     strcat(outpath, "Assignment/");
     strcat(outpath, outfile_name);
+
+
+    struct stat s;
+    if (stat(outpath, &s) == 0 && S_ISREG(s.st_mode)) {
+        print_string("\n* output file exists: True");    
+    } else {
+        print_string("\n* output file exists: False");
+    }
 
     const FILE_DESC outfile = open(outpath, O_RDONLY);
     free(outpath);
@@ -62,10 +77,27 @@ FILE_DESC open_input_file(const char *input_filepath) {
 }
 
 void print_file_permissions(const FILE_DESC file) {
-    error_print("\n*** User Permissions ***\n");
-    error_print("\n*** Group Permissions ***")
-    error_print("\n*** Others Permissions ***")
-    
+    struct stat s;
+    if(!fstat(file, &s)) {
+        print_string("\nERROR: unable to extract file permission "
+                " information. Quitting");
+        return;
+    }
+    print_string("\n*** User Permissions ***");
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IRUSR);
+    print_string("\n * Write: "); print_bool(s.st_mode & S_IWUSR);
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IXUSR);
+
+    print_string("\n*** Group Permissions ***");
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IRGRP);
+    print_string("\n * Write: "); print_bool(s.st_mode & S_IWGRP);
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IXGRP);
+
+    print_string("\n*** Others Permissions ***");
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IROTH);
+    print_string("\n * Write: "); print_bool(s.st_mode & S_IWOTH);
+    print_string("\n * Read: "); print_bool(s.st_mode & S_IXOTH);
+
 };
 
 
@@ -77,27 +109,27 @@ void reverse_buffer(char *buf, size_t len) {
     }
 }
 
-int read_block_reverse(FILE_DESC file, const char *buffer, size_t reading_size) {
-    lseek(inputfile, -reading_size, SEEK_CUR);
+int read_block_reverse(const FILE_DESC file, char *buffer, const size_t reading_size) {
+    lseek(file, -reading_size, SEEK_CUR);
     const size_t bytes_read = read(file, buffer, reading_size);
     //rewind whatever youve read
     assert(bytes_read == reading_size);
 
-    if (!bytes_read == reading_size) {
+    if (!(bytes_read == reading_size)) {
         return -1;
     };
 
-    lseek(inputfile, -bytes_read, SEEK_CUR);
+    lseek(file, -bytes_read, SEEK_CUR);
 
     return 1;
 }
 
 
-int read_block_forward(FILE_DESC file, const char *buffer, size_t reading_size) {
+int read_block_forward(const FILE_DESC file, char *buffer, const size_t reading_size) {
     const size_t bytes_read = read(file, buffer, reading_size);
     assert(bytes_read == reading_size);
 
-    if (!bytes_read == reading_size) {
+    if (!(bytes_read == reading_size)) {
         return -1;
     };
     return 1;
@@ -105,22 +137,22 @@ int read_block_forward(FILE_DESC file, const char *buffer, size_t reading_size) 
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        error_print("ERROR: Need input file path and out file path as command line parameter."
-                    "\nUSAGE: progname <infile path> <outfile path>"
-                    "\nQuitting...");
+        print_string("\nERROR: Need input file path and out file path as command line parameter."
+                "\nUSAGE: progname <infile path> <outfile path>"
+                "\nQuitting...");
         return 1;
     }
     const FILE_DESC inputfile = open_input_file(argv[1]);
     //create out file
-    const FILE_DESC outputfile = open_file(argv[2]);
+    const FILE_DESC outputfile = open_output_file(argv[2]);
 
     if (inputfile == -1) {
-        error_print("ERROR: unable to open input file...");
+        print_string("\nERROR: unable to open input file...");
         return 1;
     }
-    
+
     if (outputfile == -1) {
-        error_print("ERROR: unable to open output file...");
+        print_string("\nERROR: unable to open output file...");
         return 1;
     }
     //go to end
@@ -129,48 +161,51 @@ int main(int argc, char **argv) {
     const size_t BYTES_OUTFILE = lseek(outputfile, 0, SEEK_END);
     lseek(outputfile, 0, SEEK_SET);
 
-    if (TOTAL_BYTES != BYES_OUTFILE) {
-        error_print("input and output files have different sizes. Invalid");
-        return -1;
-    }
-    
-    size_t to_read = TOTAL_BYTES;
-    while (to_read > 0) {
-        size_t reading_size = min(to_read, READ_BLOCK_SIZE);
-        if(!read_block_reverse(inputfile, in_buffer, reading_size)) {
-            error_print("read invalid number of bytes from input file");
-            return 1;
-        };
-       if(!read_block_forwarrd(outputfile, out_buffer, reading_size)) {
-            error_print("read invalid number of bytes from output file");
-            return 1;
-       }
-
-        to_read -= reading_size;
-        
-        int i = strlen(in_buffer);
-
+    if (TOTAL_BYTES != BYTES_OUTFILE) {
+        print_string("\n* Input same as output: False (different sizes)");
+    } else {
+        size_t to_read = TOTAL_BYTES;
         int files_match = 1;
-        for(int i = 0;  i < reading_size; i++) {
-            if(in_buffer[i] != out_buffer[reading_size - 1 - i]) {
-                files_match = 0;
-                break;
+        while (to_read > 0) {
+            size_t reading_size = min(to_read, READ_BLOCK_SIZE);
+            if(!read_block_reverse(inputfile, in_buffer, reading_size)) {
+                print_string("read invalid number of bytes from input file");
+                return 1;
+            };
+            if(!read_block_forward(outputfile, out_buffer, reading_size)) {
+                print_string("read invalid number of bytes from output file");
+                return 1;
+            }
+
+            to_read -= reading_size;
+
+            int files_match = 1;
+            for(int i = 0;  i < reading_size; i++) {
+                if(in_buffer[i] != out_buffer[reading_size - 1 - i]) {
+                    files_match = 0;
+                    break;
+                }
             }
         }
-    }
 
-    if (files_match) {
-        error_print("* Input same as output: True");
-    }
-    else {
-        error_print("* Input same as output: False");
-    }
+        print_string("\n*** Input Output Comparison ***");
+        if (files_match) {
+            print_string("\n* Input same as output: True");
+        }
+        else {
+            print_string("\n* Input same as output: False");
+        }
 
-    print_file_permissions(outfile);
-
+    }
 
     close(inputfile);
     close(outputfile);
+
+    print_file_permissions(outputfile);
+
+
+
+
 
 
     return  0;
