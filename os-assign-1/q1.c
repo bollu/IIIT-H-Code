@@ -27,16 +27,16 @@ void error_print(const char *str) {
     write(2, str, strlen(str));
 }
 
-FILE_DESC create_output_file(const char* outfile_name) {
+FILE_DESC create_output_file(const char* inputfile_name) {
     if (mkdir("Assignment", 0777) == -1) {
          error_print("ERROR: unable to create folder Assignment/. Maybe folder already"
                       " exists? If so, please delete it\n");
          return -1;
     };
-    char *outpath = (char *)malloc(strlen("Assignment/") + strlen(outfile_name) + 1);
+    char *outpath = (char *)malloc(strlen("Assignment/output_") + strlen(inputfile_name) + 1);
     outpath[0]= '\0';
-    strcat(outpath, "Assignment/");
-    strcat(outpath, outfile_name);
+    strcat(outpath, "Assignment/output_");
+    strcat(outpath, inputfile_name);
 
     const FILE_DESC outfile = open(outpath, O_WRONLY | O_CREAT | O_TRUNC);
     fchmod(outfile, 0777);
@@ -57,16 +57,21 @@ void reverse_buffer(char *buf, size_t len) {
         buf[len - 1 - i] = temp;
     }
 }
+
+void allow_only_user_access(FILE_DESC file) {
+  fchmod(file, S_IRUSR | S_IWUSR | S_IXUSR);
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         error_print("ERROR: Need input file path and out file path as command line parameter."
-                    "\nUSAGE: progname <infile path> <outfile path>"
+                    "\nUSAGE: progname <infile name>"
                     "\nQuitting...");
         return 1;
     }
     const FILE_DESC inputfile = open_input_file(argv[1]);
     //create out file
-    const FILE_DESC outputfile = create_output_file(argv[2]);
+    const FILE_DESC outputfile = create_output_file(argv[1]);
 
     if (inputfile == -1) {
         error_print("ERROR: unable to open input file...");
@@ -101,7 +106,9 @@ int main(int argc, char **argv) {
 
     }
     close(inputfile);
-    close(outputfile);
+    // close(outputfile);
+
+    allow_only_user_access(outputfile);
 
 
     return  0;

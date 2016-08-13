@@ -1,5 +1,7 @@
 CC=clang -Wall -Werror
 
+all: q1 q2
+
 q1: q1.c
 	@mkdir -p bin
 	$(CC) q1.c -o bin/q1

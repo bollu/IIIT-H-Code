@@ -43,8 +43,8 @@ int check_assign_folder_exists(const char *foldername) {
     return 0;
 }
 
-FILE_DESC open_output_file(const char* outfile_name) {
-    print_string("*** File and Folder Existence ***");
+FILE_DESC open_output_file(const char* inputfile_name) {
+    print_string("\n*** File and Folder Existence ***");
     if (!check_assign_folder_exists("Assignment")) {
         print_string("\n* assignment folder exists: False");
         return -1;
@@ -52,10 +52,10 @@ FILE_DESC open_output_file(const char* outfile_name) {
         print_string("\n* assignment folder exists: True");
     }
 
-    char *outpath = (char *)malloc(strlen("Assignment/") + strlen(outfile_name) + 1);
+    char *outpath = (char *)malloc(strlen("Assignment/output_") + strlen(inputfile_name) + 1);
     outpath[0]= '\0';
-    strcat(outpath, "Assignment/");
-    strcat(outpath, outfile_name);
+    strcat(outpath, "Assignment/output_");
+    strcat(outpath, inputfile_name);
 
 
     struct stat s;
@@ -78,7 +78,7 @@ FILE_DESC open_input_file(const char *input_filepath) {
 
 void print_file_permissions(const FILE_DESC file) {
     struct stat s;
-    if(!fstat(file, &s)) {
+    if(fstat(file, &s) != 0) {
         print_string("\nERROR: unable to extract file permission "
                 " information. Quitting");
         return;
@@ -138,13 +138,13 @@ int read_block_forward(const FILE_DESC file, char *buffer, const size_t reading_
 int main(int argc, char **argv) {
     if (argc < 2) {
         print_string("\nERROR: Need input file path and out file path as command line parameter."
-                "\nUSAGE: progname <infile path> <outfile path>"
+                "\nUSAGE: progname <infile name>"
                 "\nQuitting...");
         return 1;
     }
     const FILE_DESC inputfile = open_input_file(argv[1]);
     //create out file
-    const FILE_DESC outputfile = open_output_file(argv[2]);
+    const FILE_DESC outputfile = open_output_file(argv[1]);
 
     if (inputfile == -1) {
         print_string("\nERROR: unable to open input file...");
@@ -199,11 +199,10 @@ int main(int argc, char **argv) {
     }
 
     close(inputfile);
-    close(outputfile);
+
 
     print_file_permissions(outputfile);
-
-
+    close(outputfile);
 
 
 
