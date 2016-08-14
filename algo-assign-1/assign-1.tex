@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage{amsmath, amsthm, amssymb}
+
+\newtheorem{problem}{Problem}
+\theoremstyle{definition}
+\newtheorem*{solution}{Solution}
+
+\begin{document}
+\title{Assignment 3}
+\author{Siddharth Bhat}
+\date{\today}
+\maketitle
+
+\begin{problem}
+    Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
+\end{problem}
+\begin{solution}
+    Assume the given statement is true. 
+    Consider $f(n) = 2n$, $g(n) = n$. Clearly, $f(n) \in O(g(n))$.
+    Now,
+    \begin{gather*}
+        2^{f(n)} = 2^{2n}= (2^2)^n = 4^n \\
+        O(2^{g(n)}) = O(2^n) \\
+        \text{Since from our hypothesis} \\
+        2^{f(n)} \in O(2^{g(n)}) \\
+        4^n \in O(2^n) \\
+        \text{This implies that} \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
+        \forall i \geq N, \ 4^n = c \cdot 2^n \\
+        \left ( \frac{4}{2} \right ) ^n = c \implies \\
+        c = 2^n \\
+        \text{Hence, $c$ is not a constant, violating our assumption.}
+    \end{gather*}
+
+    Therefore, the theorem is incorrect.
+\end{solution}
+
+\begin{problem}
+    Prove or disprove: $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$
+\end{problem}
+\begin{solution}
+    Given statement is false.
+
+    let $f(n) = n$, $g(n) = 2^n$. Consider the problem statement to be
+    true. This gives us
+
+    \begin{gather*}
+    f(n) + g(n) = n + 2^n \\
+    \text{from the theorem, } \\
+    f(n) + g(n) \in \Theta(min \{ f(n), g(n) \}) = \Theta(min \{n, 2^n \}) = \Theta(n) \\
+    \text{which implies that} \\
+    n + 2^n \in O(n) \\
+    \text{which is false, since $2^n$ grows rapidly faster than $n$, which can
+    be checked with a little algebra.}
+    \end{gather*}
+    Hence, by contradiction, the statement $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$ is false.
+\end{solution}
+
+
+\begin{problem}
+    Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
+\end{problem}
+\begin{solution}
+    Given statement is false.
+
+    let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
+
+
+    $f(n) \neq O(g(n))$ since they are periodic and intersect each other
+    infinitely many times over $\mathbb R$. Hence, they do not dominate
+    one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
+    
+
+    \begin{gather*}
+        \text{Algebraically, for a proof by contradiction, assume } g(n) = O(f(n)) \\
+        cos(n) = O(sin(n)) \\
+        \text{Therefore, by definition of $O(\cdots)$ notation, } \\
+        \exists N \in \mathbb N,
+        \exists c \in \mathbb R
+        \text{ where $N$ and $c$ are constants such that } 
+        \forall i \geq N, \  \cos(i) \leq c \sin(i) \\
+        \text{this implies} \\
+        \tan(i) \leq c \\
+        \text{ However, that means that c is not a constant with respect to $i$, which is illegal.} \\
+        \text{Therefore, } g(n) \neq O(f(n))
+    \end{gather*}
+
+\end{solution}
+
+
+\begin{problem}
+    Prove or disprove: $min \{ f(n), g(n) \} \in \Theta(f(n) + g(n))
+\end{problem}
+\begin{solution}
+\end{solution}
+
+\end{document}
