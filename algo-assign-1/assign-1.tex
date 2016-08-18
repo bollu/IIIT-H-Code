@@ -5,9 +5,9 @@
 \newtheorem{problem}{Problem}
 \theoremstyle{definition}
 \newtheorem*{solution}{Solution}
-
 \newtheorem{lemma}{Lemma}
 
+\setcounter{secnumdepth}{5} 
 
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
@@ -31,7 +31,7 @@ Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
 		\text{Since from our hypothesis} \\
 		2^{f(n)} \in O(2^{g(n)}) \\
 		4^n \in O(2^n) \\
-		\text{This implies that } \ \ \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
+		\text{ This implies that } \ \ \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
 		\forall i \geq N, \ 4^n = c \cdot 2^n \\
 		\left ( \frac{4}{2} \right ) ^n = c \implies \\
 		c = 2^n \\
@@ -71,26 +71,9 @@ Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
 	
 	Assume the statement is true. let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
 	
-	
 	$f(n) \neq O(g(n))$ since they are periodic and intersect each other
 	infinitely many times over $\mathbb R$. Hence, they do not dominate
 	one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
-	    
-	
-	\begin{gather*}
-		\text{Algebraically, for a proof by contradiction, assume } g(n) = O(f(n)) \\
-		cos(n) = O(sin(n)) \\
-		\text{Therefore, by definition of $O(\cdots)$ notation, } \\
-		\exists N \in \mathbb N,
-		\exists c \in \mathbb R
-		\text{ where $N$ and $c$ are constants such that } 
-		\forall i \geq N, \  \cos(i) \leq c \sin(i) \\
-		\text{this implies} \\
-		\tan(i) \leq c \\
-		\text{ However, that means that c is not a constant with respect to $i$, which is illegal.} \\
-		\text{Therefore, } g(n) \neq O(f(n))
-	\end{gather*}
-	
 \end{solution}
 
 
@@ -318,6 +301,6 @@ T(N) \leq  2 T \left( \frac{N}{2} \right) + O(N) \\
 \text{which by an immediate application of Master's theorem yields} \\
 T(N) \leq N \log N
 \end{gather*}
-Which means our algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix .
+Which means our algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix.
 \end{solution}
 \end{document}
