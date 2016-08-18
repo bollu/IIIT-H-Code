@@ -1,8 +1,8 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{mathtools}
 
-\newtheorem{problem}{Problem}
+\newtheorem*{problem}{Problem}
 \theoremstyle{definition}
 \newtheorem*{solution}{Solution}
 \newtheorem{lemma}{Lemma}
@@ -18,6 +18,7 @@
 \date{\today}
 \maketitle
 
+\section{Prove or disprove the given statements}
 \begin{problem}
 Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
 \end{problem}
@@ -103,6 +104,7 @@ $$
 Hence, the statement is false
 \end{solution}
 
+\section{Solve the following recurrence relations}
 \begin{problem}
 Solve the following recurrence relation: $T(n) = 3T(\frac n 4) + T(\frac n 8) + n \log n$
 \end{problem}
@@ -191,9 +193,7 @@ Solve the following recurrence: $T(n)=T(n)+\log n$
 	$$
 \end{solution}
 
-\begin{problem}
-Check if the given matrix is happy or not (TODO: fill this up)
-\end{problem}
+\section{Happy Matrix Problem}
 
 \begin{solution}
 The discussion will concern itself with an $R \times C$ matrix.
@@ -269,20 +269,26 @@ $$
 T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c)
 $$
 Using the strong induction expression on the RHS terms yields
-$$
+\[
 T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + 
-T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c)
-$$
-where $f(c) \in O(c)$. 
-Now, replacing the definition of
-$ T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c) $
-in $T \left(r, \frac{c}{2} + \delta \right)$ gives
+T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) \tag*{$f(c) \in O(c)$}
+\]
 
-\begin{gather*}
+Now, replacing the definition of
+{\tiny
+$ T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c) $
+}
+in
+{\tiny $T \left(r, \frac{c}{2} + \delta \right)$ }
+gives
+
+$$
 T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) + O(c)
-\text{since $f(c) \in O(c)$, we can safely absorb it in $O(c)$ to get} \\
+$$
+Since $f(c) \in O(c)$, we can safely absorb it in $O(c)$ to get
+$$
 T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + O(c)
-\end{gather*}
+$$
 Hence, our theorem is also proved for $r = R$.
 \end{proof}
 
@@ -290,17 +296,22 @@ Now, using the Lemma on our original expression
 $$
 T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + O(C) \right) + O(C)
 $$
+
 Gives us
+
 $$
 T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C)
 $$
-\begin{gather*}
-T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C) \\
-\text{Since $R = C$ in the beginning, and since we break down both $R$ and $C$ uniformly, we can replace $R = C = N$ giving} \\
+
+Since $R = C$ in the beginning, and since we break down both $R$ and $C$ uniformly, we can replace $R = C = N$ giving
+$$
 T(N) \leq  2 T \left( \frac{N}{2} \right) + O(N) \\
-\text{which by an immediate application of Master's theorem yields} \\
-T(N) \leq N \log N
-\end{gather*}
-Which means our algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix.
+$$
+
+
+Which by an immediate application of Master's theorem yields $$T(N) \leq N \log N$$
+
+This means that the 
+algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix.
 \end{solution}
 \end{document}
