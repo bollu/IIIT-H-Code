@@ -1,9 +1,16 @@
 \documentclass{article}
 \usepackage{amsmath, amsthm, amssymb}
+\usepackage{mathtools}
 
 \newtheorem{problem}{Problem}
 \theoremstyle{definition}
 \newtheorem*{solution}{Solution}
+
+\newtheorem{lemma}{Lemma}
+
+
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
 
 \begin{document}
 \title{Assignment 3}
@@ -12,85 +19,323 @@
 \maketitle
 
 \begin{problem}
-    Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
+Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
 \end{problem}
 \begin{solution}
-    Assume the given statement is true. 
-    Consider $f(n) = 2n$, $g(n) = n$. Clearly, $f(n) \in O(g(n))$.
-    Now,
-    \begin{gather*}
-        2^{f(n)} = 2^{2n}= (2^2)^n = 4^n \\
-        O(2^{g(n)}) = O(2^n) \\
-        \text{Since from our hypothesis} \\
-        2^{f(n)} \in O(2^{g(n)}) \\
-        4^n \in O(2^n) \\
-        \text{This implies that} \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
-        \forall i \geq N, \ 4^n = c \cdot 2^n \\
-        \left ( \frac{4}{2} \right ) ^n = c \implies \\
-        c = 2^n \\
-        \text{Hence, $c$ is not a constant, violating our assumption.}
-    \end{gather*}
-
-    Therefore, the theorem is incorrect.
+	Assume the given statement is true. 
+	Consider $f(n) = 2n$, $g(n) = n$. Clearly, $f(n) \in O(g(n))$.
+	Now,
+	\begin{gather*}
+		2^{f(n)} = 2^{2n}= (2^2)^n = 4^n \\
+		O(2^{g(n)}) = O(2^n) \\
+		\text{Since from our hypothesis} \\
+		2^{f(n)} \in O(2^{g(n)}) \\
+		4^n \in O(2^n) \\
+		\text{This implies that } \ \ \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
+		\forall i \geq N, \ 4^n = c \cdot 2^n \\
+		\left ( \frac{4}{2} \right ) ^n = c \implies \\
+		c = 2^n \\
+		\text{Hence, $c$ is not a constant, violating our assumption.}
+	\end{gather*}
+	
+	Therefore, the theorem is incorrect.
 \end{solution}
 
 \begin{problem}
-    Prove or disprove: $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$
+Prove or disprove: $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$
 \end{problem}
 \begin{solution}
-    Given statement is false.
-
-    let $f(n) = n$, $g(n) = 2^n$. Consider the problem statement to be
-    true. This gives us
-
-    \begin{gather*}
-    f(n) + g(n) = n + 2^n \\
-    \text{from the theorem, } \\
-    f(n) + g(n) \in \Theta(min \{ f(n), g(n) \}) = \Theta(min \{n, 2^n \}) = \Theta(n) \\
-    \text{which implies that} \\
-    n + 2^n \in O(n) \\
-    \text{which is false, since $2^n$ grows rapidly faster than $n$, which can
-    be checked with a little algebra.}
-    \end{gather*}
-    Hence, by contradiction, the statement $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$ is false.
-\end{solution}
-
-
-\begin{problem}
-    Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
-\end{problem}
-\begin{solution}
-    Given statement is false.
-
-    let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
-
-
-    $f(n) \neq O(g(n))$ since they are periodic and intersect each other
-    infinitely many times over $\mathbb R$. Hence, they do not dominate
-    one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
-    
-
-    \begin{gather*}
-        \text{Algebraically, for a proof by contradiction, assume } g(n) = O(f(n)) \\
-        cos(n) = O(sin(n)) \\
-        \text{Therefore, by definition of $O(\cdots)$ notation, } \\
-        \exists N \in \mathbb N,
-        \exists c \in \mathbb R
-        \text{ where $N$ and $c$ are constants such that } 
-        \forall i \geq N, \  \cos(i) \leq c \sin(i) \\
-        \text{this implies} \\
-        \tan(i) \leq c \\
-        \text{ However, that means that c is not a constant with respect to $i$, which is illegal.} \\
-        \text{Therefore, } g(n) \neq O(f(n))
-    \end{gather*}
-
+	Given statement is false.
+	
+	let $f(n) = n$, $g(n) = 2^n$. Consider the problem statement to be
+	true. This gives us
+	
+	\begin{gather*}
+		f(n) + g(n) = n + 2^n \\
+		\text{from the theorem, } \\
+		f(n) + g(n) \in \Theta(min \{ f(n), g(n) \}) = \Theta(min \{n, 2^n \}) = \Theta(n) \\
+		\text{which implies that} \\
+		n + 2^n \in O(n) \\
+		\text{which is false, since $2^n$ grows rapidly faster than $n$, which can
+		be checked with a little algebra.}
+	\end{gather*}
+	Hence, by contradiction, the statement $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$ is false.
 \end{solution}
 
 
 \begin{problem}
-    Prove or disprove: $min \{ f(n), g(n) \} \in \Theta(f(n) + g(n))
+Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
 \end{problem}
 \begin{solution}
+	Given statement is false.
+	
+	Assume the statement is true. let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
+	
+	
+	$f(n) \neq O(g(n))$ since they are periodic and intersect each other
+	infinitely many times over $\mathbb R$. Hence, they do not dominate
+	one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
+	    
+	
+	\begin{gather*}
+		\text{Algebraically, for a proof by contradiction, assume } g(n) = O(f(n)) \\
+		cos(n) = O(sin(n)) \\
+		\text{Therefore, by definition of $O(\cdots)$ notation, } \\
+		\exists N \in \mathbb N,
+		\exists c \in \mathbb R
+		\text{ where $N$ and $c$ are constants such that } 
+		\forall i \geq N, \  \cos(i) \leq c \sin(i) \\
+		\text{this implies} \\
+		\tan(i) \leq c \\
+		\text{ However, that means that c is not a constant with respect to $i$, which is illegal.} \\
+		\text{Therefore, } g(n) \neq O(f(n))
+	\end{gather*}
+	
 \end{solution}
 
+
+\begin{problem}
+Prove or disprove: $min \{ f(n), g(n) \} \in \Theta(f(n) + g(n))$
+\end{problem}
+\begin{solution}
+	Given statement is false.
+	
+	Assume the statement is true. Let $f(n) = n$, and $g(n) = n^2$. Consider the expression
+	
+	\begin{gather*}
+	\forall n \in \mathbb N \\
+	min \{f(n), g(n) \} = min \{n, n^{2} \} = n \\
+	\text{and also} \\
+	\Theta(f(n) + g(n)) = \Theta(n + n^{2}) = \Theta(n^{2})
+	\end{gather*}
+But we know that
+$$
+n \notin \Theta(n^{2})
+$$
+
+This violates our assumption that 
+$$
+min \{ f(n), g(n) \} \in (\Theta(f(n) + g(n))
+$$
+Hence, the statement is false
+\end{solution}
+
+\begin{problem}
+Solve the following recurrence relation: $T(n) = 3T(\frac n 4) + T(\frac n 8) + n \log n$
+\end{problem}
+\begin{solution}
+	TODO
+\end{solution}
+
+\begin{problem}
+Solve the following recurrence relation: $T(n) = T(n - 10) + log(n)$
+\end{problem}
+\begin{solution}
+	I make the assumption that
+	\begin{gather*}
+		\forall i, 0 \leq i \leq 9, T(i) = 1
+	\end{gather*}
+	
+	Let $n = 10k + r, k, r \in \mathbb N, \ 0 \leq r < 10$ (by division algorithm). Now, reducing the recurrence relation,
+	\begin{gather*}
+		T(n) = T(n - 10) + \log n \\ß
+		T(n) = (T(n - 20) + \log n) + \log n = T(n - 2 \cdot 10) + 2 \log n \\
+		\text{generalizing to $p \in \mathbb N$ gives us} \\
+		T(n) = T(n - 10p) + p \log n  \\
+		T(10k + r) = T(10k + r - 10p) + p \log n \\
+		\text{let $p = k$ to solve the recurrence} \\
+		T(10k + r) = T(10k + r -10k) + k \log n \\
+		T(10k + r) = T(r) + k \log n \\
+		T(10k + r) = 1 + k \log n \\
+		\text{but $k = \frac{(n - r)}{10} = \floor*{\frac{n}{10}}$. Hence} \\
+		T(n) = 1 + \floor*{\frac{n}{10}} \log n
+	\end{gather*}
+\end{solution}
+
+
+\begin{problem}
+Solve the following recurrence: $T(n) = 4T(\frac n 3) + n^{\frac 5 4}$
+\end{problem}
+\begin{solution}
+	Applying master's theorem on the given problem, with respect to the standard form
+	$$
+	T(n) = aT \left( \frac{n}{b} \right) + f(n) \\
+	$$
+	where $a = 4$, $b = 3$, $f(n) = n^{\frac 5 4} = n^{1.25}$.
+	To apply Masters's Theorem, we need to consider the comparison value
+	$$n^{\log_b a} = n^{log_3 4} = n^{1.26...}$$
+	Since
+	$$
+	f(n) = n^{1.25} \in O(n^{\log_b a - \epsilon} = n^{1.26 - \epsilon})
+	$$
+	We can show the existence of $\epsilon < 1.26 - 1.25$, which immediately tells us that $\epsilon < 0.01$. Hence,
+	$$
+	f(n) = n^{1.25} \in \O \left( n^{log_3 4} \right)
+	$$
+	Therefore, by applying Master's theorem, we get that 
+	$$
+	T(n) \in \Theta \left( f(n) \right) \implies T(n) \in \Theta \left( n^{1.25} \right)
+	$$
+	So, finally
+	$$
+	T(n) \in \Theta \left( n^{1.25} \right)
+	$$
+\end{solution}
+
+\begin{problem}
+Solve the following recurrence: $T(n)=T(n)+\log n$
+\end{problem}
+\begin{solution}
+	Consider 
+	$$
+	T(n) = T(n) + \log n
+	$$
+	
+	Expanding the given recurrence, one arrives at 
+	
+	\begin{gather*}
+		T(n) = T(n) + \log n = \\
+		(T(n) + \log n) + \log n = T(n) + 2 \log n = \\
+		(T(n) + \log n) + 2 \log n = T(n) + 3 \log n = \\
+		\cdots \\
+		T(n) = T(n) + k \log n, \forall k \in \mathbb N
+	\end{gather*}
+	
+	Since $k \in \mathbb N$, this expression is unbounded (divergent), and one can
+	informally write
+	$$
+	T(n) = \infty
+	$$
+\end{solution}
+
+\begin{problem}
+Check if the given matrix is happy or not (TODO: fill this up)
+\end{problem}
+
+\begin{solution}
+The discussion will concern itself with an $R \times C$ matrix.
+The solution uses a divide-and-conquer approach to find the largest element (the happy element) on row $\frac R 2$, say at some column $j$.
+Now, we will consider the subproblems of the matrices of $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$
+
+\[
+\left [
+\begin{array}{c c c|c c}
+a_{11} & \ldots &  a_{1j} & \ldots & a_{1C} \\
+\vdots & \ddots & \vdots & \ddots & \vdots \\
+a_{\frac{R}{2}1} & \ldots & a_{\frac{R}{2}j} & \ldots & a_{\frac{R}{2}C} \\
+\vdots & \ddots & \vdots & \ddots & \vdots \\
+a_{R1} & \ldots & a_{Rj} & \ldots & a_{RC}
+\end{array}
+\right ]
+\]
+
+The complexity to search for the correct $jth$ element in row $\frac{R}{2}$ will be $O(C)$ where $C$ is the size of the
+matrix we are interested in. We will also need to solve two matrices of the size $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$.
+
+The recurrence will be
+$$
+T(R, C) = T\left(\frac{R}{2}, j\right) + T\left(\frac{R}{2}, C - j + 1\right) + O(C)
+$$
+
+This can also be written with a little bit of algebra as
+
+$$
+T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1\right) + O(C)
+$$
+where $\delta = j - \frac{C}{2}$
+
+
+When the number of rows is $1$, then we will simply linear search on the columns to arrive at the recurrence bound
+$$
+T(1, C) = O(C)
+$$
+
+
+We will now prove a lemma which provides tight bounds on the above expression.
+\begin{lemma}
+For the given recurrence relation, 
+$$
+T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta + 1 \right) \leq 2T \left(r, \frac{c}{2} \right) + 1
+$$
+\end{lemma}
+\begin{proof}
+
+Consider strong induction over $r$.
+
+
+\begin{gather*}
+\text{When $r = 1$, the left hand side is } \\
+T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta + 1 \right) =  \\
+\frac{c}{2} + \delta + \frac{c}{2} - \delta + 1= 2 \cdot \frac{c}{2} + 1= c + 1 \; \text{ (since T(1, c) = c)} \\
+\text{and the right hand side is} \\
+2T \left(1, \frac{c}{2} \right) + 1= 2 \cdot \frac c 2 + 1= c + 1\\
+\text{Hence}\\
+c + 1\leq c + 1 \\
+\text{ Therefore } \\
+T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta \right) \leq 2T \left(1, \frac{c}{2} \right) + 1
+\end{gather*}
+Hence, the lemma holds for $r = 1$
+
+
+Now, assume by strong induction that it holds for all $r \leq R$. We need to show that it holds for $r = R$.
+
+Considering the expression $T \left(r, \frac{c}{2} + \delta \right)$ and breaking it down using the recurrence, 
+$$
+T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(n)
+$$
+Using the strong induction on the RHS terms yields
+$$
+T \left(\frac{2}{2}, \frac{c}{2} + \delta \right) \leq 2T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) + 1 + O(c)
+$$
+Similarly, for the term $T \left(\frac{r}{2}, \frac{c}{2} - \delta \right)$ gets the inequality
+$$
+T \left(\frac{r}{2}, \frac{c}{2} - \delta \right) \leq 2T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + 1 + O(c)
+$$
+Adding both, one arrives at 
+\begin{gather*}
+T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq
+\left(2T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) + 1 + O(c)\right) + 
+\left(2T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + 1 + O(c)\right) \\
+% line 2
+T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
+2\left(
+T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) +
+T\left(\frac{r}{2}, \frac{c}{2} - \delta \right)
+\right) + 4 + O(c) \\
+\text{We can now apply a multiplicative factor of $2$ on $O(n)$ and also absorb the $ + 4$ expression giving us} \\
+% line 3
+T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
+2\left(
+T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) +
+T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + O(c)
+\right) \\
+\text{Clearly, the expression within our brackets is simply the expanded recurrence which we can combine to get} \\
+T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
+2T\left(r, \frac{c}{2}\right)
+\end{gather*}
+%Considering the right hand side,  
+%
+%\begin{gather*}
+%T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta \right) = \\
+%\left( T \left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T \left(\frac{r}{2}, \frac{\frac{c}{2} + \delta }{2} - \epsilon \right) + O\left(\frac{c + \delta}{2}\right) \right)
+%\end{gather*}
+\end{proof}
+
+Now, using the Lemma on our original expression
+$$
+T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1 \right) + O(C)
+$$
+Gives us
+$$
+T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C)
+$$
+\begin{gather*}
+T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C) \\
+\text{Since $R = C$ in the beginning, and since we break down both $R$ and $C$ uniformly, we can replace $R = C = N$ giving} \\
+T(N) \leq  2 T \left( \frac{N}{2} \right) + O(N) \\
+\text{which by an immediate application of Master's theorem yields} \\
+T(N) \leq N \log N
+\end{gather*}
+Which means our algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix .
+\end{solution}
 \end{document}
