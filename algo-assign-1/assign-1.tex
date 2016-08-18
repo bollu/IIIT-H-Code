@@ -254,9 +254,11 @@ $$
 We will now prove a lemma which provides tight bounds on the above expression.
 \begin{lemma}
 For the given recurrence relation, 
-$$
-T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta + 1 \right) \leq 2T \left(r, \frac{c}{2} \right) + 1
-$$
+
+\begin{gather*}
+\forall r \in \mathbb N, \forall c \in \mathbb N, \text{ there exists an $f(c) \in O(c)$ such that} \\
+T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta + 1 \right) \leq 2T \left(r, \frac{c}{2} \right) + f(c)
+\end{gather*}
 \end{lemma}
 \begin{proof}
 
@@ -268,62 +270,42 @@ Consider strong induction over $r$.
 T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta + 1 \right) =  \\
 \frac{c}{2} + \delta + \frac{c}{2} - \delta + 1= 2 \cdot \frac{c}{2} + 1= c + 1 \; \text{ (since T(1, c) = c)} \\
 \text{and the right hand side is} \\
-2T \left(1, \frac{c}{2} \right) + 1= 2 \cdot \frac c 2 + 1= c + 1\\
-\text{Hence}\\
-c + 1\leq c + 1 \\
-\text{ Therefore } \\
-T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta \right) \leq 2T \left(1, \frac{c}{2} \right) + 1
+2T \left(1, \frac{c}{2} \right) + f(c) = 2 \cdot \frac c 2 + f(c) = c + f(c) \\
+\text{pick $\forall c, f(c) > 1$ so that we are able to get the inequality } \\
+c + 1 < c + f(c) \\
+\text{and hence} \\
+T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta \right) \leq 2T \left(1, \frac{c}{2} \right) + O(c)
 \end{gather*}
-Hence, the lemma holds for $r = 1$
+Therefore, he lemma holds for $r = 1$
 
 
-Now, assume by strong induction that it holds for all $r \leq R$. We need to show that it holds for $r = R$.
+Now, assume by strong induction that it holds for all $r < R$. We need to show that it holds for $r = R$.
 
-Considering the expression $T \left(r, \frac{c}{2} + \delta \right)$ and breaking it down using the recurrence, 
+Considering the expression $T \left(R, \frac{c}{2} + \delta \right)$ and breaking it down using the recurrence, 
 $$
-T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(n)
+T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c)
 $$
-Using the strong induction on the RHS terms yields
+Using the strong induction expression on the RHS terms yields
 $$
-T \left(\frac{2}{2}, \frac{c}{2} + \delta \right) \leq 2T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) + 1 + O(c)
+T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + 
+T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c)
 $$
-Similarly, for the term $T \left(\frac{r}{2}, \frac{c}{2} - \delta \right)$ gets the inequality
-$$
-T \left(\frac{r}{2}, \frac{c}{2} - \delta \right) \leq 2T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + 1 + O(c)
-$$
-Adding both, one arrives at 
+where $f(c) \in O(c)$. 
+Now, replacing the definition of
+$ T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c) $
+in $T \left(r, \frac{c}{2} + \delta \right)$ gives
+
 \begin{gather*}
-T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq
-\left(2T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) + 1 + O(c)\right) + 
-\left(2T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + 1 + O(c)\right) \\
-% line 2
-T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
-2\left(
-T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) +
-T\left(\frac{r}{2}, \frac{c}{2} - \delta \right)
-\right) + 4 + O(c) \\
-\text{We can now apply a multiplicative factor of $2$ on $O(n)$ and also absorb the $ + 4$ expression giving us} \\
-% line 3
-T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
-2\left(
-T\left(\frac{r}{2}, \frac{c}{2} + \delta \right) +
-T\left(\frac{r}{2}, \frac{c}{2} - \delta \right) + O(c)
-\right) \\
-\text{Clearly, the expression within our brackets is simply the expanded recurrence which we can combine to get} \\
-T \left(r, \frac{c}{2} + \delta \right) + T \left(r, \frac{c}{2} - \delta \right) \leq 
-2T\left(r, \frac{c}{2}\right)
+T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) + O(c)
+\text{since $f(c) \in O(c)$, we can safely absorb it in $O(c)$ to get} \\
+T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + O(c)
 \end{gather*}
-%Considering the right hand side,  
-%
-%\begin{gather*}
-%T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta \right) = \\
-%\left( T \left(\frac{r}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T \left(\frac{r}{2}, \frac{\frac{c}{2} + \delta }{2} - \epsilon \right) + O\left(\frac{c + \delta}{2}\right) \right)
-%\end{gather*}
+Hence, our theorem is also proved for $r = R$.
 \end{proof}
 
 Now, using the Lemma on our original expression
 $$
-T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1 \right) + O(C)
+T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + O(C) \right) + O(C)
 $$
 Gives us
 $$
