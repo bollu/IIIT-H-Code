@@ -475,8 +475,15 @@ class CLIView(View):
 
     def get_event(self):
         event = EVENT_NONE
+        
+        # keep taking events till we get the last one
+        key = None
         try:
-            key = self.win.getkey()
+            while True:
+                key = self.win.getkey()
+        except Exception:
+            pass
+
             if key == 'w':
                 event = EVENT_ROTATE_CW
             elif key == 's':
@@ -487,17 +494,15 @@ class CLIView(View):
                 event = EVENT_MOVE_RIGHT
             elif key == 'q':
                 event = EVENT_QUIT
-        except Exception:
-            self.last_event = "EXCEPTION"
             pass
 
         self.last_event = event
         return event
 
-TIME_STEP_TIME = 1.0 / 15.0
+TIME_STEP_TIME = 1.0 / 30.0
 
 if __name__ == "__main__":
-    width, height = (20, 20)
+    width, height = (20, 40)
     view = CLIView(width, height)
     game = Game(width, height)
 
@@ -519,8 +524,10 @@ if __name__ == "__main__":
                 view.quit()
                 quit = True
             else:
-                game.update(event)
                 view.draw(game)
+                game.update(event)
+
+                curses.noqiflush()
                 if game.is_game_over():
                     quit = True
                     view.gameover()
