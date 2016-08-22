@@ -499,7 +499,8 @@ class CLIView(View):
         self.last_event = event
         return event
 
-TIME_STEP_TIME = 1.0 / 30.0
+RENDER_STEP_TIME = 1.0 / 60.0
+NUM_FRAMES_TO_UPDATE = 3
 
 if __name__ == "__main__":
     width, height = (20, 40)
@@ -507,30 +508,32 @@ if __name__ == "__main__":
     game = Game(width, height)
 
     prev_time = time.time()
-    time_accum = 0
+    render_time_accum = 0
+    nonupdated_frames_accum = 0
 
     quit = False
 
     while not quit:
         current_time = time.time()
-        time_accum += current_time - prev_time
+        render_time_accum += current_time - prev_time
 
-        while time_accum > TIME_STEP_TIME:
-            time_accum -= TIME_STEP_TIME
-
-            event = view.get_event()
-
-            if event == EVENT_QUIT:
-                view.quit()
-                quit = True
-            else:
-                view.draw(game)
-                game.update(event)
-
+        while render_time_accum > RENDER_STEP_TIME:
+            render_time_accum -= RENDER_STEP_TIME
+            view.draw(game)
+            nonupdated_frames_accum += 1
+            if nonupdated_frames_accum > NUM_FRAMES_TO_UPDATE:
+                nonupdated_frames_accum -= NUM_FRAMES_TO_UPDATE
                 curses.noqiflush()
-                if game.is_game_over():
+                event = view.get_event()
+                if event == EVENT_QUIT:
+                    view.quit()
                     quit = True
-                    view.gameover()
+                else:
+                    game.update(event)
+
+            if game.is_game_over():
+                quit = True
+                view.gameover()
 
         prev_time = time.time()
     # reset stuff
