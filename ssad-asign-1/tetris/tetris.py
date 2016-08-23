@@ -91,8 +91,8 @@ class Shape:
 
     def point_occupied(self, point):
         if point.x < 0 or point.x >= self.dim.x or \
-           point.y < 0 or point.y >= self.dim.y:
-            return False
+                point.y < 0 or point.y >= self.dim.y:
+                    return False
 
         return self.shape[point.x][point.y]
 
@@ -118,7 +118,7 @@ class Shape:
         rotated clockwise"""
 
         new_shape = [[False for _ in range(shape.dim.x)] for _ in range(shape.dim.y)]
-        
+
         for x in range(shape.dim.x):
             for y in range(shape.dim.y):
                 new_shape[y][shape.dim.x - 1 - x] = shape.shape[x][y]
@@ -132,7 +132,7 @@ class Shape:
         rotated clockwise"""
 
         new_shape = [[False for _ in range(shape.dim.x)] for _ in range(shape.dim.y)]
-        
+
         for x in range(shape.dim.x):
             for y in range(shape.dim.y):
                 new_shape[shape.dim.y - 1 - y][x] = shape.shape[x][y]
@@ -151,21 +151,27 @@ class Board:
         # assert pos.x >= 0 and pos.x <= self.dim.x
         # assert pos.y >= 0 and pos.y < self.dim.y
         if pos.x < 0 or pos.x >= self._dim.x or \
-           pos.y < 0 or pos.y >= self._dim.y:
-            return True
+                pos.y < 0 or pos.y >= self._dim.y:
+                    return True
         return self._occupied[pos.x][pos.y]
 
     def freeze_point(self, pos):
         assert(pos.x >= 0 and pos.x < self._dim.x and pos.y >= 0 and
-               pos.y < self._dim.y)
+                pos.y < self._dim.y)
         # assert(self._field[pos.x][pos.y] is False)
         self._occupied[pos.x][pos.y] = True
+
+    def unfreeze_point(self, pos):
+        assert(pos.x >= 0 and pos.x < self._dim.x and pos.y >= 0 and
+                pos.y < self._dim.y)
+        # assert(self._field[pos.x][pos.y] is False)
+        self._occupied[pos.x][pos.y] = False
 
     def can_place_shape(self, shape, pos):
         extrema = pos + shape.dim
         if extrema.x > self.dim.x or extrema.y > self.dim.y or \
-           pos.x < 0 or pos.y < 0:
-            return False
+                pos.x < 0 or pos.y < 0:
+                    return False
 
         for y in range(shape.dim.y):
             for x in range(shape.dim.x):
@@ -286,28 +292,73 @@ class Block:
                 delta = Vec2(x, y)
                 if self.point_occupied(delta):
                     board.freeze_point(self.pos + delta)
+    def rotate_cw(self):
+        """
+        Rotates the piece clockwise and returns the new shape
+        Return None if this is to be disallowed
+        """
+        new_shape = Shape.rotate_cw(self.shape)
+        return Block(self.pos, new_shape)
+    
+    def rotate_ccw(self):
+        """
+        Rotates the piece counter-clockwise and returns the new Block
+        Return None if this is to be disallowed
+        """
+        new_shape = Shape.rotate_ccw(self.shape)
+        return Block(self.pos, new_shape)
+
+
+class VerticalKillBlock(Block):
+    def __init__(self, pos, shape):
+        Block.__init__(self, pos, shape)
+
+    def freeze(self, board):
+        for y in range(0, board.dim.y):
+            board.unfreeze_point(Vec2(self.pos.x, y))
+
 
 def g_make_new_block_shape(pos, board):
+    possible_shapes = []
     # Simple Blocks
     LONG = Shape.shape_from_str(["x", "x", "x", "x"])
-
     T = Shape.shape_from_str(["xxx", " x ", " x "])
-
     SQUARE = Shape.shape_from_str(["xx", "xx"])
-    simple_block_shapes = [T]
+    ZIGZAG = Shape.shape_from_str(["x  ", "xxx", "  x"])
 
-    possible_shapes = []
+    simple_block_shapes = [SQUARE, T, LONG, ZIGZAG]
+
     for shape in simple_block_shapes:
-        for x in range(0, board.dim.x - shape.dim.x):
+        for x in range(0, board.dim.x - shape.dim.x + 1):
             pos = Vec2(x, 0)
             if board.can_place_shape(shape, pos):
                 possible_shapes.append(Block(pos, shape))
+
+            cw_shape = Shape.rotate_cw(shape)
+            if board.can_place_shape(cw_shape,  pos):
+                possible_shapes.append(cw_shape)
+
+            ccw_shape = Shape.rotate_ccw(shape)
+            if board.can_place_shape(ccw_shape,  pos):
+                possible_shapes.append(cw_shape)
 
     if len(possible_shapes) == 0:
         return None
     else:
         return possible_shapes[random.randint(0, len(possible_shapes) - 1)]
 
+
+class Player:
+    def __init__(self):
+        self._score = 0
+
+    def add_score(self, score_delta):
+        self._score += score_delta
+
+    @property
+    def score(self):
+        return self._score
+    
 class Game:
     def __init__(self, width, height):
 
@@ -315,6 +366,7 @@ class Game:
         self.board = Board(width, height)
         self.block = None
         self._game_over = False
+        self._player = Player()
 
     def update(self, event):
         if self._game_over:
@@ -332,50 +384,58 @@ class Game:
                 self.block = new_block
         else:
             write_debug_log("updating block")
-            block_delta = Vec2(0, 0)
             GRAVITY = Vec2(0, 1)
+            block_delta = Vec2(0, 0)
 
             # Movement Events ----
-            if event == EVENT_MOVE_LEFT:
-                block_delta.x = -1
-            elif event == EVENT_MOVE_RIGHT:
-                block_delta.x = +1
+            if event == EVENT_MOVE_LEFT or event ==  EVENT_MOVE_RIGHT:
+                move_delta = Vec2(0, 0)
+                if event == EVENT_MOVE_LEFT:
+                    block_delta.x = -1
+                elif event == EVENT_MOVE_RIGHT:
+                    block_delta.x = +1
 
-            new_pos = self.block.pos + block_delta + GRAVITY
-            new_pos.x = clamp(0, new_pos.x, self.board.dim.x - self.block.dim.x)
+                # disallow wrong placements
+                if not self.board.can_place_shape(self.block.shape, self.block.pos + block_delta + GRAVITY):
+                    block_delta = Vec2(0, 0)
 
-            # collision detection
-            if not self.board.can_place_shape(self.block.shape, new_pos):
-               block_delta.x = 0
-               new_pos = self.block.pos + GRAVITY
-
+            # Fall events
+            elif event == EVENT_FALL:
+                fall_delta = Vec2(0, 0)
+                while self.board.can_place_shape(self.block.shape, self.block.pos + GRAVITY + fall_delta): 
+                        fall_delta.y += 1
+                block_delta += fall_delta
+                self.block.set_pos(self.block.pos + fall_delta)
 
             # Rotation Events --
-            if event == EVENT_ROTATE_CW:
-                new_shape = Shape.rotate_cw(self.block.shape)
-                if self.board.can_place_shape(self.block.shape, new_pos):
-                    self.block = Block(self.block.pos, new_shape)
+            elif event == EVENT_ROTATE_CW or event == EVENT_ROTATE_CCW:
+                if event == EVENT_ROTATE_CW:
+                    new_block = self.block.rotate_cw()
+                else:
+                    new_block = self.block.rotate_ccw()
+                    
+                if self.board.can_place_shape(new_block.shape, new_block.pos):
+                    self.block = new_block
                 else:
                     write_debug_log("cannot place shape like that")
-            if event == EVENT_ROTATE_CCW:
-                new_shape = Shape.rotate_ccw(self.block.shape)
-                if self.board.can_place_shape(self.block.shape, new_pos):
-                    self.block = Block(self.block.pos, new_shape)
-                else:
-                    write_debug_log("cannot place shape like that")
-
 
             # Update physics
+            new_pos = self.block.pos + block_delta + GRAVITY
             if not self.board.can_place_shape(self.block.shape, new_pos):
                 write_debug_log("Block Frozen")
                 # self.block.pos.y += 1
                 self.block.freeze(self.board)
                 self.block = None
-                self.board.clear_full_rows()
+                num_rows_cleared = self.board.clear_full_rows()
+                self.player.add_score(num_rows_cleared * 100)
             else:
                 write_debug_log("Block Moving. Vel: %s" % (block_delta + GRAVITY))
                 self.block.set_pos(new_pos)
                 write_debug_log("Block position: %s" % self.block.pos)
+
+    @property
+    def player(self):
+        return self._player
 
     def is_game_over(self):
         return self._game_over
@@ -386,6 +446,7 @@ class Game:
 # Oh how I miss sum types...
 EVENT_NONE = "EVENT_NONE"
 EVENT_MOVE_LEFT = "EVENT_MOVE_LEFT"
+EVENT_FALL = "EVENT_FALL"
 EVENT_MOVE_RIGHT = "EVENT_MOVE_RIGHT"
 EVENT_ROTATE_CW = "EVENT_ROTATE_CW"
 EVENT_ROTATE_CCW = "EVENT_ROTATE_CCW"
@@ -425,28 +486,35 @@ class CLIView(View):
         render_pos = view_pos + self.RENDER_ORIGIN
         self.win.addch(render_pos.y, render_pos.x, char)
 
-    def draw(self, game):
-        self.win.clear()
+
+    def _draw_debug_log(self):
         self.win.addstr(0, 0, self.last_event,
                 curses.A_REVERSE)
 
         self.win.addstr(1, 0, get_debug_string(),
                 curses.A_REVERSE)
 
-        def draw_borders(max_width, max_height):
+    def _draw_score(self, game):
+        self.win.addstr(0, 0, "Score: %d" % (game.player.score, ))
 
-            for y in range(max_height):
-                self.addch(Vec2(0, y), '|')
-                self.addch(Vec2(width + 1, y), '|')
+    def _draw_borders(self, max_width, max_height):
 
-            for x in range(max_width+2):
-                self.addch(Vec2(x, max_height), '-')
+        for y in range(max_height):
+            self.addch(Vec2(0, y), '|')
+            self.addch(Vec2(width + 1, y), '|')
 
-            extreme_points = [Vec2(0, max_height), Vec2(max_width+1, max_height)]
-            for point in extreme_points:
-                self.addch(point, '+')
+        for x in range(max_width+2):
+            self.addch(Vec2(x, max_height), '-')
 
-        draw_borders(self.MAX_WIDTH, self.MAX_HEIGHT)
+        extreme_points = [Vec2(0, max_height), Vec2(max_width+1, max_height)]
+        for point in extreme_points:
+            self.addch(point, '+')
+    def draw(self, game):
+        self.win.clear()
+        self._draw_score(game)
+
+
+        self._draw_borders(self.MAX_WIDTH, self.MAX_HEIGHT)
 
         for y in range(self.MAX_HEIGHT):
             for x in range(self.MAX_WIDTH):
@@ -457,15 +525,16 @@ class CLIView(View):
         if game.block is not None:
             for y in range(game.block.dim.y):
                 for x in range(game.block.dim.x):
-                        if game.block.point_occupied(Vec2(x, y)):
-                            curr_pos = game.block.pos + Vec2(x, y)
-                            self.addch(CLIView.model_to_view(curr_pos), '#')
+                    if game.block.point_occupied(Vec2(x, y)):
+                        curr_pos = game.block.pos + Vec2(x, y)
+                        self.addch(CLIView.model_to_view(curr_pos), 'x')
 
         self.win.refresh()
 
-    def gameover(self):
+    def gameover(self, game):
         self.win.clear()
         self.win.addstr("Game over! Well played!")
+        self.win.addstr("You scored: " + str(game.player.score))
         self.win.refresh()
 
     def quit(self):
@@ -475,7 +544,7 @@ class CLIView(View):
 
     def get_event(self):
         event = EVENT_NONE
-        
+
         # keep taking events till we get the last one
         key = None
         try:
@@ -484,17 +553,18 @@ class CLIView(View):
         except Exception:
             pass
 
-            if key == 'w':
-                event = EVENT_ROTATE_CW
-            elif key == 's':
-                event = EVENT_ROTATE_CCW
-            elif key == 'a':
-                event = EVENT_MOVE_LEFT
-            elif key == 'd':
-                event = EVENT_MOVE_RIGHT
-            elif key == 'q':
-                event = EVENT_QUIT
-            pass
+        if key == 'q':
+            event = EVENT_QUIT
+        if key == 'j':
+            event = EVENT_ROTATE_CW
+        elif key == 'k':
+            event = EVENT_ROTATE_CCW
+        elif key == 'a':
+            event = EVENT_MOVE_LEFT
+        elif key == 'd':
+            event = EVENT_MOVE_RIGHT
+        elif key == 's':
+            event = EVENT_FALL
 
         self.last_event = event
         return event
@@ -503,7 +573,7 @@ RENDER_STEP_TIME = 1.0 / 60.0
 NUM_FRAMES_TO_UPDATE = 3
 
 if __name__ == "__main__":
-    width, height = (20, 40)
+    width, height = (1, 20)
     view = CLIView(width, height)
     game = Game(width, height)
 
@@ -533,7 +603,7 @@ if __name__ == "__main__":
 
             if game.is_game_over():
                 quit = True
-                view.gameover()
+                view.gameover(game)
 
         prev_time = time.time()
     # reset stuff
