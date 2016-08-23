@@ -89,12 +89,23 @@ class Shape:
     def dim(self):
         return self._dim
 
+
     def point_occupied(self, point):
         if point.x < 0 or point.x >= self.dim.x or \
                 point.y < 0 or point.y >= self.dim.y:
                     return False
 
         return self.shape[point.x][point.y]
+
+    
+    def get_occupied_points(self):
+        occupied_points = []
+        for y in range(self.dim.y):
+            for x in range(self.dim.x):
+                delta = Vec2(x, y)
+                if self.point_occupied(delta):
+                    occupied_points.append(delta)
+        return occupied_points
 
     @staticmethod
     def shape_from_str(shape_str):
@@ -150,20 +161,25 @@ class Board:
     def point_occupied(self, pos):
         # assert pos.x >= 0 and pos.x <= self.dim.x
         # assert pos.y >= 0 and pos.y < self.dim.y
-        if pos.x < 0 or pos.x >= self._dim.x or \
-                pos.y < 0 or pos.y >= self._dim.y:
+        if not self.is_point_legal(pos):
                     return True
         return self._occupied[pos.x][pos.y]
 
+    def is_point_legal(self, pos):
+        if (pos.x >= 0 and pos.x < self._dim.x and pos.y >= 0 and
+                pos.y < self._dim.y):
+            return True
+        else:
+            return False
+
     def freeze_point(self, pos):
-        assert(pos.x >= 0 and pos.x < self._dim.x and pos.y >= 0 and
-                pos.y < self._dim.y)
+        assert self.is_point_legal(pos)
         # assert(self._field[pos.x][pos.y] is False)
         self._occupied[pos.x][pos.y] = True
 
+
     def unfreeze_point(self, pos):
-        assert(pos.x >= 0 and pos.x < self._dim.x and pos.y >= 0 and
-                pos.y < self._dim.y)
+        assert self.is_point_legal(pos)
         # assert(self._field[pos.x][pos.y] is False)
         self._occupied[pos.x][pos.y] = False
 
@@ -173,11 +189,10 @@ class Board:
                 pos.x < 0 or pos.y < 0:
                     return False
 
-        for y in range(shape.dim.y):
-            for x in range(shape.dim.x):
-                delta = Vec2(x, y)
-                if shape.point_occupied(delta) and self.point_occupied(pos + delta):
-                    return False
+        shape_points = shape.get_occupied_points()
+        for point in shape_points:
+            if self.point_occupied(pos + point):
+                return False
 
         return True
 
@@ -229,7 +244,7 @@ class Board:
             # if we did clear, then there maybe more
             still_clearing = self._clear_first_full_row()
             num_rows_cleared += 1
-        return num_rows_cleared
+        return num_rows_cleared - 1
 
     @property
     def dim(self):
@@ -309,13 +324,19 @@ class Block:
         return Block(self.pos, new_shape)
 
 
-class VerticalKillBlock(Block):
+
+class ExplosionBlock(Block):
     def __init__(self, pos, shape):
         Block.__init__(self, pos, shape)
 
     def freeze(self, board):
-        for y in range(0, board.dim.y):
-            board.unfreeze_point(Vec2(self.pos.x, y))
+        shape_points = self.shape.get_occupied_points()
+        delta_points = [p + Vec2(dx, dy) for p in shape_points
+                            for dx in range(-2, 3)
+                            for dy in range(-2, 3)]
+        for p in delta_points:
+            if board.is_point_legal(p + self.pos):
+                board.unfreeze_point(p + self.pos)
 
 
 def g_make_new_block(board):
@@ -333,13 +354,16 @@ def g_make_new_block(board):
             pos = Vec2(x, 0)
             if board.can_place_shape(shape, pos):
                 possible_blocks.append(Block(pos, shape))
+                possible_blocks.append(ExplosionBlock(pos, shape))
 
             cw_shape = Shape.rotate_cw(shape)
             if board.can_place_shape(cw_shape,  pos):
                 possible_blocks.append(Block(pos, cw_shape))
+                possible_blocks.append(ExplosionBlock(pos, shape))
 
             ccw_shape = Shape.rotate_ccw(shape)
             if board.can_place_shape(ccw_shape,  pos):
+                possible_blocks.append(Block(pos, ccw_shape))
                 possible_blocks.append(Block(pos, ccw_shape))
 
     if len(possible_blocks) == 0:
@@ -521,11 +545,22 @@ class CLIView(View):
                     self.addch(CLIView.model_to_view(curr_pos), '@')
 
         if game.block is not None:
-            for y in range(game.block.dim.y):
-                for x in range(game.block.dim.x):
-                    if game.block.point_occupied(Vec2(x, y)):
-                        curr_pos = game.block.pos + Vec2(x, y)
-                        self.addch(CLIView.model_to_view(curr_pos), 'x')
+            self._draw_block(game)
+
+    def _draw_block(self, game):
+        assert(game.block is not None)
+
+        block_appearances = {
+                Block: 'o',
+                ExplosionBlock: '*'
+                }
+
+        block_points = game.block.shape.get_occupied_points()
+        block_char = block_appearances[type(game.block)]
+
+        for point in block_points:
+            curr_pos = game.block.pos + point
+            self.addch(CLIView.model_to_view(curr_pos), block_char)
 
         self.win.refresh()
 
