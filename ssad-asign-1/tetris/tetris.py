@@ -445,11 +445,12 @@ class Game:
             new_pos = self.block.pos + block_delta + GRAVITY
             if not self.board.can_place_shape(self.block.shape, new_pos):
                 write_debug_log("Block Frozen")
+                self.player.add_score(50)
                 # self.block.pos.y += 1
                 self.block.freeze(self.board)
                 self.block = None
                 num_rows_cleared = self.board.clear_full_rows()
-                self.player.add_score(num_rows_cleared * 100)
+                self.player.add_score(num_rows_cleared * 1000)
             else:
                 write_debug_log("Block Moving. Vel: %s" % (block_delta + GRAVITY))
                 self.block.set_pos(new_pos)
@@ -522,8 +523,8 @@ class CLIView(View):
     def _draw_borders(self, max_width, max_height):
 
         for y in range(max_height):
-            self.addch(Vec2(0, y), '|')
-            self.addch(Vec2(width + 1, y), '|')
+            self.addch(Vec2(0, y), ']')
+            self.addch(Vec2(width + 1, y), '[')
 
         for x in range(max_width+2):
             self.addch(Vec2(x, max_height), '-')
@@ -546,6 +547,29 @@ class CLIView(View):
 
         if game.block is not None:
             self._draw_block(game)
+            self._draw_block_projection(game)
+
+    def _draw_block_projection(self, game):
+        block = game.block
+        block_lowermost_points = [None for x in range(block.dim.x)]
+        for x in range(block.dim.x):
+            # iterate downwards looking for all y's
+            for y in range(block.dim.y):
+                point = Vec2(x, y)
+                if block.point_occupied(point):
+                    block_lowermost_points[x] = point
+
+        for lower_point in block_lowermost_points:
+            assert isinstance(lower_point, Vec2)
+            delta = Vec2(0, 1)
+            
+            while True:
+                project_pos = block.pos + lower_point + delta
+                if not game.board.is_point_legal(project_pos) or game.board.point_occupied(project_pos):
+                    break
+
+                self.addch(CLIView.model_to_view(project_pos), '|')
+                delta.y += 1
 
     def _draw_block(self, game):
         assert(game.block is not None)
@@ -602,8 +626,8 @@ class CLIView(View):
         self.last_event = event
         return event
 
-RENDER_STEP_TIME = 1.0 / 60.0
-NUM_FRAMES_TO_UPDATE = 3
+RENDER_STEP_TIME = 1.0 / 20.0
+NUM_FRAMES_TO_UPDATE = 1
 
 if __name__ == "__main__":
     width, height = (10, 30)

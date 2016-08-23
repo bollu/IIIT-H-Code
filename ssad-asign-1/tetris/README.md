@@ -13,6 +13,11 @@ Block Appearances
 'ooo': Standard Block
 '***': destroys anything in a 1 block radius of the shape of the block
 
+Scoring
+=======
+
+Block added: 50 points
+Row cleared: 1000 points
 
 Architecture
 ============
@@ -40,3 +45,9 @@ color info as well).
 
 This is a pretty popular way of doing it in common physics engines: for example,
 see both Box2D and Chipmunk which have different notions of Body and Shape.
+
+
+Interesting Tidbits
+===================
+
+* Drawing the projection of where the block would fall was pretty fun to implement
