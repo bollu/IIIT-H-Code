@@ -318,8 +318,8 @@ class VerticalKillBlock(Block):
             board.unfreeze_point(Vec2(self.pos.x, y))
 
 
-def g_make_new_block_shape(pos, board):
-    possible_shapes = []
+def g_make_new_block(board):
+    possible_blocks = []
     # Simple Blocks
     LONG = Shape.shape_from_str(["x", "x", "x", "x"])
     T = Shape.shape_from_str(["xxx", " x ", " x "])
@@ -332,20 +332,20 @@ def g_make_new_block_shape(pos, board):
         for x in range(0, board.dim.x - shape.dim.x + 1):
             pos = Vec2(x, 0)
             if board.can_place_shape(shape, pos):
-                possible_shapes.append(Block(pos, shape))
+                possible_blocks.append(Block(pos, shape))
 
             cw_shape = Shape.rotate_cw(shape)
             if board.can_place_shape(cw_shape,  pos):
-                possible_shapes.append(cw_shape)
+                possible_blocks.append(Block(pos, cw_shape))
 
             ccw_shape = Shape.rotate_ccw(shape)
             if board.can_place_shape(ccw_shape,  pos):
-                possible_shapes.append(cw_shape)
+                possible_blocks.append(Block(pos, ccw_shape))
 
-    if len(possible_shapes) == 0:
+    if len(possible_blocks) == 0:
         return None
     else:
-        return possible_shapes[random.randint(0, len(possible_shapes) - 1)]
+        return possible_blocks[random.randint(0, len(possible_blocks) - 1)]
 
 
 class Player:
@@ -361,7 +361,6 @@ class Player:
     
 class Game:
     def __init__(self, width, height):
-
         self.dim = Vec2(width, height)
         self.board = Board(width, height)
         self.block = None
@@ -374,8 +373,7 @@ class Game:
 
         if self.block is None and self._should_spawn_block():
             write_debug_log("spawning block")
-            rand_x = random.randint(0, self.dim.x - 1)
-            new_block = g_make_new_block_shape(Vec2(rand_x, 0), self.board)
+            new_block = g_make_new_block(self.board)
 
             if new_block is None:
                 write_debug_log("Game Over")
@@ -573,7 +571,7 @@ RENDER_STEP_TIME = 1.0 / 60.0
 NUM_FRAMES_TO_UPDATE = 3
 
 if __name__ == "__main__":
-    width, height = (1, 20)
+    width, height = (10, 30)
     view = CLIView(width, height)
     game = Game(width, height)
 
