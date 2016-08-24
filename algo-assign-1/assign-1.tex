@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{mathtools}
 
@@ -13,305 +13,369 @@
 
 
 \begin{document}
-\title{Assignment 3}
-\author{Siddharth Bhat}
+\title{Algorithms Assignment 1}
+\author{Siddharth Bhat (20161105)}
 \date{\today}
 \maketitle
 
 \section{Prove or disprove the given statements}
 \begin{problem}
-Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
+    Prove or disprove: $f(n) = O(g(n)) \implies 2^{f(n)} = O(2^{g(n)})$
 \end{problem}
 \begin{solution}
-	Assume the given statement is true. 
-	Consider $f(n) = 2n$, $g(n) = n$. Clearly, $f(n) \in O(g(n))$.
-	Now,
-	\begin{gather*}
-		2^{f(n)} = 2^{2n}= (2^2)^n = 4^n \\
-		O(2^{g(n)}) = O(2^n) \\
-		\text{Since from our hypothesis} \\
-		2^{f(n)} \in O(2^{g(n)}) \\
-		4^n \in O(2^n) \\
-		\text{ This implies that } \ \ \exists N \in \mathbb N,\ \exists c \in \mathbb R \text{ where $c$ is a constant, such that }
-		\forall i \geq N, \ 4^n = c \cdot 2^n \\
-		\left ( \frac{4}{2} \right ) ^n = c \implies \\
-		c = 2^n \\
-		\text{Hence, $c$ is not a constant, violating our assumption.}
-	\end{gather*}
-	
-	Therefore, the theorem is incorrect.
+    Assume the given statement is true. 
+    Consider $f(n) = 2n$, $g(n) = n$. Clearly, $f(n) \in O(g(n))$.
+    Now,
+    \begin{align*}
+        2^{f(n)} = 2^{2n} &= 4^n \\
+        O(2^{g(n)}) &= O(2^n)
+    \end{align*}
+     Since our hypothesis is that $2^{f(n)} \in O(2^{g(n)})$
+    $$4^n \in O(2^n)$$
+    
+This implies that  $\exists N \in \mathbb N,\ \exists c \in \mathbb R$ where $c$ is a constant, such that
+	\begin{align*}
+        \forall i \geq N, \ 4^n &= c \cdot 2^n \\
+        \left ( \frac{4}{2} \right ) ^n &= c \implies \\
+        c &= 2^n \\
+    \end{align*}
+
+  Hence, $c$ is not a constant, violating our assumption.  
+    Therefore, the theorem is incorrect.
 \end{solution}
 
 \begin{problem}
-Prove or disprove: $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$
+    Prove or disprove: $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$
 \end{problem}
 \begin{solution}
-	Given statement is false.
-	
-	let $f(n) = n$, $g(n) = 2^n$. Consider the problem statement to be
-	true. This gives us
-	
-	\begin{gather*}
-		f(n) + g(n) = n + 2^n \\
-		\text{from the theorem, } \\
-		f(n) + g(n) \in \Theta(min \{ f(n), g(n) \}) = \Theta(min \{n, 2^n \}) = \Theta(n) \\
-		\text{which implies that} \\
-		n + 2^n \in O(n) \\
-		\text{which is false, since $2^n$ grows rapidly faster than $n$, which can
-		be checked with a little algebra.}
-	\end{gather*}
-	Hence, by contradiction, the statement $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$ is false.
-\end{solution}
+    Given statement is false.
 
+    let $f(n) = n$, $g(n) = 2^n$. Consider the problem statement to be
+    true. This gives us
 
-\begin{problem}
-Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
-\end{problem}
-\begin{solution}
-	Given statement is false.
-	
-	Assume the statement is true. let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
-	
-	$f(n) \neq O(g(n))$ since they are periodic and intersect each other
-	infinitely many times over $\mathbb R$. Hence, they do not dominate
-	one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
+    \begin{gather*}
+        f(n) + g(n) = n + 2^n \\
+        \text{from the theorem, } \\
+        f(n) + g(n) \in \Theta(min \{ f(n), g(n) \}) = \Theta(min \{n, 2^n \}) = \Theta(n) \\
+        \text{which implies that} \\
+        n + 2^n \in O(n) \\
+        \text{which is false, since $2^n$ grows rapidly faster than $n$, which can
+        be checked with a little algebra.}
+    \end{gather*}
+    Hence, by contradiction, the statement $f(n) + g(n) = \Theta(min \{ f(n), g(n) \})$ is false.
 \end{solution}
 
 
 \begin{problem}
-Prove or disprove: $min \{ f(n), g(n) \} \in \Theta(f(n) + g(n))$
+    Prove or disprove: $f(n) \neq O(g(n)) \implies g(n) = O(f(n))$
 \end{problem}
 \begin{solution}
-	Given statement is false.
-	
-	Assume the statement is true. Let $f(n) = n$, and $g(n) = n^2$. Consider the expression
-	
-	\begin{gather*}
-	\forall n \in \mathbb N \\
-	min \{f(n), g(n) \} = min \{n, n^{2} \} = n \\
-	\text{and also} \\
-	\Theta(f(n) + g(n)) = \Theta(n + n^{2}) = \Theta(n^{2})
-	\end{gather*}
-But we know that
-$$
-n \notin \Theta(n^{2})
-$$
+    Given statement is false.
 
-This violates our assumption that 
-$$
-min \{ f(n), g(n) \} \in (\Theta(f(n) + g(n))
-$$
-Hence, the statement is false
+    Assume the statement is true. let $f(n) = \sin(n)$, $g(n) = \cos(n)$.
+
+    $f(n) \neq O(g(n))$ since they are periodic and intersect each other
+    infinitely many times over $\mathbb R$. Hence, they do not dominate
+    one another. Similary, $g(n) \neq O(f(n))$ by the exact same reasoning.
+\end{solution}
+
+
+\begin{problem}
+    Prove or disprove: $min \{ f(n), g(n) \} \in \Theta(f(n) + g(n))$
+\end{problem}
+\begin{solution}
+    Given statement is false.
+
+    Assume the statement is true. Let $f(n) = n$, and $g(n) = n^2$. Consider the expression
+
+    \begin{gather*}
+        \forall n \in \mathbb N \\
+        min \{f(n), g(n) \} = min \{n, n^{2} \} = n \\
+        \text{and also} \\
+        \Theta(f(n) + g(n)) = \Theta(n + n^{2}) = \Theta(n^{2})
+    \end{gather*}
+    But we know that
+    $$
+    n \notin \Theta(n^{2})
+    $$
+
+    This violates our assumption that 
+    $$
+    min \{ f(n), g(n) \} \in (\Theta(f(n) + g(n))
+    $$
+    Hence, the statement is false
 \end{solution}
 
 \section{Solve the following recurrence relations}
 \begin{problem}
-Solve the following recurrence relation: $T(n) = 3T(\frac n 4) + T(\frac n 8) + n \log n$
+    Solve the following recurrence relation: $T(n) = 3T\left( \frac n 4 \right) + T \left(\frac n 8 \right) + n \log n$
 \end{problem}
 \begin{solution}
-	TODO
+    We go by the intuition that since the subproblems are of sizes
+    $\frac n 4$ and $\frac n 8$, the sum of sizes of subproblems does not
+    exceed $n$. Hence, the problem size at each level ($n \log n$) will
+    dominate.
+
+    Assuming $T(n) \in O(n \log n) gives$
+
+    \begin{align*}
+        T(n) &= 3T \left( \frac n 4 \right) + T \left(\frac n 8 \right) + n \log n \\
+        T(n) &= 3O \left( \frac n 4 \log{\frac n 4} \right)  O \left(\frac n 8 \log{\frac n 8} \right) + n \log n \\
+        T(n) &= O \left( n \log n \right) \tag{$ O \left( n \log n \right)$ dominates the other two complexities}
+    \end{align*}
+
+    Hence, $T(n) \in O(n \log n)$ and our assumption is correct
+
 \end{solution}
 
 \begin{problem}
-Solve the following recurrence relation: $T(n) = T(n - 10) + log(n)$
+    Solve the following recurrence relation: $T(n) = T(n - 10) + log(n)$
 \end{problem}
 \begin{solution}
-	I make the assumption that
-	\begin{gather*}
-		\forall i, 0 \leq i \leq 9, T(i) = 1
-	\end{gather*}
-	
-	Let $n = 10k + r, k, r \in \mathbb N, \ 0 \leq r < 10$ (by division algorithm). Now, reducing the recurrence relation,
-	\begin{gather*}
-		T(n) = T(n - 10) + \log n \\ß
-		T(n) = (T(n - 20) + \log n) + \log n = T(n - 2 \cdot 10) + 2 \log n \\
-		\text{generalizing to $p \in \mathbb N$ gives us} \\
-		T(n) = T(n - 10p) + p \log n  \\
-		T(10k + r) = T(10k + r - 10p) + p \log n \\
-		\text{let $p = k$ to solve the recurrence} \\
-		T(10k + r) = T(10k + r -10k) + k \log n \\
-		T(10k + r) = T(r) + k \log n \\
-		T(10k + r) = 1 + k \log n \\
-		\text{but $k = \frac{(n - r)}{10} = \floor*{\frac{n}{10}}$. Hence} \\
-		T(n) = 1 + \floor*{\frac{n}{10}} \log n
-	\end{gather*}
+    I make the assumption that
+    \begin{gather*}
+        \forall i, 0 \leq i \leq 9, T(i) = 1
+    \end{gather*}
+
+    Let $n = 10k + r, k, r \in \mathbb N, \ 0 \leq r < 10$ (by division algorithm). Now, reducing the recurrence relation,
+    \begin{align*}
+        T(n) &= T(n - 10) + \log n \\ß
+        T(n) &= (T(n - 20) + \log n) + \log n \\
+        	 &= T(n - 2 \cdot 10) + 2 \log n \\
+        \text{generalizing to } p &\in \mathbb N \text{ gives us} \\
+        T(n) &= T(n - 10p) + p \log n  \\
+        T(10k + r) &= T(10k + r - 10p) + p \log n \\
+        \text{let } p &= k \text{ to solve the recurrence} \\
+        T(10k + r) &= T(10k + r -10k) + k \log n \\
+        T(10k + r) &= T(r) + k \log n \\
+        T(10k + r) &= 1 + k \log n \\
+        \text{but } k &= \frac{(n - r)}{10} = \\
+        			 &\floor*{\frac{n}{10}} \text{. Hence} \\
+        T(n) &= 1 + \floor*{\frac{n}{10}} \log n
+    \end{align*}
 \end{solution}
 
 
 \begin{problem}
-Solve the following recurrence: $T(n) = 4T(\frac n 3) + n^{\frac 5 4}$
+    Solve the following recurrence: $T(n) = 4T(\frac n 3) + n^{\frac 5 4}$
 \end{problem}
 \begin{solution}
-	Applying master's theorem on the given problem, with respect to the standard form
-	$$
-	T(n) = aT \left( \frac{n}{b} \right) + f(n) \\
-	$$
-	where $a = 4$, $b = 3$, $f(n) = n^{\frac 5 4} = n^{1.25}$.
-	To apply Masters's Theorem, we need to consider the comparison value
-	$$n^{\log_b a} = n^{log_3 4} = n^{1.26...}$$
-	Since
-	$$
-	f(n) = n^{1.25} \in O(n^{\log_b a - \epsilon} = n^{1.26 - \epsilon})
-	$$
-	We can show the existence of $\epsilon < 1.26 - 1.25$, which immediately tells us that $\epsilon < 0.01$. Hence,
-	$$
-	f(n) = n^{1.25} \in \O \left( n^{log_3 4} \right)
-	$$
-	Therefore, by applying Master's theorem, we get that 
-	$$
-	T(n) \in \Theta \left( f(n) \right) \implies T(n) \in \Theta \left( n^{1.25} \right)
-	$$
-	So, finally
-	$$
-	T(n) \in \Theta \left( n^{1.25} \right)
-	$$
+    Applying master's theorem on the given problem, with respect to the standard form
+    $$
+    T(n) = aT \left( \frac{n}{b} \right) + f(n) \\
+    $$
+    where $a = 4$, $b = 3$, $f(n) = n^{\frac 5 4} = n^{1.25}$.
+    To apply Masters's Theorem, we need to consider the comparison value
+    $$n^{\log_b a} = n^{log_3 4} = n^{1.26...}$$
+    Since
+    $$
+    f(n) = n^{1.25} \in O(n^{\log_b a - \epsilon} = n^{1.26 - \epsilon})
+    $$
+    We can show the existence of $\epsilon < 1.26 - 1.25$, which immediately tells us that $\epsilon < 0.01$. Hence,
+    $$
+    f(n) = n^{1.25} \in \O \left( n^{log_3 4} \right)
+    $$
+    Therefore, by applying Master's theorem, we get that 
+    $$
+    T(n) \in \Theta \left( f(n) \right) \implies T(n) \in \Theta \left( n^{1.25} \right)
+    $$
+    So, finally
+    $$
+    T(n) \in \Theta \left( n^{1.25} \right)
+    $$
 \end{solution}
 
 \begin{problem}
-Solve the following recurrence: $T(n)=T(n)+\log n$
+    Solve the following recurrence: $T(n)=T(n)+\log n$
 \end{problem}
 \begin{solution}
-	Consider 
-	$$
-	T(n) = T(n) + \log n
-	$$
-	
-	Expanding the given recurrence, one arrives at 
-	
-	\begin{gather*}
-		T(n) = T(n) + \log n = \\
-		(T(n) + \log n) + \log n = T(n) + 2 \log n = \\
-		(T(n) + \log n) + 2 \log n = T(n) + 3 \log n = \\
-		\cdots \\
-		T(n) = T(n) + k \log n, \forall k \in \mathbb N
-	\end{gather*}
-	
-	Since $k \in \mathbb N$, this expression is unbounded (divergent), and one can
-	informally write
-	$$
-	T(n) = \infty
-	$$
+    Consider 
+    $$
+    T(n) = T(n) + \log n
+    $$
+
+    Expanding the given recurrence, one arrives at 
+
+    \begin{align*}
+        T(n) &= T(n) + \log n \\
+        T(n) &= (T(n) + \log n) + \log n = T(n) + 2 \log n \\
+        T(n) &= (T(n) + \log n) + 2 \log n = T(n) + 3 \log n \\
+        &\cdots \\
+        T(n) &= T(n) + k \log n \tag{$\forall k \in \mathbb N$}
+    \end{align*}
+
+    Since $k \in \mathbb N$, this expression is unbounded (divergent), and one can
+    informally write
+    $$
+    T(n) = \infty
+    $$
 \end{solution}
 
 \section{Happy Matrix Problem}
 
 \begin{solution}
-The discussion will concern itself with an $R \times C$ matrix.
-The solution uses a divide-and-conquer approach to find the largest element (the happy element) on row $\frac R 2$, say at some column $j$.
-Now, we will consider the subproblems of the matrices of $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$
+    The discussion will concern itself with an $R \times C$ matrix.
+    The solution uses a divide-and-conquer approach to find the largest element (the happy element) on row $\frac R 2$, say at some column $j$.
+    Now, we will consider the subproblems of the matrices of $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$
 
-\[
-\left [
-\begin{array}{c c c|c c}
-a_{11} & \ldots &  a_{1j} & \ldots & a_{1C} \\
-\vdots & \ddots & \vdots & \ddots & \vdots \\
-a_{\frac{R}{2}1} & \ldots & a_{\frac{R}{2}j} & \ldots & a_{\frac{R}{2}C} \\
-\vdots & \ddots & \vdots & \ddots & \vdots \\
-a_{R1} & \ldots & a_{Rj} & \ldots & a_{RC}
-\end{array}
-\right ]
-\]
+    \[
+    \left [
+    \begin{array}{c c c|c c}
+        a_{11} & \ldots &  a_{1j} & \ldots & a_{1C} \\
+        \vdots & \ddots & \vdots & \ddots & \vdots \\
+        a_{\frac{R}{2}1} & \ldots & a_{\frac{R}{2}j} & \ldots & a_{\frac{R}{2}C} \\
+        \vdots & \ddots & \vdots & \ddots & \vdots \\
+        a_{R1} & \ldots & a_{Rj} & \ldots & a_{RC}
+    \end{array}
+    \right ]
+    \]
 
-The complexity to search for the correct $jth$ element in row $\frac{R}{2}$ will be $O(C)$ where $C$ is the size of the
-matrix we are interested in. We will also need to solve two matrices of the size $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$.
+    The complexity to search for the correct $jth$ element in row $\frac{R}{2}$ will be $O(C)$ where $C$ is the size of the
+    matrix we are interested in. We will also need to solve two matrices of the size $\frac{R}{2} \times j$ and $\frac{R}{2} \times (C - j)$.
 
-The recurrence will be
-$$
-T(R, C) = T\left(\frac{R}{2}, j\right) + T\left(\frac{R}{2}, C - j + 1\right) + O(C)
-$$
+    The recurrence will be
+    $$
+    T(R, C) = T\left(\frac{R}{2}, j\right) + T\left(\frac{R}{2}, C - j + 1\right) + O(C)
+    $$
 
-This can also be written with a little bit of algebra as
+    This can also be written with a little bit of algebra as
 
-$$
-T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1\right) + O(C)
-$$
-where $\delta = j - \frac{C}{2}$
-
-
-When the number of rows is $1$, then we will simply linear search on the columns to arrive at the recurrence bound
-$$
-T(1, C) = O(C)
-$$
+    $$
+    T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1\right) + O(C)
+    $$
+    where $\delta = j - \frac{C}{2}$
 
 
-We will now prove a lemma which provides tight bounds on the above expression.
-\begin{lemma}
-For the given recurrence relation, 
-
-\begin{gather*}
-\forall r \in \mathbb N, \forall c \in \mathbb N, \text{ there exists an $f(c) \in O(c)$ such that} \\
-T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta + 1 \right) \leq 2T \left(r, \frac{c}{2} \right) + f(c)
-\end{gather*}
-\end{lemma}
-\begin{proof}
-
-Consider strong induction over $r$.
+    When the number of rows is $1$, then we will simply linear search on the columns to arrive at the recurrence bound
+    $$
+    T(1, C) = O(C)
+    $$
 
 
-\begin{gather*}
-\text{When $r = 1$, the left hand side is } \\
-T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta + 1 \right) =  \\
-\frac{c}{2} + \delta + \frac{c}{2} - \delta + 1= 2 \cdot \frac{c}{2} + 1= c + 1 \; \text{ (since T(1, c) = c)} \\
-\text{and the right hand side is} \\
-2T \left(1, \frac{c}{2} \right) + f(c) = 2 \cdot \frac c 2 + f(c) = c + f(c) \\
-\text{pick $\forall c, f(c) > 1$ so that we are able to get the inequality } \\
-c + 1 < c + f(c) \\
-\text{and hence} \\
-T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta \right) \leq 2T \left(1, \frac{c}{2} \right) + O(c)
-\end{gather*}
-Therefore, he lemma holds for $r = 1$
+    We will now prove a lemma which provides tight bounds on the above expression.
+    \begin{lemma}
+        For the given recurrence relation, 
+
+        \begin{gather*}
+            \forall r \in \mathbb N, \forall c \in \mathbb N, \text{ there exists an $f(c) \in O(c)$ such that} \\
+            T \left(r, \frac{c}{2} + \delta\right) + T \left(r, \frac{c}{2} - \delta + 1 \right) \leq 2T \left(r, \frac{c}{2} \right) + f(c)
+        \end{gather*}
+    \end{lemma}
+    \begin{proof}
+
+        Consider strong induction over $r$.
 
 
-Now, assume by strong induction that it holds for all $r < R$. We need to show that it holds for $r = R$.
-
-Considering the expression $T \left(R, \frac{c}{2} + \delta \right)$ and breaking it down using the recurrence, 
-$$
-T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c)
-$$
-Using the strong induction expression on the RHS terms yields
-\[
-T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + 
-T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) \tag*{$f(c) \in O(c)$}
-\]
-
-Now, replacing the definition of
-{\tiny
-$ T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c) $
-}
-in
-{\tiny $T \left(r, \frac{c}{2} + \delta \right)$ }
-gives
-
-$$
-T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) + O(c)
-$$
-Since $f(c) \in O(c)$, we can safely absorb it in $O(c)$ to get
-$$
-T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + O(c)
-$$
-Hence, our theorem is also proved for $r = R$.
-\end{proof}
-
-Now, using the Lemma on our original expression
-$$
-T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + O(C) \right) + O(C)
-$$
-
-Gives us
-
-$$
-T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C)
-$$
-
-Since $R = C$ in the beginning, and since we break down both $R$ and $C$ uniformly, we can replace $R = C = N$ giving
-$$
-T(N) \leq  2 T \left( \frac{N}{2} \right) + O(N) \\
-$$
+        \begin{align*}
+            \text{When $r = 1$, the left hand side is } \\
+            T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta + 1 \right) &=  \\
+            \frac{c}{2} + \delta + \frac{c}{2} - \delta + 1 & = 2 \cdot \frac{c}{2} + 1 \\
+            &= c + 1 \tag{(since T(1, c) = c)} \\
+        \end{align*}
+         
+        and the right hand side is
+        
+        \begin{gather*}
+            2T \left(1, \frac{c}{2} \right) + f(c) = 2 \cdot \frac c 2 + f(c) = \\
+            c + f(c) \\
+            \text{pick $\forall c, f(c) > 1$ so that we are able to get the inequality } \\
+            c + 1 < c + f(c) \\
+            \text{and hence} \\
+            T \left(1, \frac{c}{2} + \delta\right) + T \left(1, \frac{c}{2} - \delta \right) \leq 2T \left(1, \frac{c}{2} \right) + O(c)
+        \end{gather*}
+        Therefore, he lemma holds for $r = 1$
 
 
-Which by an immediate application of Master's theorem yields $$T(N) \leq N \log N$$
+        Now, assume by strong induction that it holds for all $r < R$. We need to show that it holds for $r = R$.
 
-This means that the 
-algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix.
+        Considering the expression $T \left(R, \frac{c}{2} + \delta \right)$ and breaking it down using the recurrence, 
+        $$
+        T \left(r, \frac{c}{2} + \delta \right) = T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c)
+        $$
+        Using the strong induction expression on the RHS terms yields
+        \[
+        T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + 
+        T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) \tag*{$f(c) \in O(c)$}
+        \]
+
+        Now, replacing the definition of
+        {\small
+        $ T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} + \epsilon \right) + T\left(\frac{R}{2}, \frac{\frac{c}{2} + \delta}{2} - \epsilon + 1 \right) + O(c) $
+        }
+        in
+        {\small $T \left(r, \frac{c}{2} + \delta \right)$ }
+        gives
+
+        $$
+        T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + f(c) + O(c)
+        $$
+        Since $f(c) \in O(c)$, we can safely absorb it in $O(c)$ to get
+        $$
+        T \left(R, \frac{c}{2} + \delta \right)  \leq 2T\left(\frac{R}{2}, \frac{c}{2} + \delta \right) + O(c)
+        $$
+        Hence, our theorem is also proved for $r = R$.
+    \end{proof}
+
+    Now, using the Lemma on our original expression
+    $$
+    T(R, C) = T\left(\frac{R}{2}, \frac{C}{2} + \delta\right) + T\left(\frac{R}{2}, \frac{C}{2} - \delta + 1\right) + O(C)
+    $$
+    
+    Gives us
+
+    \begin{gather*}
+   	T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + f(C) +  O(C) \tag{$f(C) \in O(C)$}
+    \end{gather*}
+    
+    Since $f(C) \in O(C)$, we can absorb it into $O(C)$ to arrive at 
+    
+    $$
+	T(R, C) \leq 2 T \left(\frac{R}{2}, \frac{C}{2} \right) + O(C)
+    $$
+    
+    Since $R = C$ in the beginning, and since we break down both $R$ and $C$ uniformly, we can replace $R = C = N$ giving
+    $$
+    T(N) \leq  2 T \left( \frac{N}{2} \right) + O(N) \\
+    $$
+
+
+    Which by an immediate application of Master's theorem yields $$T(N) \leq N \log N$$
+
+    This means that the 
+    algorithm has a complexity of $N \log N$ where $N$ is the size of the square matrix.
+\end{solution}
+
+\section{$n$ medians}
+\subsection{Naive Solution}
+The naive solution is to simply merge sort of the $k$ arrays into one large chunk, and then
+take the middlemost element. This will have a time complexity of $O(n \cdot k)$ to merge all the $k$ arrays together.
+
+One slight improvement is to notice that we don't need to take all $nk$ elements - simply taking
+$n\frac{k}{2}$ will give us the median. Hence, the ``better'' time complexity is $O(\frac{n \cdot k}{2})$
+\subsection{Better Solution}
+\begin{solution}
+I shall explain the general solution, which can then be specialised into the specific case that we are interested in ($2$ arrays).
+
+We have $k$ arrays of size $n$ each. One property that we can rely on is that the median of all of the arrays will lie in between
+the median of the individual arrays. Hence, we will get a smaller search space of that between the smallest median and the largest median.
+
+To find the smallest and largest medians, we will first need to sort all the medians - this will take $O(k \log k)$ time.
+
+Next, we pick an element in the range of the medians, and then check how many elements in the other arrays satisfy this. To do this,
+we will binary search through all the arrays ($k$ of them) checking for the ``tipping point'' in all the arrays using binary search. This 
+will take $k \log n$ time ($\log n$ to search for the tipping point in one array, $k$ to search in every array). If the element we picked turns
+out to be the median, then we're good. If not, we need to repeat the search - and this will be done $k \log n$ times - we will binary search through the
+range of positions in our $k$ arrays for good medians (the binary search takes $\log n$ time.
+
+So, the split up is
+
+\begin{align*}
+\text{First: sort arrays according to medians} &: k \log k \\
+\text{Loop: pick up all good medians} &: k \log n \\
+\text{for one potential median, check if if is true median} &: k \log n 
+\end{align*}
+
+Hence, total time complexity is $O(k \log k + (k \log n) \cdot (k \log n)) = O(k \log k + (k \log n)^{2})$
+ 
 \end{solution}
 \end{document}
