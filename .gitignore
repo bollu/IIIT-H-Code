@@ -204,3 +204,4 @@ TSWLatexianTemp*
 *~[0-9]*
 
 ssad-project
+*.sw*
