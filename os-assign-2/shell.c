@@ -308,22 +308,19 @@ Command* repl_read(Context *ctx){
 
     Command *commands = NULL;
     parse_expr(tokens, &commands);
-    for(Command *c = commands; c != NULL; c = c->next) {
-        command_print(c);
-    }
     return commands;
 
 };
 
 
-int repl_launch(char **args) {
+int repl_launch(const Command *command) {
     pid_t pid, wpid;
     int status;
 
     pid = fork();
     if (pid == 0) {
         // Child process
-        if (execvp(args[0], args) == -1) {
+        if (execvp(command->args[0], command->args) == -1) {
             perror("lsh");
         }
         exit(EXIT_FAILURE);
@@ -340,21 +337,51 @@ int repl_launch(char **args) {
     return 1;
 }
 
-void repl_eval(Command *command) {
-    if (command->type == COMMAND_TYPE_LAUNCH) {
-        repl_launch(command->args);
+int repl_cd(const Command *command) {
+    if (command->num_args != 1) {
+        return -1;
     }
+
+    chdir(command->args[0]);
+    return 0;
+};
+
+
+int repl_pwd(const Command *command, const Context *context) {
+    if (command->num_args != 0) {
+        return -1;
+    }
+    printf("%s", context->cwd);
+    return 0;
+};
+
+void repl_eval(const Command *command, const Context *context) {
+    switch(command->type) {
+        case COMMAND_TYPE_LAUNCH:
+            repl_launch(command);
+            break;
+        case COMMAND_TYPE_CD:
+            repl_cd(command);
+            break;
+        case COMMAND_TYPE_PWD:
+            repl_pwd(command, context);
+            break;
+        case COMMAND_TYPE_EXIT:
+            break;
+    };
+
 }
 
 int main(int argc, char **argv) {
     Context *ctx = context_new();
 
     while(!context_should_quit(ctx)) {
-        context_update(ctx);
-        Command *commands =  repl_read(ctx);
+        Command *commands = repl_read(ctx);
         for(Command *c = commands; c != NULL; c = c->next) {
-            repl_eval(c);
+            context_update(ctx);
+            repl_eval(c, ctx);
         }
     }
+    context_update(ctx);
     return 0;
 }
