@@ -4,6 +4,12 @@
 #include <string.h>
 #include <assert.h>
 
+//copied neat idea from ISL library! 
+//returns a new block of memory
+#define give
+//takes a block of memory and frees it
+#define take
+
 /* *** Context *** */
 static const int MAX_CWD_LENGTH = 1024 * 20;
 static const int MAX_USERNAME_LENGTH = 1024 * 20;
@@ -22,28 +28,58 @@ int context_should_quit(const Context *ctx);
 
 /* *** Command *** */
 typedef enum {
-    COMMAND_TYPE_NONE,
     COMMAND_TYPE_CD,
     COMMAND_TYPE_PWD,
     COMMAND_TYPE_EXIT,
     COMMAND_TYPE_LAUNCH,
 
 } CommandType;
+//TODO: this is pretty hacky, fix this
+static const int COMMAND_TOTAL_ARGS_LENGTH = 1024;
+
 typedef struct Command {
     CommandType type;
-    char **args;
+    char *args[COMMAND_TOTAL_ARGS_LENGTH];
+    int num_args;
     struct Command *next;
 } Command;
 
-Command* command_new(CommandType type, char **args) {
+Command* command_new(CommandType type) {
     Command *command = (Command*)malloc(sizeof(Command));
     command->next = NULL;
     command->type = type;
-    command->args = args;
-
+    command->num_args = 0;
     return command;
 }
+void command_add_arg(give Command *command, const char *arg) {
+    assert(command->num_args < COMMAND_TOTAL_ARGS_LENGTH);
+    command->args[command->num_args] = malloc(strlen(arg) + 1);
+    strcpy(command->args[command->num_args], arg);
+    command->num_args++;
+}
 
+
+void command_print(Command *c) {
+    printf("c[");
+    switch(c->type) {
+        case COMMAND_TYPE_CD:
+            printf("cd: "); break;
+
+        case COMMAND_TYPE_PWD:
+            printf("pwd: "); break;
+
+        case COMMAND_TYPE_EXIT:
+            printf("exit: "); break;
+
+        case COMMAND_TYPE_LAUNCH:
+            printf("launch: "); break;
+    }
+    for(int i = 0; i < c->num_args; i++) {
+        printf("%s ", c->args[i]);
+    }
+    printf("]");
+}
+    
 /* *** Context Impl *** */
 Context *context_new() {
     Context *ctx = (Context*)malloc(sizeof(Context));
@@ -107,6 +143,8 @@ typedef struct Token {
     char *string;
     struct Token *next;
 } Token;
+
+//TODO: implement proper linked list support
 
 Token* token_new_semicolon() {
     Token *t = (Token*)malloc(sizeof(Token));
@@ -185,7 +223,6 @@ Token* tokenize_line(char *line) {
             }
         }
     }
-    assert(head != NULL);
     return head;
     
 };
@@ -193,16 +230,64 @@ Token* tokenize_line(char *line) {
 
 /* Grammar of REPL syntax  (in EBNF)
  * This can be parsed properly using recursive-descent, but let's strtok for now
- * Expr := Command ; Expr | Command
+ * Expr := ";" | Command | Command ";" Expr 
  * Command := <name> [args]*
  */
 
-Command *parse_command(const Token *head) {
+Token *parse_command(Token *head, Command **result);
+Token *parse_expr(Token *head, Command **result);
+
+Token *parse_expr(Token *head, Command **result) {
     if (head == NULL) {
-        return NULL;
+        *result = NULL;
+    }
+    //empty ";"
+    else if (head->type == TOKEN_TYPE_SEMICOLON) {
+        *result = NULL;
+    }
+    //Command ";" Expr | Command 
+    else {
+        head = parse_command(head, *result == NULL ? result : &((*result)->next));
+
+        //Command ":" Expr
+        if (head != NULL && head->type == TOKEN_TYPE_SEMICOLON) {
+            head = head->next;
+            head = parse_expr(head, *result == NULL ? result : &((*result)->next));
+        } 
     }
 
-    return NULL;
+    return head;
+};
+
+Token *parse_command(Token *head, Command **result) {
+    assert (head != NULL);
+    assert (head->type != TOKEN_TYPE_SEMICOLON);
+
+    
+    assert (*result == NULL);
+    if (!strcmp(head->string, "pwd")) {
+        *result = command_new(COMMAND_TYPE_PWD);
+        head = head->next;
+    }
+    else if (!strcmp(head->string, "cd")) {
+        *result = command_new(COMMAND_TYPE_CD);
+        head = head->next;
+    }
+    else if (!strcmp(head->string, "exit")) {
+        *result = command_new(COMMAND_TYPE_EXIT);
+        head = head->next;
+    }
+    else {
+        *result = command_new(COMMAND_TYPE_LAUNCH);
+    }
+
+    assert (*result != NULL);
+    while(head != NULL && head->type != TOKEN_TYPE_SEMICOLON) {
+        command_add_arg((*result), head->string);
+        head = head->next;
+    }
+
+    return head;
 
 };
 
@@ -215,11 +300,17 @@ Command* repl_read(Context *ctx){
     
     Token *tokens = tokenize_line(line);
 
+    /*
     for(Token *t = tokens; t != NULL; t = t->next) {
         token_print(*t);
     }
+    */
 
     Command *commands = NULL;
+    parse_expr(tokens, &commands);
+    for(Command *c = commands; c != NULL; c = c->next) {
+        command_print(c);
+    }
     return commands;
 
 };
