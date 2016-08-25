@@ -10,6 +10,11 @@
 //takes a block of memory and frees it
 #define take
 
+typedef enum {
+    FALSE = 0,
+    TRUE = 1
+} boolean;
+
 /* *** Context *** */
 static const int MAX_CWD_LENGTH = 1024 * 20;
 static const int MAX_USERNAME_LENGTH = 1024 * 20;
@@ -18,12 +23,13 @@ typedef struct  {
     char cwd[MAX_CWD_LENGTH];
     char username[MAX_USERNAME_LENGTH];
     char hostname[MAX_HOSTNAME_LENGTH];
+    boolean should_quit;
 
 } Context;
 
 Context *context_new();
 void context_update(Context *context);
-int context_should_quit(const Context *ctx);
+boolean context_should_quit(const Context *ctx);
 
 
 /* *** Command *** */
@@ -41,6 +47,7 @@ typedef struct Command {
     CommandType type;
     char *args[COMMAND_TOTAL_ARGS_LENGTH];
     int num_args;
+    int background;
     struct Command *next;
 } Command;
 
@@ -49,8 +56,14 @@ Command* command_new(CommandType type) {
     command->next = NULL;
     command->type = type;
     command->num_args = 0;
+    command->background = 0;
     return command;
 }
+
+void command_make_background(Command *command) {
+    command->background = 1;
+}
+
 void command_add_arg(give Command *command, const char *arg) {
     assert(command->num_args < COMMAND_TOTAL_ARGS_LENGTH);
     command->args[command->num_args] = malloc(strlen(arg) + 1);
@@ -83,6 +96,8 @@ void command_print(Command *c) {
 /* *** Context Impl *** */
 Context *context_new() {
     Context *ctx = (Context*)malloc(sizeof(Context));
+    ctx->should_quit = FALSE;
+    ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
     return ctx;
 }
 
@@ -90,10 +105,6 @@ void context_update(Context *context) {
     getcwd(context->cwd, MAX_CWD_LENGTH); 
     gethostname(context->hostname, MAX_HOSTNAME_LENGTH);
     strncpy(context->username, getlogin(), MAX_USERNAME_LENGTH);
-}
-
-int context_should_quit(const Context *ctx){
-    return 0;
 }
 
 /* *** Command Implementation *** */
@@ -105,16 +116,23 @@ void repl_print_prompt(const Context *ctx) {
 }
 
 
-char* read_single_lne() {
+char* read_single_line(boolean *should_quit) {
+    assert(should_quit != NULL);
+
     static const int BUFFER_BLOCK_SIZE = 1024;
     int buffer_block_multiple = 1;
+
 
     char *output = (char*)malloc(sizeof(char) * BUFFER_BLOCK_SIZE);
     int buffer_pos = 0;
 
     while(1) {
         int c = getchar();
-        if (c == '\n' || c == '\0' || c == EOF) {
+        if (c == EOF) {
+            *should_quit = TRUE;
+            break;
+        }
+        else if (c == '\n' || c == '\0') {
             break;
         } else {
             if (buffer_pos == buffer_block_multiple * BUFFER_BLOCK_SIZE) {
@@ -134,7 +152,8 @@ char* read_single_lne() {
 }
 
 typedef enum {
-    TOKEN_TYPE_SEMICOLON,
+    TOKEN_TYPE_SEMICOLON = 1,
+    TOKEN_TYPE_AMPERSAND,
     TOKEN_TYPE_WORD,
 } TokenType;
 
@@ -149,6 +168,14 @@ typedef struct Token {
 Token* token_new_semicolon() {
     Token *t = (Token*)malloc(sizeof(Token));
     t->type = TOKEN_TYPE_SEMICOLON;
+    t->string = NULL;
+    t->next = NULL;
+    return t;
+}
+
+Token* token_new_ampersand() {
+    Token *t = (Token*)malloc(sizeof(Token));
+    t->type = TOKEN_TYPE_AMPERSAND;
     t->string = NULL;
     t->next = NULL;
     return t;
@@ -174,6 +201,10 @@ void token_print(Token t) {
 
 int is_char_whitespace(char c) {
     return c == ' ' || c == '\n' || c == '\t';
+}
+
+int is_char_token_symbol(char c) {
+    return c == ';' || c == '&';
 }
 
 Token* tokenize_line(char *line) {
@@ -202,9 +233,20 @@ Token* tokenize_line(char *line) {
                 head = current = new;
             }
         }
+        else if (line[i] == '&') {
+            i++;
+            Token *new = token_new_ampersand();
+            if (current) {
+                current->next = new;
+                current = current->next;
+            } else {
+                head = current = new;
+            }
+        }
         else {
             const int prev_pos = i;
-            while(i < strlen(line) && !is_char_whitespace(line[i]) && line[i] != ';') {
+            while(i < strlen(line) && !is_char_whitespace(line[i]) &&
+                    !is_char_token_symbol(line[i])) {
                 i++;
             }
 
@@ -230,8 +272,8 @@ Token* tokenize_line(char *line) {
 
 /* Grammar of REPL syntax  (in EBNF)
  * This can be parsed properly using recursive-descent, but let's strtok for now
- * Expr := ";" | Command | Command ";" Expr 
- * Command := <name> [args]*
+ * Expr := ";" | "&" | Command | Command ";" Expr 
+ * Command := <name> <args>* <"&">?
  */
 
 Token *parse_command(Token *head, Command **result);
@@ -241,8 +283,8 @@ Token *parse_expr(Token *head, Command **result) {
     if (head == NULL) {
         *result = NULL;
     }
-    //empty ";"
-    else if (head->type == TOKEN_TYPE_SEMICOLON) {
+    //empty ";" | empty "&
+    else if (head->type == TOKEN_TYPE_SEMICOLON || head->type == TOKEN_TYPE_AMPERSAND) {
         *result = NULL;
     }
     //Command ";" Expr | Command 
@@ -255,13 +297,14 @@ Token *parse_expr(Token *head, Command **result) {
             head = parse_expr(head, *result == NULL ? result : &((*result)->next));
         } 
     }
-
     return head;
 };
 
 Token *parse_command(Token *head, Command **result) {
     assert (head != NULL);
     assert (head->type != TOKEN_TYPE_SEMICOLON);
+    assert (head->type != TOKEN_TYPE_AMPERSAND);
+
 
     
     assert (*result == NULL);
@@ -273,7 +316,8 @@ Token *parse_command(Token *head, Command **result) {
         *result = command_new(COMMAND_TYPE_CD);
         head = head->next;
     }
-    else if (!strcmp(head->string, "exit")) {
+    else if (!strcmp(head->string, "exit") ||
+             !strcmp(head->string, "quit")) {
         *result = command_new(COMMAND_TYPE_EXIT);
         head = head->next;
     }
@@ -283,8 +327,14 @@ Token *parse_command(Token *head, Command **result) {
 
     assert (*result != NULL);
     while(head != NULL && head->type != TOKEN_TYPE_SEMICOLON) {
-        command_add_arg((*result), head->string);
-        head = head->next;
+        if (head->type == TOKEN_TYPE_AMPERSAND) {
+            head = head->next;
+            command_make_background(*result);
+            break;
+        } else {
+            command_add_arg((*result), head->string);
+            head = head->next;
+        }
     }
 
     return head;
@@ -296,7 +346,7 @@ Token *parse_command(Token *head, Command **result) {
 Command* repl_read(Context *ctx){
 
     repl_print_prompt(ctx);
-    char *line = read_single_lne();
+    char *line = read_single_line(&(ctx->should_quit));
     
     Token *tokens = tokenize_line(line);
 
@@ -311,6 +361,7 @@ Command* repl_read(Context *ctx){
     return commands;
 
 };
+
 
 
 int repl_launch(const Command *command) {
@@ -337,6 +388,12 @@ int repl_launch(const Command *command) {
     return 1;
 }
 
+
+int repl_quit(Context *ctx) {
+    ctx->should_quit = TRUE;
+    return 0;
+}
+
 int repl_cd(const Command *command) {
     if (command->num_args != 1) {
         return -1;
@@ -355,7 +412,7 @@ int repl_pwd(const Command *command, const Context *context) {
     return 0;
 };
 
-void repl_eval(const Command *command, const Context *context) {
+void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
             repl_launch(command);
@@ -367,21 +424,33 @@ void repl_eval(const Command *command, const Context *context) {
             repl_pwd(command, context);
             break;
         case COMMAND_TYPE_EXIT:
+            repl_quit(context);
             break;
     };
 
 }
 
+void repl_shutdown(const Context *context) {
+    printf("\nGoodbye %s", context->username);
+}
+
 int main(int argc, char **argv) {
     Context *ctx = context_new();
+    context_update(ctx);
 
-    while(!context_should_quit(ctx)) {
+    while(TRUE) {
         Command *commands = repl_read(ctx);
+        
+        if(ctx->should_quit) {
+            break;
+        }
+
         for(Command *c = commands; c != NULL; c = c->next) {
             context_update(ctx);
             repl_eval(c, ctx);
         }
+
     }
-    context_update(ctx);
+    repl_shutdown(ctx);
     return 0;
 }
