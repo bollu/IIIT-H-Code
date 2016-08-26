@@ -1,10 +1,12 @@
-CC=clang -Wall -Werror
+CC=gcc
+CC_SAFE=$(CC) -Wall -Werror
 
 all: build run
 
 build:
 	@mkdir -p bin/
-	$(CC) shell.c -o bin/shell
+	$(CC_SAFE) shell.c -o bin/shell
+	$(CC) crash.c -o bin/crash
 
 run: build
 	@echo "--"

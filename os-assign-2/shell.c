@@ -2,9 +2,11 @@
 #include <stdlib.h>
 
 
+
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 //copied neat idea from ISL library! 
 //returns a new block of memory
@@ -32,7 +34,7 @@ typedef struct  {
     char homedir[MAX_HOMEDIR_LENGTH];
     boolean should_quit;
     boolean debug_mode;
-    struct Process *background_jobs;
+    struct Process *jobs;
 
 } Context;
 
@@ -157,11 +159,11 @@ void context_update(Context *context) {
     strncpy(context->username, getlogin(), MAX_USERNAME_LENGTH);
 }
 
-void context_add_background_job(Context *context, Process *p) {
-    if (context->background_jobs == NULL) {
-        context->background_jobs = p;
+void context_add_job(Context *context, Process *p) {
+    if (context->jobs == NULL) {
+        context->jobs = p;
     }  else {
-        Process *last = context->background_jobs;
+        Process *last = context->jobs;
         for(; last->next != NULL; last = last->next){};
         last->next = p;
     }
@@ -192,7 +194,7 @@ give char* context_tildefy_directory(const Context *ctx, const char *dirpath) {
 void repl_print_prompt(const Context *ctx) {
 
     char *tilded_dirpath = context_tildefy_directory(ctx, ctx->cwd);
-    printf("\n%s@%s:%s>", tilded_dirpath, ctx->username, ctx->hostname);
+    printf("%s@%s:%s>", tilded_dirpath, ctx->username, ctx->hostname);
     free(tilded_dirpath);
 }
 
@@ -435,22 +437,68 @@ Token *parse_command(Token *head, Command **result) {
 
 };
 
+
+//holy memory juggling batman :/
+give char* get_process_end_string(const Process *p, int status) {
+    char SUCCESS_EXIT_STR[] = "Clean exit";
+    char COREDUMP_EXIT_STR[] = "Core dumped";
+    char SIGNAL_EXIT_STR[] = "Died due to signal";
+    char UNKNOWN_EXIT_STR[] = "Unknown exit. check get_process_status_str.";
+
+
+    char *signal_str;
+    if (WIFEXITED(status)) {
+        asprintf(&signal_str, "%s", SUCCESS_EXIT_STR);
+    }
+    else if (WIFSIGNALED(status)) {
+        if (WCOREDUMP(status)) {
+            asprintf(&signal_str, "%s", COREDUMP_EXIT_STR);
+        }
+        else {
+            asprintf(&signal_str, "%s(%d)", SIGNAL_EXIT_STR, WTERMSIG(status));
+        }
+
+    }
+    else {
+        asprintf(&signal_str, "%s", UNKNOWN_EXIT_STR);
+    }
+
+    char *dest = NULL;
+    asprintf(&dest, "Process [%s] with pid [%d] ended. Exit: %s",
+            p->pname, p->pid, signal_str);
+    
+    assert(dest != NULL);
+    free(signal_str);
+
+    return dest;
+
+}
+
+
+//
+//TODO: clean up. This is doing both printing and
+//cleaning up the linked list
 void repl_print_ended_jobs(Context *ctx) {
 
     Process *prev = NULL;
-    for (Process *p = ctx->background_jobs; p != NULL; prev = p, p = p->next) {
+    for (Process *p = ctx->jobs; p != NULL; prev = p, p = p->next) {
+
         int status;
         pid_t result = waitpid(p->pid, &status, WNOHANG);
+
         assert(result != -1 && "error on trying to get child process status");
+
         if (result == 0) {
-            printf("\nchild process [%d] still running.", p->pid);
+            printf("\n%s with pid [%d] still running.", p->pname, p->pid);
         }
-        if (result != 0) {
-            printf("\nchild process [%d] ended, Result: [%d]", p->pid, result);
+        else if (result != 0) {
+            char *process_end_str = get_process_end_string(p, status);
+            assert(process_end_str != NULL);
+            printf("%s", process_end_str);
 
             //remove a job if it is done
             if (prev == NULL) {
-                ctx->background_jobs = p->next;
+                ctx->jobs = p->next;
             } else {
                 prev->next = p->next;
             }
@@ -484,8 +532,6 @@ give char* tilde_expand_path(const char *toexpand, const char *homedir) {
 
 give Command* repl_read(Context *ctx){
 
-    repl_print_ended_jobs(ctx);
-    repl_print_prompt(ctx);
     char *line = read_single_line(&(ctx->should_quit));
     Token *tokens = tokenize_line(line);
     
@@ -523,7 +569,6 @@ give Command* repl_read(Context *ctx){
 
 int repl_launch(const Command *command, Context *context) {
     pid_t pid, wpid;
-    int status;
 
     pid = fork();
     if (pid == 0) {
@@ -537,18 +582,23 @@ int repl_launch(const Command *command, Context *context) {
     } 
     // Parent process
     else {
-        if (command->background) {
-            Process *p = process_new(pid, command);
-            context_add_background_job(context, p);
+        Process *p = process_new(pid, command);
+        if(command->background) {
+            context_add_job(context, p);
         }
+        //for a foreground process, only display info
+        //if some sort of fuckery happens
         else {
+            int status;
             wpid = waitpid(pid, &status, WUNTRACED);
-            /*
-            do {
-                waitpid (pid, NULL, 0);
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-            */
-        }
+
+
+            if (!WIFEXITED(status)) {
+                char *process_end_str = get_process_end_string(p, status);
+                assert(process_end_str != NULL);
+                printf("%s", process_end_str);
+            }
+        } 
     }
 
     return 1;
@@ -565,8 +615,41 @@ int repl_cd(const Command *command) {
         return -1;
     }
 
-    chdir(command->args[0]);
-    return 0;
+    int status = chdir(command->args[0]);
+
+    if (status == 0) {
+        return 0;
+    }
+    else{
+        assert(status == -1);
+        printf("\n[cd %s] failed. ", command->args[0]);
+        if (errno == EACCES) {
+            printf("Search denied to path");
+        }
+        else if (errno == EFAULT) {
+            printf("Path is outside process space");
+        }
+        else if (errno == EIO) {
+            printf("I/O error occured when reading filesystem");
+        }
+        else if (errno == ELOOP) {
+            printf("Too many symbolic links encountered");
+        }
+        else if (errno == ENAMETOOLONG) {
+            printf("Path too long");
+        }
+        else if (errno == ENOENT) {
+            printf("Directory does not exist");
+        }
+        else if (errno == ENOTDIR) {
+            printf("Some part of path is not a directory");
+        }
+        else {
+            printf("Unknown failure. status: %d. Please report this!", status);
+        }
+    }
+
+    return -1;
 };
 
 
@@ -611,12 +694,11 @@ int main(int argc, char **argv) {
     context_update(ctx);
 
     while(TRUE) {
+        repl_print_ended_jobs(ctx);
+        repl_print_prompt(ctx);
+
         Command *commands = repl_read(ctx);
         
-        if(ctx->should_quit) {
-            break;
-        }
-
         for(Command *c = commands; c != NULL; c = c->next) {
             repl_eval(c, ctx);
             context_update(ctx);
@@ -628,6 +710,12 @@ int main(int argc, char **argv) {
             free(curr);
             curr = next;
         }
+
+
+        if(ctx->should_quit) {
+            break;
+        }
+
 
     }
     repl_shutdown(ctx);

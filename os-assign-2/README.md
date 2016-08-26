@@ -8,4 +8,4 @@ Features
 Bonus
 =====
  - pinfo
-
+ - Tilde expansion of shell (ls ~/bin -> ls <PATH>/bin)
