@@ -624,28 +624,28 @@ int repl_cd(const Command *command) {
         assert(status == -1);
         printf("\n[cd %s] failed. ", command->args[0]);
         if (errno == EACCES) {
-            printf("Search denied to path");
+            printf("Search denied to path\n");
         }
         else if (errno == EFAULT) {
-            printf("Path is outside process space");
+            printf("Path is outside process space\n");
         }
         else if (errno == EIO) {
-            printf("I/O error occured when reading filesystem");
+            printf("I/O error occured when reading filesystem\n");
         }
         else if (errno == ELOOP) {
-            printf("Too many symbolic links encountered");
+            printf("Too many symbolic links encountered\n");
         }
         else if (errno == ENAMETOOLONG) {
             printf("Path too long");
         }
         else if (errno == ENOENT) {
-            printf("Directory does not exist");
+            printf("Directory does not exist\n");
         }
         else if (errno == ENOTDIR) {
-            printf("Some part of path is not a directory");
+            printf("Some part of path is not a directory\n");
         }
         else {
-            printf("Unknown failure. status: %d. Please report this!", status);
+            printf("Unknown failure. status: %d. Please report this!\n", status);
         }
     }
 
