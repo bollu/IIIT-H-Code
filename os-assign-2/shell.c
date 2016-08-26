@@ -464,7 +464,7 @@ give char* get_process_end_string(const Process *p, int status) {
     }
 
     char *dest = NULL;
-    asprintf(&dest, "Process [%s] with pid [%d] ended. Exit: %s",
+    asprintf(&dest, "Process [%s] with pid [%d] ended. Exit: %s\n",
             p->pname, p->pid, signal_str);
     
     assert(dest != NULL);
