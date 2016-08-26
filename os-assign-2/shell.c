@@ -294,6 +294,9 @@ int is_char_token_symbol(char c) {
     return c == ';' || c == '&';
 }
 
+
+
+
 give Token* tokenize_line(char *line) {
     Token *head = NULL;
     Token *current = NULL;
@@ -455,12 +458,45 @@ void repl_print_ended_jobs(Context *ctx) {
     }
 }
 
+
+give char* tilde_expand_path(const char *toexpand, const char *homedir) {
+
+    static const int MAX_BUF_LEN = 1024 * 10;
+    char *expanded_buf = (char *)malloc(sizeof(char) * MAX_BUF_LEN);
+    
+    char *new  = expanded_buf;
+    for (const char *original = toexpand; *original != '\0'; original++) {
+        assert (new - expanded_buf < MAX_BUF_LEN);
+
+        if (*original == '~') {
+            strcpy(new, homedir);
+            new += strlen(homedir);
+        } else {
+            *new = *original;
+            new++;
+        }
+    }
+
+    *new = '\0';
+    return expanded_buf;
+
+}
+
 give Command* repl_read(Context *ctx){
 
     repl_print_ended_jobs(ctx);
     repl_print_prompt(ctx);
     char *line = read_single_line(&(ctx->should_quit));
     Token *tokens = tokenize_line(line);
+    
+    //tilde expand
+    for (Token *curr = tokens; curr != NULL; curr = curr->next) {
+        if(curr->type == TOKEN_TYPE_WORD) {
+            char *new_str = tilde_expand_path(curr->string, ctx->homedir);
+            free(curr->string);
+            curr->string = new_str;
+        }
+    }
     free(line);
 
     if (ctx->debug_mode) {
