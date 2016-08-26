@@ -17,17 +17,22 @@ typedef enum boolean{
     TRUE = 1
 } boolean;
 
+
+struct Process;
+
 /* *** Context *** */
 static const int MAX_CWD_LENGTH = 1024 * 20;
+static const int MAX_HOMEDIR_LENGTH = 1024 * 20;
 static const int MAX_USERNAME_LENGTH = 1024 * 20;
 static const int MAX_HOSTNAME_LENGTH = 1024 * 20;
 typedef struct  {
     char cwd[MAX_CWD_LENGTH];
     char username[MAX_USERNAME_LENGTH];
     char hostname[MAX_HOSTNAME_LENGTH];
+    char homedir[MAX_HOMEDIR_LENGTH];
     boolean should_quit;
     boolean debug_mode;
-    Process *background_jobs;
+    struct Process *background_jobs;
 
 } Context;
 
@@ -61,21 +66,28 @@ typedef struct Command {
 typedef struct Process {
     int pid;
     struct Process *next;
-    //the command that was used to launch this process
-    Command *command;
+    char *pname;
 } Process;
 
 
-Process* process_new(int pid, Command *command) {
+give Process* process_new(int pid, const Command *command) {
     Process *p = (Process *)malloc(sizeof(Process));
     p->pid = pid;
     p->next = NULL;
-    p->command = command
+
+
+    assert (command->type == COMMAND_TYPE_LAUNCH && 
+            command->num_args > 0 &&
+            command->args[0] != NULL);
+    
+    p->pname =(char *)malloc(strlen(command->args[0]));
+    strcpy(p->pname, command->args[0]);
+
     return p;
 }
 
 
-Command* command_new(CommandType type) {
+give Command* command_new(CommandType type) {
     Command *command = (Command*)malloc(sizeof(Command));
     command->next = NULL;
     command->type = type;
@@ -132,6 +144,10 @@ Context *context_new() {
     ctx->should_quit = FALSE;
     ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
     ctx->debug_mode = FALSE;
+
+    
+    getcwd(ctx->homedir, MAX_HOMEDIR_LENGTH); 
+    context_update(ctx);
     return ctx;
 }
 
@@ -155,26 +171,28 @@ void context_add_background_job(Context *context, Process *p) {
 /* *** REPL Implementation *** */
 
 give char* context_tildefy_directory(const Context *ctx, const char *dirpath) {
-   char *substr = substr(dirpath, ctx->cwd);
+   char *substr = strstr(dirpath, ctx->homedir);
 
    if (substr != NULL) {
-       char *new_dirpath = malloc("~/" + strlen(substr) + 1);
-       sprintf(new_dirpath, "~/%s", substr);
+       //skip the home path
+       substr += strlen(ctx->homedir);
+       char *new_dirpath = malloc(strlen("~") + strlen(substr) + 1);
+       sprintf(new_dirpath, "~%s", substr);
 
        return new_dirpath;
    } else {
-        char *new_dirpath = malloc(strlen(dirpath + 1);
+        char *new_dirpath = malloc(strlen(dirpath) + 1);
         strcpy(new_dirpath, dirpath);
         
         return new_dirpath;
    }
 }
 
+//TODO: This is stateful, need to clean this up dude
 void repl_print_prompt(const Context *ctx) {
 
-    const char *tilded_dirpath = context_tildefy_directory(ctx, ctx->cwd);
-    printf("\n%s@%s:%s>", context_tildefy_directory(ctx, tilded_dirpath),
-        ctx->username, ctx->hostname);
+    char *tilded_dirpath = context_tildefy_directory(ctx, ctx->cwd);
+    printf("\n%s@%s:%s>", tilded_dirpath, ctx->username, ctx->hostname);
     free(tilded_dirpath);
 }
 
@@ -228,7 +246,7 @@ typedef struct Token {
 
 //TODO: implement proper linked list support
 
-Token* token_new_semicolon() {
+give Token* token_new_semicolon() {
     Token *t = (Token*)malloc(sizeof(Token));
     t->type = TOKEN_TYPE_SEMICOLON;
     t->string = NULL;
@@ -236,7 +254,7 @@ Token* token_new_semicolon() {
     return t;
 }
 
-Token* token_new_ampersand() {
+give Token* token_new_ampersand() {
     Token *t = (Token*)malloc(sizeof(Token));
     t->type = TOKEN_TYPE_AMPERSAND;
     t->string = NULL;
@@ -244,7 +262,7 @@ Token* token_new_ampersand() {
     return t;
 }
 
-Token* token_new_word(char *word) {
+give Token* token_new_word(char *word) {
     assert(word != NULL);
     Token *t = (Token*)malloc(sizeof(Token));
     t->type = TOKEN_TYPE_WORD;
@@ -454,18 +472,12 @@ give Command* repl_read(Context *ctx){
     Command *commands = NULL;
     parse_expr(tokens, &commands);
 
-    //free the Tokens linked list
-    Token *curr = tokens, *next = NULL;
-    while(curr != NULL) {
+    for(Token *curr = tokens, *next = NULL; curr != NULL;) {
         next = curr->next;
         token_delete(curr);
         free(curr);
         curr = next;
-    
     }
-    //free the last token as well
-    free(prev);
-
 
     return commands;
 
@@ -570,8 +582,15 @@ int main(int argc, char **argv) {
         }
 
         for(Command *c = commands; c != NULL; c = c->next) {
-            context_update(ctx);
             repl_eval(c, ctx);
+            context_update(ctx);
+        }
+
+        for(Command *curr = commands, *next = NULL; curr != NULL;) {
+            next = curr->next;
+            command_delete(curr);
+            free(curr);
+            curr = next;
         }
 
     }
