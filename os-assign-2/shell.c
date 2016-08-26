@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
@@ -10,7 +12,7 @@
 //takes a block of memory and frees it
 #define take
 
-typedef enum {
+typedef enum boolean{
     FALSE = 0,
     TRUE = 1
 } boolean;
@@ -24,6 +26,8 @@ typedef struct  {
     char username[MAX_USERNAME_LENGTH];
     char hostname[MAX_HOSTNAME_LENGTH];
     boolean should_quit;
+    boolean debug_mode;
+    Process *background_jobs;
 
 } Context;
 
@@ -33,11 +37,12 @@ boolean context_should_quit(const Context *ctx);
 
 
 /* *** Command *** */
-typedef enum {
+typedef enum CommandType{
     COMMAND_TYPE_CD,
     COMMAND_TYPE_PWD,
     COMMAND_TYPE_EXIT,
     COMMAND_TYPE_LAUNCH,
+    COMMAND_TYPE_PINFO,
 
 } CommandType;
 //TODO: this is pretty hacky, fix this
@@ -51,6 +56,25 @@ typedef struct Command {
     struct Command *next;
 } Command;
 
+
+/* *** Process *** */
+typedef struct Process {
+    int pid;
+    struct Process *next;
+    //the command that was used to launch this process
+    Command *command;
+} Process;
+
+
+Process* process_new(int pid, Command *command) {
+    Process *p = (Process *)malloc(sizeof(Process));
+    p->pid = pid;
+    p->next = NULL;
+    p->command = command
+    return p;
+}
+
+
 Command* command_new(CommandType type) {
     Command *command = (Command*)malloc(sizeof(Command));
     command->next = NULL;
@@ -58,6 +82,12 @@ Command* command_new(CommandType type) {
     command->num_args = 0;
     command->background = 0;
     return command;
+}
+
+void command_delete(Command *command) {
+    for(int i = 0; i < command->num_args; i++) {
+        free(command->args[i]);
+    }
 }
 
 void command_make_background(Command *command) {
@@ -86,6 +116,9 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_LAUNCH:
             printf("launch: "); break;
+
+        case COMMAND_TYPE_PINFO:
+            printf("pinfo: "); break;
     }
     for(int i = 0; i < c->num_args; i++) {
         printf("%s ", c->args[i]);
@@ -98,6 +131,7 @@ Context *context_new() {
     Context *ctx = (Context*)malloc(sizeof(Context));
     ctx->should_quit = FALSE;
     ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
+    ctx->debug_mode = FALSE;
     return ctx;
 }
 
@@ -107,16 +141,45 @@ void context_update(Context *context) {
     strncpy(context->username, getlogin(), MAX_USERNAME_LENGTH);
 }
 
+void context_add_background_job(Context *context, Process *p) {
+    if (context->background_jobs == NULL) {
+        context->background_jobs = p;
+    }  else {
+        Process *last = context->background_jobs;
+        for(; last->next != NULL; last = last->next){};
+        last->next = p;
+    }
+}
 /* *** Command Implementation *** */
 
 /* *** REPL Implementation *** */
 
+give char* context_tildefy_directory(const Context *ctx, const char *dirpath) {
+   char *substr = substr(dirpath, ctx->cwd);
+
+   if (substr != NULL) {
+       char *new_dirpath = malloc("~/" + strlen(substr) + 1);
+       sprintf(new_dirpath, "~/%s", substr);
+
+       return new_dirpath;
+   } else {
+        char *new_dirpath = malloc(strlen(dirpath + 1);
+        strcpy(new_dirpath, dirpath);
+        
+        return new_dirpath;
+   }
+}
+
 void repl_print_prompt(const Context *ctx) {
-    printf("\n%s@%s:%s>", ctx->cwd, ctx->username, ctx->hostname);
+
+    const char *tilded_dirpath = context_tildefy_directory(ctx, ctx->cwd);
+    printf("\n%s@%s:%s>", context_tildefy_directory(ctx, tilded_dirpath),
+        ctx->username, ctx->hostname);
+    free(tilded_dirpath);
 }
 
 
-char* read_single_line(boolean *should_quit) {
+give char* read_single_line(boolean *should_quit) {
     assert(should_quit != NULL);
 
     static const int BUFFER_BLOCK_SIZE = 1024;
@@ -190,6 +253,11 @@ Token* token_new_word(char *word) {
     return t;
 }
 
+void token_delete(Token *t) {
+    free(t->string);
+}
+
+
 void token_print(Token t) {
     if (t.type == TOKEN_TYPE_SEMICOLON) {
         printf("t[;]");
@@ -199,6 +267,7 @@ void token_print(Token t) {
     }
 }
 
+
 int is_char_whitespace(char c) {
     return c == ' ' || c == '\n' || c == '\t';
 }
@@ -207,7 +276,7 @@ int is_char_token_symbol(char c) {
     return c == ';' || c == '&';
 }
 
-Token* tokenize_line(char *line) {
+give Token* tokenize_line(char *line) {
     Token *head = NULL;
     Token *current = NULL;
 
@@ -316,6 +385,10 @@ Token *parse_command(Token *head, Command **result) {
         *result = command_new(COMMAND_TYPE_CD);
         head = head->next;
     }
+    else if (!strcmp(head->string, "cd")) {
+        *result = command_new(COMMAND_TYPE_PINFO);
+        head = head->next;
+    }
     else if (!strcmp(head->string, "exit") ||
              !strcmp(head->string, "quit")) {
         *result = command_new(COMMAND_TYPE_EXIT);
@@ -341,48 +414,93 @@ Token *parse_command(Token *head, Command **result) {
 
 };
 
+void repl_print_ended_jobs(Context *ctx) {
 
+    Process *prev = NULL;
+    for (Process *p = ctx->background_jobs; p != NULL; prev = p, p = p->next) {
+        int status;
+        pid_t result = waitpid(p->pid, &status, WNOHANG);
+        assert(result != -1 && "error on trying to get child process status");
+        if (result == 0) {
+            printf("\nchild process [%d] still running.", p->pid);
+        }
+        if (result != 0) {
+            printf("\nchild process [%d] ended, Result: [%d]", p->pid, result);
 
-Command* repl_read(Context *ctx){
+            //remove a job if it is done
+            if (prev == NULL) {
+                ctx->background_jobs = p->next;
+            } else {
+                prev->next = p->next;
+            }
+        }
+    }
+}
 
+give Command* repl_read(Context *ctx){
+
+    repl_print_ended_jobs(ctx);
     repl_print_prompt(ctx);
     char *line = read_single_line(&(ctx->should_quit));
-    
     Token *tokens = tokenize_line(line);
+    free(line);
 
-    /*
-    for(Token *t = tokens; t != NULL; t = t->next) {
-        token_print(*t);
+    if (ctx->debug_mode) {
+        for(Token *t = tokens; t != NULL; t = t->next) {
+            token_print(*t);
+        }
     }
-    */
 
     Command *commands = NULL;
     parse_expr(tokens, &commands);
+
+    //free the Tokens linked list
+    Token *curr = tokens, *next = NULL;
+    while(curr != NULL) {
+        next = curr->next;
+        token_delete(curr);
+        free(curr);
+        curr = next;
+    
+    }
+    //free the last token as well
+    free(prev);
+
+
     return commands;
 
 };
 
 
 
-int repl_launch(const Command *command) {
+int repl_launch(const Command *command, Context *context) {
     pid_t pid, wpid;
     int status;
 
     pid = fork();
     if (pid == 0) {
-        // Child process
+        // child process
         if (execvp(command->args[0], command->args) == -1) {
-            perror("lsh");
+            perror("failed to run command");
         }
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
-        // Error forking
-        perror("lsh");
-    } else {
-        // Parent process
-        do {
+        perror("unable to fork child");
+    } 
+    // Parent process
+    else {
+        if (command->background) {
+            Process *p = process_new(pid, command);
+            context_add_background_job(context, p);
+        }
+        else {
             wpid = waitpid(pid, &status, WUNTRACED);
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+            /*
+            do {
+                waitpid (pid, NULL, 0);
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+            */
+        }
     }
 
     return 1;
@@ -412,10 +530,13 @@ int repl_pwd(const Command *command, const Context *context) {
     return 0;
 };
 
+int repl_pinfo(const Context *context) {
+    return 0;
+}
 void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
-            repl_launch(command);
+            repl_launch(command, context);
             break;
         case COMMAND_TYPE_CD:
             repl_cd(command);
@@ -425,6 +546,9 @@ void repl_eval(const Command *command, Context *context) {
             break;
         case COMMAND_TYPE_EXIT:
             repl_quit(context);
+            break;
+        case COMMAND_TYPE_PINFO:
+            repl_pinfo(context);
             break;
     };
 
