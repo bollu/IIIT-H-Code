@@ -1,4 +1,4 @@
-CC=gcc
+CC=clang
 CC_SAFE=$(CC) -Wall -Werror
 
 all: build run

@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+
+
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 //copied neat idea from ISL library! 
 //returns a new block of memory
@@ -50,6 +53,7 @@ typedef enum CommandType{
     COMMAND_TYPE_EXIT,
     COMMAND_TYPE_LAUNCH,
     COMMAND_TYPE_PINFO,
+    COMMAND_TYPE_ECHO,
 
 } CommandType;
 //TODO: this is pretty hacky, fix this
@@ -69,6 +73,7 @@ typedef struct Process {
     int pid;
     struct Process *next;
     char *pname;
+    boolean done;
 } Process;
 
 
@@ -76,6 +81,7 @@ give Process* process_new(int pid, const Command *command) {
     Process *p = (Process *)malloc(sizeof(Process));
     p->pid = pid;
     p->next = NULL;
+    p->done = FALSE;
 
 
     assert (command->type == COMMAND_TYPE_LAUNCH && 
@@ -86,6 +92,10 @@ give Process* process_new(int pid, const Command *command) {
     strcpy(p->pname, command->args[0]);
 
     return p;
+}
+
+void process_delete(take Process *p) {
+    free(p->pname);
 }
 
 
@@ -133,6 +143,9 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_PINFO:
             printf("pinfo: "); break;
+
+        case COMMAND_TYPE_ECHO:
+            printf("echo: "); break;
     }
     for(int i = 0; i < c->num_args; i++) {
         printf("%s ", c->args[i]);
@@ -408,7 +421,11 @@ Token *parse_command(Token *head, Command **result) {
         *result = command_new(COMMAND_TYPE_CD);
         head = head->next;
     }
-    else if (!strcmp(head->string, "cd")) {
+    else if (!strcmp(head->string, "echo")) {
+        *result = command_new(COMMAND_TYPE_ECHO);
+        head = head->next;
+    }
+    else if (!strcmp(head->string, "pinfo")) {
         *result = command_new(COMMAND_TYPE_PINFO);
         head = head->next;
     }
@@ -446,29 +463,28 @@ give char* get_process_end_string(const Process *p, int status) {
     char UNKNOWN_EXIT_STR[] = "Unknown exit. check get_process_status_str.";
 
 
-    char *signal_str;
+    char signal_str[1024] = "\0";
     if (WIFEXITED(status)) {
-        asprintf(&signal_str, "%s", SUCCESS_EXIT_STR);
+        sprintf(signal_str, "%s", SUCCESS_EXIT_STR);
     }
     else if (WIFSIGNALED(status)) {
         if (WCOREDUMP(status)) {
-            asprintf(&signal_str, "%s", COREDUMP_EXIT_STR);
+            sprintf(signal_str, "%s", COREDUMP_EXIT_STR);
         }
         else {
-            asprintf(&signal_str, "%s(%d)", SIGNAL_EXIT_STR, WTERMSIG(status));
+            sprintf(signal_str, "%s(%d)", SIGNAL_EXIT_STR, WTERMSIG(status));
         }
 
     }
     else {
-        asprintf(&signal_str, "%s", UNKNOWN_EXIT_STR);
+        sprintf(signal_str, "%s", UNKNOWN_EXIT_STR);
     }
 
-    char *dest = NULL;
-    asprintf(&dest, "Process [%s] with pid [%d] ended. Exit: %s\n",
+    char *dest = malloc(sizeof(char) * 1024);
+    sprintf(dest, "Process [%s] with pid [%d] ended. Exit: %s\n",
             p->pname, p->pid, signal_str);
     
     assert(dest != NULL);
-    free(signal_str);
 
     return dest;
 
@@ -480,28 +496,50 @@ give char* get_process_end_string(const Process *p, int status) {
 //cleaning up the linked list
 void repl_print_ended_jobs(Context *ctx) {
 
-    Process *prev = NULL;
-    for (Process *p = ctx->jobs; p != NULL; prev = p, p = p->next) {
+    for (Process *p = ctx->jobs; p != NULL; p = p->next) {
 
         int status;
-        pid_t result = waitpid(p->pid, &status, WNOHANG);
+        static const int options = WNOHANG;
+        pid_t result = waitpid(p->pid, &status, options);
 
-        assert(result != -1 && "error on trying to get child process status");
-
-        if (result == 0) {
-            printf("\n%s with pid [%d] still running.", p->pname, p->pid);
+        if (result == -1) {
+            //this is aclled when the process has nothing to wait for
+            if (errno != ECHILD) {
+                assert(FALSE && "unexpected failure of waitpid");
+            }
         }
-        else if (result != 0) {
+
+        if (result == -1 || result != 0) {
+            p->done = TRUE;
+        }
+        
+        if (result != 0) {
             char *process_end_str = get_process_end_string(p, status);
             assert(process_end_str != NULL);
             printf("%s", process_end_str);
+        }
+    }
+}
 
-            //remove a job if it is done
-            if (prev == NULL) {
-                ctx->jobs = p->next;
-            } else {
-                prev->next = p->next;
-            }
+void clear_ended_jobs(Context *ctx) {
+
+    //find the new head of the linked list
+    Process *curr_head = ctx->jobs;
+    while (curr_head != NULL && curr_head->done) {
+        Process *to_free = curr_head;
+        curr_head = curr_head->next;
+        free(to_free);
+    };
+    
+    ctx->jobs = curr_head;
+
+    //traverse the linked list destroying cleared processes
+    for(Process *curr = ctx->jobs; curr != NULL; curr = curr->next) {
+        if (curr->next != NULL && curr->next->done) {
+            Process *to_free = curr->next;
+            curr->next = curr->next->next;
+            process_delete(to_free);
+            free(to_free);
         }
     }
 }
@@ -597,6 +635,7 @@ int repl_launch(const Command *command, Context *context) {
                 char *process_end_str = get_process_end_string(p, status);
                 assert(process_end_str != NULL);
                 printf("%s", process_end_str);
+                free(process_end_str);
             }
         } 
     }
@@ -657,9 +696,17 @@ int repl_pwd(const Command *command, const Context *context) {
     if (command->num_args != 0) {
         return -1;
     }
-    printf("%s", context->cwd);
+    printf("%s\n", context->cwd);
     return 0;
 };
+
+int repl_echo(const Command *command) {
+    for(int i = 0; i < command->num_args; i++) {
+        printf("%s", command->args[i]);
+    }
+    printf("\n");
+    return 0;
+}
 
 int repl_pinfo(const Context *context) {
     return 0;
@@ -674,6 +721,9 @@ void repl_eval(const Command *command, Context *context) {
             break;
         case COMMAND_TYPE_PWD:
             repl_pwd(command, context);
+            break;
+        case COMMAND_TYPE_ECHO:
+            repl_echo(command);
             break;
         case COMMAND_TYPE_EXIT:
             repl_quit(context);
@@ -695,6 +745,7 @@ int main(int argc, char **argv) {
 
     while(TRUE) {
         repl_print_ended_jobs(ctx);
+        clear_ended_jobs(ctx);
         repl_print_prompt(ctx);
 
         Command *commands = repl_read(ctx);
