@@ -5,7 +5,7 @@ all: build run
 
 build:
 	@mkdir -p bin/
-	$(CC_SAFE) shell.c -o bin/shell
+	$(CC_SAFE) shell.c context.c parser.c -o bin/shell
 	$(CC) crash.c -o bin/crash
 
 run: build
@@ -13,4 +13,5 @@ run: build
 	@./bin/shell
 
 zip:
-	zip -r 20161105_assign_2.zip *
+	zip  20161105_assign_2.zip  shell.c crash.c makefile  README.md
+
