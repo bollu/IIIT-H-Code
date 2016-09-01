@@ -31,7 +31,6 @@ typedef struct Command {
 } Command;
 
 
-
 give Command* command_new(CommandType type);
 
 void command_delete(Command *command);

@@ -6,11 +6,16 @@ static const int MAX_USERNAME_LENGTH = 1024;
 static const int MAX_HOSTNAME_LENGTH = 1024;
 static const int MAX_HOMEDIR_LENGTH = 1024;
 
-struct Process;
-typedef struct Process Process;
 
 struct Command;
-typedef struct Command Command;
+
+typedef struct Process {
+    int pid;
+    struct Process *next;
+    char *pname;
+    boolean done;
+} Process;
+
 
 typedef struct  {
     char cwd[MAX_CWD_LENGTH];
@@ -30,14 +35,8 @@ void context_add_job(Context *context, Process *p);
 give char* context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */
-typedef struct Process {
-    int pid;
-    struct Process *next;
-    char *pname;
-    boolean done;
-} Process;
 
 
-give Process* process_new(int pid, const Command *command);
+give Process* process_new(int pid, const struct Command *command);
 void process_delete(take Process *p);
 
