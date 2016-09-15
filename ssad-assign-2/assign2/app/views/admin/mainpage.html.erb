@@ -1,2 +1,25 @@
 <h1>Admin Main page</h1>
-<h3> <%= link_to 'Logout', :action => "logout", :controller => "user", method: :delete %> </h3>
+<h3  style="margin-bottom: 50px"> <%= link_to 'Logout', { :action => "logout", :controller => "admin" }, method: :delete %> </h3>
+<h3 style="margin-bottom: 50px">
+<% if flash.key?(:message) %>
+<%= flash[:message] %>
+<% end %>
+</h3>
+
+<h4> Users </h4>
+<% User.all.each do |user| %>
+<div class="panel panel-default" style="width: 30em">
+  <div class="panel-heading">
+    <h3 class="panel-title">  <%= user.username %> </h3>
+</div>
+    <ul class="list-group">
+    <li class="list-group-item">Email: <%= user.email %></li>
+    <li class="list-group-item">Name: <%= user.name %></li>
+    <!-- TODO: fix user deletion -->
+    <%= link_to 'Delete User', { :action => "delete_user", :controller => "user", :user => { username: user.username } } , method: :delete,
+        :class => "list-group-item list-group-item-danger" %>
+
+  </ul>
+</div>
+
+<% end %>

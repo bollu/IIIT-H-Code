@@ -1,6 +1,7 @@
 class AdminController < ApplicationController
   before_action  :kick_out_unauthorized?
-
+  
+  
   # use this to kick out unauthorized profiles
   def kick_out_unauthorized?
     @unauthorized_allowed_actions = ['signup', 'login']
@@ -43,25 +44,25 @@ class AdminController < ApplicationController
         return
     end
 
- 
-    @admin = Admin.find_by(username: user_params[:username])
+    @admin = Admin.find_by(username: admin_params[:username])
 
     if @admin.nil? then
       flash[:error] = {"username": ['does not exist']}
       redirect_to :controller => 'admin', :action => 'login'
     
-    elsif !@admin.authenticate(user_params[:password]) then
+    elsif !@admin.authenticate(admin_params[:password]) then
       flash[:error] = {"password": ["maybe incorrect"], "username": ["maybe incorrect"]}
       redirect_to :controller => 'admin', :action => 'login'
     else
       session["admin_id"] = @admin.id
+
       # TODO: allow custom redirects here
       redirect_to :controller => 'admin', :action => 'mainpage'
     end
   end
 
-  def user_params
-    params.require(:user).permit(:name, :email, :username, :password, :password_conformation)
+  def admin_params
+    params.require(:user).permit(:username, :password)
   end
 
 end
