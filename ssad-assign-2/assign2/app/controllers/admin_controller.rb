@@ -17,6 +17,12 @@ class AdminController < ApplicationController
     if @survey.nil? then
       flash[:error] = "Unable to find survey: " + survey_params[:name]
     else
+      
+    SurveyResponse.where({survey_id: @survey.id}).each do |resp|
+      Answer.delete_all({survey_response_id: resp.id})
+      resp.destroy
+    end
+
       @survey.destroy
       redirect_to :controller => 'admin', :action => 'mainpage'
     end
