@@ -23,8 +23,8 @@
     <h3 class="panel-title">  <%= survey.name %> </h3>
 </div>
     <ul class="list-group">
-    <% survey.question.each do |question| %>
-    <li> <%= question.name %> </li>
+    <% survey.questions.each do |question| %>
+    <li class="list-group-item"> <%= question.question %> </li>
     <% end %>
     
 
@@ -33,7 +33,10 @@
             :controller => "admin",
             :survey_name =>  survey.name
         } , method: :get,
-        :class => "list-group-item" %>
+        :class => "list-group-item list-group-item-success" %>
+
+    <%= link_to 'Delete Survey', { :action => "delete_survey", :controller => "admin", :survey => { name: survey.name } } , method: :delete,
+        :class => "list-group-item list-group-item-danger" %>
 
   </ul>
 </div>
@@ -52,7 +55,7 @@
     <li class="list-group-item">Email: <%= user.email %></li>
     <li class="list-group-item">Name: <%= user.name %></li>
     <!-- TODO: fix user deletion -->
-    <%= link_to 'Delete User', { :action => "delete_user", :controller => "user", :user => { username: user.username } } , method: :delete,
+    <%= link_to 'Delete User', { :action => "delete_user", :controller => "admin", :user => { username: user.username } } , method: :delete,
         :class => "list-group-item list-group-item-danger" %>
 
   </ul>

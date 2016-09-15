@@ -91,13 +91,6 @@ class UserController < ApplicationController
     end
   end
 
-  def delete_user
-    @user = User.find_by(username: user_params[:username])
-    if not @user.nil? then
-      @user.destroy
-    end
-  end
-
   def user_params
     params.require(:user).permit(:name, :email, :username, :password, :password_conformation)
   end

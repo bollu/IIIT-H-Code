@@ -3,6 +3,25 @@ class AdminController < ApplicationController
 
 
   # === SURVEY STUFF ===
+  def delete_survey
+  if kick_out_unauthorized? then
+      return
+    end
+
+    if not request.delete? then
+        return
+    end
+
+    @survey = Survey.find_by({:name => survey_params[:name]})
+
+    if @survey.nil? then
+      flash[:error] = "Unable to find survey: " + survey_params[:name]
+    else
+      @survey.destroy
+      redirect_to :controller => 'admin', :action => 'mainpage'
+    end
+
+  end
   
   def survey_add_question
     if kick_out_unauthorized? then
@@ -22,11 +41,12 @@ class AdminController < ApplicationController
       return
     end
 
-    if @survey.save then
+    @question = @survey.questions.create(question_params)
+    if @question.save then
         flash[:message] = "Successfully added question to Survey " + question_params[:survey_name]
         redirect_to :controller => 'admin', :action => 'mainpage'
     else
-      flash[:error] = @survey.errors
+      flash[:error] = @survey.errors.full_messages
       redirect_to :controller => 'admin', :action => 'mainpage'
     end
   end
@@ -53,7 +73,7 @@ class AdminController < ApplicationController
     end
   end
 
-  # === USER STUFF ===
+  # === ADMIN STUFF ===
 
   # use this to kick out unauthorized profiles
   def kick_out_unauthorized?
@@ -114,6 +134,9 @@ class AdminController < ApplicationController
     end
   end
 
+
+
+
   def admin_params
     # HACK: this should be :admin?
     params.require(:user).permit(:username, :password)
@@ -125,6 +148,26 @@ class AdminController < ApplicationController
 
   def question_params
     params.require(:question).permit(:question, :survey_name)
+  end
+
+  def user_params
+    params.require(:user).permit(:name, :email, :username, :password, :password_conformation)
+  end
+
+
+  # === USER STUFF ===
+  def delete_user
+   if not request.delete? then
+        return
+    end
+    puts "TRYING TO DELETE USER: " + user_params[:username]
+
+    @user = User.find_by(username: user_params[:username])
+    if not @user.nil? then
+      puts "DELETING USER"
+      @user.destroy
+      redirect_to :controller => 'admin', :action => 'mainpage'
+    end
   end
 
 end
