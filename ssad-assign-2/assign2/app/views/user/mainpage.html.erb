@@ -1,1 +1,21 @@
 <%= render "navbar" %>
+
+
+<div class="list-group centered-form">
+    <h3 style="margin-bottom: 25px"> Surveys To take </h3>
+
+    <% Survey.all.each do |s| %>
+    <% if not @user.answered_surveys.include? s %>
+    <%= link_to  s.name, 
+        { 
+            :action => "take_survey",
+            :controller => "user",
+            :survey => { name: s.name } 
+        },
+        method: :get,
+        :class => "list-group-item" %>
+    <% end %>
+    <% end %>
+</div>
+
+<h3> Surveys Taken </h3>

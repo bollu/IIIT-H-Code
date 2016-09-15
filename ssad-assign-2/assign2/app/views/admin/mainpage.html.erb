@@ -1,16 +1,4 @@
-<h1>Admin Main page</h1>
-<h4  tyle="margin-bottom: 50px"> <%= link_to 'Logout', { :action => "logout", :controller => "admin" }, method: :delete %> </h4>
-<h4 style="margin-bottom: 50px">
-<% if flash.key?(:message) %>
-<%= flash[:message] %>
-<% end %>
-</h4>
-
-<h4 style="margin-bottom: 50px">
-<% if flash.key?(:error) %>
-<%= flash[:error] %>
-<% end %>
-</h4>
+<%= render "navbar" %>
 
 
 <h3> Surveys </h3>

@@ -1,9 +1,5 @@
-<h1> User Page - <%= @user.username %> </h1>
-<h4 style="margin-bottom: 50px">
-<%= link_to 'Logout', { :action => "logout", :controller => "user" }, method: :delete %>
-</h4>
-
-
+<h1>Admin </h1>
+<h4  tyle="margin-bottom: 50px"> <%= link_to 'Logout', { :action => "logout", :controller => "admin" }, method: :delete %> </h4>
 <h4 style="margin-bottom: 50px">
 <% if flash.key?(:message) %>
 <%= flash[:message] %>
@@ -15,4 +11,3 @@
 <%= flash[:error] %>
 <% end %>
 </h4>
-

@@ -1,9 +1,11 @@
 Rails.application.routes.draw do
-  
+  # MAIN INDEX
+  get '/' => 'main#index'  
   # ADMIN SURVEYS
   get 'admin/new_survey'
   post 'admin/new_survey' => 'admin#new_survey'
   delete 'admin/delete_survey' => 'admin#delete_survey'
+
 
   get 'admin/survey_add_question'
   post 'admin/survey_add_question' => 'admin#survey_add_question'
@@ -31,6 +33,9 @@ Rails.application.routes.draw do
   delete 'user/logout' => 'user#logout'
 
   get 'user/logout' => 'user#logout'
-    
+  
+  # USER TAKING SURVEY
+  get 'user/take_survey' => 'user#take_survey'    
+  post 'user/take_survey' => 'user#take_survey'    
 
 end

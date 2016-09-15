@@ -1,0 +1,14 @@
+<%= render "navbar" %>
+
+<h3> Take survey <%= @survey.name %> </h3>
+
+<%= form_for :survey, url: {action: "take_survey"}, method: :post, html: {class:"centered-form" }   do |f| %>
+
+<% @survey.questions.each do |question| %>
+    <label><%= question.question %> </label>
+     <%= f.text_field :answer %>
+
+<% end %>
+
+<%= f.submit "Submit Survey", :class => "btn, btn-primary" %>
+<% end %>

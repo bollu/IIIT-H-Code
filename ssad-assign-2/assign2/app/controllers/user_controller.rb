@@ -1,7 +1,29 @@
 class UserController < ApplicationController
   before_action  :kick_out_unauthorized?
-  
+    
+  # === TAKE SURVEY ===
+  def take_survey
+    if kick_out_unauthorized? then
+      return
+    end
 
+
+    if request.get? then
+      @survey = Survey.find_by(survey_params)
+      if @survey.nil? then
+        flash[:error] = "Unable to find survey " + survey_params[:name]
+        redirect_to :controller => 'user', :action => 'mainpage'
+      end
+    end
+    
+    if not request.post? then
+        return
+    end
+
+
+  end
+
+  # === SIGNUP LOGIN LOGOUT ===
   def signup
     if not request.post? then
         return
@@ -91,6 +113,11 @@ class UserController < ApplicationController
       redirect_to :controller => 'user', :action => 'mainpage'
     end
   end
+
+  def survey_params
+    params.require(:survey).permit(:name)
+  end
+
 
   def user_params
     params.require(:user).permit(:name, :email, :username, :password, :password_conformation)
