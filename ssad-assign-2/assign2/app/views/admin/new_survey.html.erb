@@ -1,0 +1,16 @@
+<%= form_for :survey, url: {action: "new_survey"}, method: :post, html: {class:"centered-form" }   do |f| %>
+<h1> New Survey </h1>
+
+<div class="form-group">  
+    <label>Survey Name</label>
+     <%= f.text_field :name, :class => "form-control" %>
+
+    <label class="help-inline" for="inputError">
+        <% if flash.key?(:error) and flash[:error].key?("name") %>
+        name <%= flash[:error]["name"][0] %>
+        <% end %>
+    </label>
+</div>
+
+<%= f.submit "Create Survey", :class => "btn, btn-primary" %>
+<% end %>

@@ -2,10 +2,15 @@ Rails.application.routes.draw do
   get 'admin/login'
   get 'admin/logout'
   get 'admin/mainpage'
+  
+  # SURVEYS
   get 'admin/new_survey'
+  post 'admin/new_survey' => 'admin#new_survey'
+
+  get 'admin/survey_add_question'
+  post 'admin/survey_add_question' => 'admin#survey_add_question'
 
   post 'admin/login' => 'admin#login'
-  post 'admin/new_survey' => 'admin#new_survey'
   
   delete 'admin/logout' => 'admin#logout'
   get 'admin/logout' => 'admin#logout'

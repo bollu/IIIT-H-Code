@@ -1,12 +1,48 @@
 <h1>Admin Main page</h1>
-<h3  style="margin-bottom: 50px"> <%= link_to 'Logout', { :action => "logout", :controller => "admin" }, method: :delete %> </h3>
-<h3 style="margin-bottom: 50px">
+<h4  tyle="margin-bottom: 50px"> <%= link_to 'Logout', { :action => "logout", :controller => "admin" }, method: :delete %> </h4>
+<h4 style="margin-bottom: 50px">
 <% if flash.key?(:message) %>
 <%= flash[:message] %>
 <% end %>
-</h3>
+</h4>
 
-<h4> Users </h4>
+<h4 style="margin-bottom: 50px">
+<% if flash.key?(:error) %>
+<%= flash[:error] %>
+<% end %>
+</h4>
+
+
+<h3> Surveys </h3>
+<h4 style="margin-bottom:25px"> <%= link_to 'New Survey', { :action => "new_survey", :controller => "admin" } %> </h4>
+
+
+<% Survey.all.each do |survey| %>
+<div class="panel panel-default" style="width: 30em">
+  <div class="panel-heading">
+    <h3 class="panel-title">  <%= survey.name %> </h3>
+</div>
+    <ul class="list-group">
+    <% survey.question.each do |question| %>
+    <li> <%= question.name %> </li>
+    <% end %>
+    
+
+    <%= link_to 'Add Question', { 
+            :action => "survey_add_question", 
+            :controller => "admin",
+            :survey_name =>  survey.name
+        } , method: :get,
+        :class => "list-group-item" %>
+
+  </ul>
+</div>
+
+<% end %>
+
+
+
+<h3 style="margin-bottom:25px"> Users </h3>
 <% User.all.each do |user| %>
 <div class="panel panel-default" style="width: 30em">
   <div class="panel-heading">
