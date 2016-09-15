@@ -1,14 +1,22 @@
 <%= render "navbar" %>
 
-<h3> Take survey <%= @survey.name %> </h3>
 
-<%= form_for :survey, url: {action: "take_survey"}, method: :post, html: {class:"centered-form" }   do |f| %>
 
-<% @survey.questions.each do |question| %>
-    <label><%= question.question %> </label>
-     <%= f.text_field :answer %>
+<%= form_for :survey_response, url: {action: "take_survey"}, method: :post, html: {class:"centered-form" }  do |f| %>
+    
+    <h3 style="margin-bottom:50px"> Take survey <%= @survey.name %> </h3>
 
+    <%= f.hidden_field :survey_id, :value => @survey.id %>
+    <% @survey.questions.each_with_index do |question, i| %>
+
+    <div class="form-group">  
+        <label><%= question.question %> </label>
+        <%= fields_for :answers do |af| %>
+            <%= af.text_field question.id,  :class => "form-control" %>
+        <% end %>
+    </div>
 <% end %>
 
-<%= f.submit "Submit Survey", :class => "btn, btn-primary" %>
+        <%= f.submit "Submit Survey", :class => "btn, btn-primary" %>
+
 <% end %>

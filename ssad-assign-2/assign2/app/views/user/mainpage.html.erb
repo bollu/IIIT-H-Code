@@ -18,4 +18,19 @@
     <% end %>
 </div>
 
-<h3> Surveys Taken </h3>
+<div class="list-group centered-form">
+    <h3 style="margin-bottom: 25px"> Done Surveys </h3>
+
+    <% Survey.all.each do |s| %>
+    <% if @user.answered_surveys.include? s %>
+    <%= link_to  s.name, 
+        { 
+            :action => "show_survey_result",
+            :controller => "user",
+            :survey => { name: s.name, id: s.id } 
+        },
+        method: :get,
+        :class => "list-group-item" %>
+    <% end %>
+    <% end %>
+</div>

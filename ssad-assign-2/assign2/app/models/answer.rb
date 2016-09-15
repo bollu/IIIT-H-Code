@@ -1,5 +1,7 @@
 class Answer < ApplicationRecord
-    has_one: question
-    belongs_to :user_survey_answer 
+    belongs_to :question
+    belongs_to :survey_response
+
+    validates :answer, presence: true
 
 end

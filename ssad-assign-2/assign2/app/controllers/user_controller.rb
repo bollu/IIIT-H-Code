@@ -17,9 +17,44 @@ class UserController < ApplicationController
     end
     
     if not request.post? then
-        return
+      return
+    end
+    # POST Request handling
+
+    @survey = Survey.find_by({id: params[:survey_response][:survey_id]})
+    raise "Survey does not exist when answer was submitted" unless not @survey.nil?
+    
+    # create survey response object and save it
+    @survey_response = SurveyResponse.new({
+          :survey_id => @survey.id,
+          :user_id => @user.id,
+      })
+
+    if @survey_response.save then
+      flash[:message] =  "Saved Response to survey " + @survey.name
+      redirect_to :controller => 'user', :action => 'mainpage'
+      # add the survey to the list of answered surveys
+      @user.answered_surveys << @survey
+    else
+      flash[:error] = "Survey Response Errored: " + @survey.name
+      redirect_to :controller => 'user', :action => 'mainpage'
     end
 
+
+    # save answers
+    params[:answers].each do |qid, ans|
+      @q = Question.find_by({id: qid})
+      raise "Question does not exist when answer was submitted" unless not @q.nil?
+
+      @a = Answer.new({:survey_response_id => @survey_response.id,
+                       :question_id =>  @q.id,
+                       :answer => ans})
+      # if this fucks up, then you done fucked
+      @a.save!
+    end
+
+
+    
 
   end
 

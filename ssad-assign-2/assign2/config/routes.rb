@@ -38,4 +38,7 @@ Rails.application.routes.draw do
   get 'user/take_survey' => 'user#take_survey'    
   post 'user/take_survey' => 'user#take_survey'    
 
+  # USER VIEWING SURVEY
+  get'show_survey_result' => 'user#show_survey_result'
+
 end
