@@ -1,0 +1,14 @@
+<%= render "navbar" %>
+<h3 style="text-align: center; margin-bottom: 50px">Survey Results of: <%= @survey.name %></h3>
+
+<% @survey_response.answers.all.each do |answer| %>
+
+<div class="panel panel-default centered-form">
+
+  <div class="panel-heading"> <%= answer.question.question %></div>
+  <div class="panel-body">
+    <%= answer.answer %>  </div>
+</div>
+
+
+<% end %>

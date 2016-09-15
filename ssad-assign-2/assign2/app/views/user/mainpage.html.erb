@@ -5,7 +5,7 @@
     <h3 style="margin-bottom: 25px"> Surveys To take </h3>
 
     <% Survey.all.each do |s| %>
-    <% if not @user.answered_surveys.include? s %>
+    <% if  SurveyResponse.find_by({survey_id: s.id}).nil? %>
     <%= link_to  s.name, 
         { 
             :action => "take_survey",
@@ -22,7 +22,7 @@
     <h3 style="margin-bottom: 25px"> Done Surveys </h3>
 
     <% Survey.all.each do |s| %>
-    <% if @user.answered_surveys.include? s %>
+    <% if not SurveyResponse.find_by({survey_id: s.id}).nil? %>
     <%= link_to  s.name, 
         { 
             :action => "show_survey_result",

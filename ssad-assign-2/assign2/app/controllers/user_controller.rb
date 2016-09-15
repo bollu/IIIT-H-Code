@@ -33,8 +33,6 @@ class UserController < ApplicationController
     if @survey_response.save then
       flash[:message] =  "Saved Response to survey " + @survey.name
       redirect_to :controller => 'user', :action => 'mainpage'
-      # add the survey to the list of answered surveys
-      @user.answered_surveys << @survey
     else
       flash[:error] = "Survey Response Errored: " + @survey.name
       redirect_to :controller => 'user', :action => 'mainpage'
@@ -53,8 +51,30 @@ class UserController < ApplicationController
       @a.save!
     end
 
+  end
 
-    
+  # === SHOW SURVEY RESULT ===
+
+  def show_survey_result
+    if kick_out_unauthorized? then
+      return
+    end
+
+
+    if request.get? then
+      @survey = Survey.find_by({id: params[:survey][:id]})
+      if @survey.nil? then
+        flash[:error] = "Unable to find survey " + survey_params[:name]
+        redirect_to :controller => 'user', :action => 'mainpage'
+        return
+      end
+
+      @survey_response = SurveyResponse.find_by({:survey_id => @survey.id })
+      puts "===SURVEY RESPONSE==="
+      puts @survey_response
+      raise "Survey Response for survey |" + @survey.name + "| does not exist" unless not @survey_response.nil?
+
+    end
 
   end
 

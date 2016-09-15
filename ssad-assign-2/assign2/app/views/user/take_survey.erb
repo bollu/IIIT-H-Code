@@ -1,7 +1,6 @@
 <%= render "navbar" %>
 
 
-
 <%= form_for :survey_response, url: {action: "take_survey"}, method: :post, html: {class:"centered-form" }  do |f| %>
     
     <h3 style="margin-bottom:50px"> Take survey <%= @survey.name %> </h3>

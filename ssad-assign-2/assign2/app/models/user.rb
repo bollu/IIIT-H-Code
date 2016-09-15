@@ -5,7 +5,6 @@ class User < ApplicationRecord
     validates :email, presence: true
     validates :name, presence: true
 
-    has_many :answered_surveys, foreign_key: "id", class_name: "Survey"
     def authenticate(given_password)
         return self.password == given_password
     end
