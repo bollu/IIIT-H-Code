@@ -83,10 +83,11 @@ class UserController < ApplicationController
     if not request.post? then
         return
     end
-
-    if params[:password_confirmation] != params[:password] then
-        flash[:error] = "Passwords do not match"
-        redirect_to 'user#signup'
+    puts "password: " + user_params[:password] + " | confirm: " + user_params[:password_conformation]  
+    if user_params[:password_conformation] != user_params[:password] then
+        flash[:error]= {:password => [" does not match with conformation password"]}
+        redirect_to :controller => 'user', :action => 'signup'
+        return
     end
 
     @user = User.new(user_params)
@@ -169,6 +170,30 @@ class UserController < ApplicationController
     end
   end
 
+  def delete_account
+    if kick_out_unauthorized? then
+      return
+    end
+
+    if not request.delete? then
+        return
+    end
+
+    SurveyResponse.where({user_id: @user.id}).each do |resp|
+      Answer.delete_all({survey_response_id: resp.id})
+      resp.destroy
+    end
+
+    @user.destroy
+
+    session["user_id"] = nil
+    session["username"] = nil
+
+    redirect_to :controller => 'main', :action => 'index'
+
+  end
+
+  # === PARAMS ===
   def survey_params
     params.require(:survey).permit(:name)
   end

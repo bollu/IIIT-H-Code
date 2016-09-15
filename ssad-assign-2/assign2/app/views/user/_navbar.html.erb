@@ -1,4 +1,8 @@
 <h1> User Page - <%= @user.username %> </h1>
+<h4>
+<%= link_to 'Edit Profile', { :action => "edit_profile", :controller => "user" }, method: :get %>
+</h4>
+
 <h4 style="margin-bottom: 50px">
 <%= link_to 'Logout', { :action => "logout", :controller => "user" }, method: :delete %>
 </h4>

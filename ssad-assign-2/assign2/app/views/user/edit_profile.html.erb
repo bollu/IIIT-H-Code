@@ -1,7 +1,6 @@
-
-
-<%= form_for :user, url: {action: "signup"}, html: {class:"centered-form" } do |f| %>
-<h1> User Signup </h1>
+<%= render "navbar" %>
+<%= form_for :change_details, url: {action: "edit_profile"}, method: :post, html: {class:"centered-form" } do |f| %>
+<h3> Change Details </h3>
 
 <div class="form-group">  
     <label>Name</label>
@@ -58,6 +57,18 @@
         <% end %>
     </label>
 
-</div>  
-<%= f.submit "Login", :class => "btn, btn-primary" %>
+</div>
+<%= f.submit "Edit Profile", :class => "btn, btn-primary" %>
+
+<% end %>
+
+
+<%= form_for :delete_account, 
+    url: {action: "delete_account"},
+    method: :delete,
+    html: {class:"centered-form", style: "margin-top: 30px"} do |f| %>
+<div class="form-group">  
+
+<%= f.submit "Delete Account ", :class => "btn, btn-danger" %>
+</div>
 <% end %>

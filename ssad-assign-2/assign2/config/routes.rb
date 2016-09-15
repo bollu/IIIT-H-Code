@@ -27,13 +27,15 @@ Rails.application.routes.draw do
   get 'user/signup'
   get 'user/login'
   get 'user/mainpage'
+  get 'user/edit_profile'
 
   post 'user/signup' => 'user#signup'
   post 'user/login' => 'user#login'
   delete 'user/logout' => 'user#logout'
-
+  delete 'user/delete_account' => 'user#delete_account'
   get 'user/logout' => 'user#logout'
   
+
   # USER TAKING SURVEY
   get 'user/take_survey' => 'user#take_survey'    
   post 'user/take_survey' => 'user#take_survey'    

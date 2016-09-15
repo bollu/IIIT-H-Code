@@ -166,9 +166,15 @@ class AdminController < ApplicationController
    if not request.delete? then
         return
     end
-    puts "TRYING TO DELETE USER: " + user_params[:username]
-
+    
     @user = User.find_by(username: user_params[:username])
+
+    SurveyResponse.where({user_id: @user.id}).each do |resp|
+      Answer.delete_all({survey_response_id: resp.id})
+      resp.destroy
+    end
+    
+    
     if not @user.nil? then
       puts "DELETING USER"
       @user.destroy
