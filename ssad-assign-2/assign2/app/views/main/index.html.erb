@@ -1,0 +1,27 @@
+<h1> SurveyMatic </h1>
+
+<h2> Admin </h2>
+<h3>
+   <%= link_to 'Admin Login', { 
+        :action => "login", 
+        :controller => "admin",
+    } , method: :get %>
+</h3>
+ 
+
+<h2> User </h2>
+
+<h3>
+<%= link_to 'User Login', { 
+    :action => "login", 
+    :controller => "user",
+} , method: :get %>
+ </h3>
+
+
+<h3>
+<%= link_to 'User Signup', { 
+    :action => "signup", 
+    :controller => "user",
+} , method: :get %>
+ </h3>

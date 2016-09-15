@@ -35,10 +35,11 @@ class UserController < ApplicationController
     # if there is a session ID and the user exists, then allow continue
     if session.has_key?("user_id") and session.has_key?("username") then
       @user = User.find_by("username": session[:username])
-      puts "FOUND USER: " + @user.username
 
       if not @user.nil? and @user.id == session["user_id"] then
         return
+      else
+        session["user_id"] = nil
       end
     end
 
