@@ -119,7 +119,7 @@ static const int WRITE_PIPE_INDEX = 1; static const int READ_PIPE_INDEX = 0;
 int single_command_launch(const Command *command, int *pipe_back, int *pipe_forward, Context *context){
     printf("\nlaunching command %s, pipe_back: %p, pipe_foward: %p\n",
                 command->args[0], pipe_back, pipe_forward);
-    pid_t pid, wpid;
+    pid_t pid;
 
     pid = fork();
     if (pid == 0) {
@@ -140,16 +140,18 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
         }
         //we need to pull input from our back
         if (pipe_back != NULL) {
-            printf("\n>using pipe to read data from back");
+            printf("\n>%s: pipe back\n", command->args[0]);
             dup2(pipe_back[READ_PIPE_INDEX], STDIN_FILENO);
             close(pipe_back[WRITE_PIPE_INDEX]);
+            close(pipe_back[READ_PIPE_INDEX]);
         }
 
         //we need to push to our front
         if (pipe_forward != NULL) {
-            printf("\n>using pipe to write data to fron");
+            printf("\n>%s: pipe forward\n", command->args[0]);
             dup2(pipe_forward[WRITE_PIPE_INDEX], STDOUT_FILENO);
-            close(pipe_forward[READ_PIPE_INDEX]);
+            //close(pipe_forward[READ_PIPE_INDEX]);
+            close(pipe_forward[WRITE_PIPE_INDEX]);
         }
         
         // child process
@@ -163,6 +165,18 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
     } 
     // Parent process
     else {
+
+        /*
+        if (pipe_forward != NULL) {
+            close(pipe_forward[READ_PIPE_INDEX]);
+            close(pipe_forward[WRITE_PIPE_INDEX]);
+        }
+
+        if (pipe_back != NULL) {
+            close(pipe_back[READ_PIPE_INDEX]);
+            close(pipe_back[WRITE_PIPE_INDEX]);
+        }*/
+
         Process *p = process_new(pid, command);
         if(command->background) {
             context_add_job(context, p);
@@ -170,9 +184,11 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
         //for a foreground process, only display info
         //if some sort of fuckery happens
         else {
+            //HACK!
+            /*
+            int wpid;
             int status;
             wpid = waitpid(pid, &status, WUNTRACED);
-
 
             if (!WIFEXITED(status)) {
                 char *process_end_str = get_process_end_string(p, status);
@@ -180,6 +196,7 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
                 printf("%s", process_end_str);
                 free(process_end_str);
             }
+            */
         } 
     }
 
@@ -200,20 +217,27 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
 
     int launch_count = 0;
     for(const Command *c = command; c != NULL; c = c->pipe, launch_count++) {
-        int *input_pipes = NULL;
-        int *output_pipes = NULL;
+        int *pipe_back = NULL;
+        int *pipe_forward = NULL;
 
         
         if (launch_count > 0) {
-            input_pipes = pipe_filedesc[launch_count - 1];
+            pipe_back = pipe_filedesc[launch_count - 1];
         } 
 
         if (launch_count < count - 1) {
-            output_pipes = pipe_filedesc[launch_count];
+            pipe_forward = pipe_filedesc[launch_count];
         }
-        single_command_launch(c, input_pipes, output_pipes, context);
-
+        single_command_launch(c, pipe_back, pipe_forward, context);
+        if (pipe_back != NULL) {
+            close(pipe_back[WRITE_PIPE_INDEX]);
+        }
     }
+
+    /*
+    if (launch_count > 0) {
+        dup2(pipe_filedesc[launch_count - 1][WRITE_PIPE_INDEX], STDOUT_FILENO);
+    }*/
 
     /*
     for(int i = 0; i < count; i++) {
