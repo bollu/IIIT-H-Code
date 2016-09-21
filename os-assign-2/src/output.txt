@@ -1,0 +1,14 @@
+total 144
+-rw-r--r--  1 bollu  staff   9573 Sep  1 12:57 20161105_assign_2.zip
+-rw-r--r--  1 bollu  staff    204 Aug 26 16:19 README.md
+drwxr-xr-x  4 bollu  staff    136 Sep 21 13:20 bin
+-rw-r--r--  1 bollu  staff    413 Sep  1 12:41 common.h
+-rw-r--r--  1 bollu  staff   1900 Sep  1 12:45 context.c
+-rw-r--r--  1 bollu  staff    964 Sep 20 23:38 context.h
+-rw-r--r--  1 bollu  staff     52 Aug 26 16:38 crash.c
+-rw-r--r--  1 bollu  staff      6 Sep 21 13:21 input.txt
+-rw-r--r--  1 bollu  staff    314 Sep 21 02:32 makefile
+-rw-------  1 bollu  staff      0 Sep 21 13:21 output.txt
+-rw-r--r--  1 bollu  staff  14790 Sep 21 13:03 parser.c
+-rw-r--r--  1 bollu  staff    941 Sep 21 12:59 parser.h
+-rw-r--r--  1 bollu  staff   9301 Sep 21 13:19 shell.c

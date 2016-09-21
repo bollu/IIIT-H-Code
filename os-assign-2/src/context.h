@@ -16,7 +16,6 @@ typedef struct Process {
     boolean done;
 } Process;
 
-
 typedef struct  {
     char cwd[MAX_CWD_LENGTH];
     char username[MAX_USERNAME_LENGTH];
@@ -25,7 +24,6 @@ typedef struct  {
     boolean should_quit;
     boolean debug_mode;
     struct Process *jobs;
-
 } Context;
 
 Context *context_new();
@@ -35,7 +33,6 @@ void context_add_job(Context *context, Process *p);
 give char* context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */
-
 
 give Process* process_new(int pid, const struct Command *command);
 void process_delete(take Process *p);

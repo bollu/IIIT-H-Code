@@ -8,7 +8,8 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include <sys/stat.h> 
+#include <fcntl.h>
 
 #include "parser.h"
 #include "context.h"
@@ -127,6 +128,23 @@ int repl_launch(const Command *command, Context *context) {
 
     pid = fork();
     if (pid == 0) {
+        // IO redirection
+        
+        if (command->redirect_output_path) {
+            //open the file, truncate
+            int fd = open(command->redirect_output_path, O_CREAT | O_TRUNC | O_WRONLY, 0600); 
+            //replace stdout
+            dup2(fd, STDOUT_FILENO); 
+            close(fd);
+        }
+        if (command->redirect_input_path) {
+            //open read file
+            int fd = open(command->redirect_output_path, O_RDONLY);
+            //replace stdin
+            dup2(fd, STDIN_FILENO); 
+            close(fd);
+        }
+
         // child process
         if (execvp(command->args[0], command->args) == -1) {
             perror("failed to run command");
@@ -288,33 +306,48 @@ void repl_shutdown(const Context *context) {
 
 int main(int argc, char **argv) {
     Context *ctx = context_new();
+    if (argc >= 2) {
+        if (!strcmp(argv[1], "--debug") || !strcmp(argv[1], "-d")) {
+            ctx->debug_mode = TRUE;
+        }
+    }
     context_update(ctx);
 
     while(TRUE) {
         repl_print_ended_jobs(ctx);
         clear_ended_jobs(ctx);
         repl_print_prompt(ctx);
-
-        Command *commands = repl_read(ctx);
         
-        for(Command *c = commands; c != NULL; c = c->next) {
-            repl_eval(c, ctx);
-            context_update(ctx);
+        int status = 1; char *error_message = NULL;
+        Command *commands = repl_read(ctx, &status, &error_message);
+
+        if (status == -1) {
+            assert(error_message != NULL);
+            printf("error: %s\n", error_message);
+        } else {
+            
+            for(Command *c = commands; c != NULL; c = c->next) {
+                if (ctx->debug_mode) {
+                    printf("debug command info: \n");
+                    command_print(c);
+                    printf("\n");
+                }
+                repl_eval(c, ctx);
+                context_update(ctx);
+            }
+
+            for(Command *curr = commands, *next = NULL; curr != NULL;) {
+                next = curr->next;
+                command_delete(curr);
+                free(curr);
+                curr = next;
+            }
+
+
+            if(ctx->should_quit) {
+                break;
+            }
         }
-
-        for(Command *curr = commands, *next = NULL; curr != NULL;) {
-            next = curr->next;
-            command_delete(curr);
-            free(curr);
-            curr = next;
-        }
-
-
-        if(ctx->should_quit) {
-            break;
-        }
-
-
     }
     repl_shutdown(ctx);
     return 0;

@@ -13,5 +13,5 @@ run: build
 	@./bin/shell
 
 zip:
-	zip  20161105_assign_2.zip  shell.c crash.c makefile  context.c context.h parser.c parser.h common.h README.md
+	zip  20161105_assign_3.zip  shell.c crash.c makefile  context.c context.h parser.c parser.h common.h README.md
 
