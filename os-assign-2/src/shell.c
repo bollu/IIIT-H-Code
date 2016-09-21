@@ -24,13 +24,6 @@ void repl_print_prompt(const Context *ctx) {
 }
 
 
-/* Grammar of REPL syntax  (in EBNF)
- * This can be parsed properly using recursive-descent, but let's strtok for now
- * Expr := ";" | "&" | Command | Command ";" Expr 
- * Command := <name> <args>* <"&">?
- */
-
-
 //holy memory juggling batman :/
 give char* get_process_end_string(const Process *p, int status) {
     char SUCCESS_EXIT_STR[] = "Clean exit";
@@ -120,10 +113,120 @@ void clear_ended_jobs(Context *ctx) {
     }
 }
 
+static const int WRITE_PIPE_INDEX = 1; static const int READ_PIPE_INDEX = 0;
 
 
+int single_command_launch(const Command *command, int *pipe_back, int *pipe_forward, Context *context){
+    printf("\nlaunching command %s, pipe_back: %p, pipe_foward: %p\n",
+                command->args[0], pipe_back, pipe_forward);
+    pid_t pid, wpid;
 
-int repl_launch(const Command *command, Context *context) {
+    pid = fork();
+    if (pid == 0) {
+        // IO redirection
+        if (command->redirect_output_path) {
+            //open the file, truncate
+            int fd = open(command->redirect_output_path, O_CREAT | O_TRUNC | O_WRONLY, 0600); 
+            //replace stdout
+            dup2(fd, STDOUT_FILENO); 
+            close(fd);
+        }
+        if (command->redirect_input_path) {
+            //open read file
+            int fd = open(command->redirect_output_path, O_RDONLY);
+            //replace stdin
+            dup2(fd, STDIN_FILENO); 
+            close(fd);
+        }
+        //we need to pull input from our back
+        if (pipe_back != NULL) {
+            printf("\n>using pipe to read data from back");
+            dup2(pipe_back[READ_PIPE_INDEX], STDIN_FILENO);
+            close(pipe_back[WRITE_PIPE_INDEX]);
+        }
+
+        //we need to push to our front
+        if (pipe_forward != NULL) {
+            printf("\n>using pipe to write data to fron");
+            dup2(pipe_forward[WRITE_PIPE_INDEX], STDOUT_FILENO);
+            close(pipe_forward[READ_PIPE_INDEX]);
+        }
+        
+        // child process
+        if (execvp(command->args[0], command->args) == -1) {
+            perror("failed to run command");
+        }
+        
+       // exit(EXIT_FAILURE);
+    } else if (pid < 0) {
+        perror("unable to fork child");
+    } 
+    // Parent process
+    else {
+        Process *p = process_new(pid, command);
+        if(command->background) {
+            context_add_job(context, p);
+        }
+        //for a foreground process, only display info
+        //if some sort of fuckery happens
+        else {
+            int status;
+            wpid = waitpid(pid, &status, WUNTRACED);
+
+
+            if (!WIFEXITED(status)) {
+                char *process_end_str = get_process_end_string(p, status);
+                assert(process_end_str != NULL);
+                printf("%s", process_end_str);
+                free(process_end_str);
+            }
+        } 
+    }
+
+    return 1;
+};
+
+int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *context) {
+    assert (command != NULL);
+
+    static const int N = 1024; //max number of things that can be peipes
+    int pipe_filedesc[N][2];
+    int count = 0;
+    for(const Command *c = command; c != NULL; c = c->pipe, count++) {
+        //generate a pair of input and output pipes
+        pipe(pipe_filedesc[count]);
+    }
+    printf("command count: %d\n", count);
+
+    int launch_count = 0;
+    for(const Command *c = command; c != NULL; c = c->pipe, launch_count++) {
+        int *input_pipes = NULL;
+        int *output_pipes = NULL;
+
+        
+        if (launch_count > 0) {
+            input_pipes = pipe_filedesc[launch_count - 1];
+        } 
+
+        if (launch_count < count - 1) {
+            output_pipes = pipe_filedesc[launch_count];
+        }
+        single_command_launch(c, input_pipes, output_pipes, context);
+
+    }
+
+    /*
+    for(int i = 0; i < count; i++) {
+        close(pipe_filedesc[i][0]);
+        close(pipe_filedesc[i][1]);
+    }
+    */
+
+    return 1;
+}
+
+/*
+int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *context) {
     pid_t pid, wpid;
 
     pid = fork();
@@ -144,11 +247,36 @@ int repl_launch(const Command *command, Context *context) {
             dup2(fd, STDIN_FILENO); 
             close(fd);
         }
+        //we need to pull input from someone
+        if (prev_pipe_filedesc != NULL) {
+            //printf("\nPIPE>> pulling input from pipe: %s\n", command->args[0]);
 
+            dup2(prev_pipe_filedesc[0], STDIN_FILENO);
+            close(prev_pipe_filedesc[1]);
+        }
+
+        //piping===
+        int pipe_filedesc[2];
+        if (command->pipe) {
+            printf("\nPIPE<< pushing output from pipe: %s\n", command->args[0]);
+
+            int error = pipe(pipe_filedesc);
+            assert(error == 0 && "unable to pipe()");
+
+            dup2(pipe_filedesc[1], STDOUT_FILENO);
+            close(pipe_filedesc[0]);
+            close(pipe_filedesc[1]);
+            
+            //launch the new process
+           repl_launch(command->pipe, pipe_filedesc, context);
+        
+        }
+        
         // child process
         if (execvp(command->args[0], command->args) == -1) {
             perror("failed to run command");
         }
+        
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
         perror("unable to fork child");
@@ -177,6 +305,7 @@ int repl_launch(const Command *command, Context *context) {
 
     return 1;
 }
+*/
 
 
 int repl_quit(Context *ctx) {
@@ -279,7 +408,7 @@ int repl_pinfo(const Command *command, const Context *context) {
 void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
-            repl_launch(command, context);
+            repl_launch(command, NULL, context);
             break;
         case COMMAND_TYPE_CD:
             repl_cd(command);
