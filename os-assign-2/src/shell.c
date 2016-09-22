@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h> 
 #include <fcntl.h>
+#include <signal.h>
 
 #include "parser.h"
 #include "context.h"
@@ -65,7 +66,7 @@ give char* get_process_end_string(const Process *p, int status) {
 //cleaning up the linked list
 void repl_print_ended_jobs(Context *ctx) {
 
-    for (Process *p = ctx->jobs; p != NULL; p = p->next) {
+    for (Process *p = ctx->background_jobs; p != NULL; p = p->next) {
 
         int status;
         static const int options = WNOHANG;
@@ -93,17 +94,17 @@ void repl_print_ended_jobs(Context *ctx) {
 void clear_ended_jobs(Context *ctx) {
 
     //find the new head of the linked list
-    Process *curr_head = ctx->jobs;
+    Process *curr_head = ctx->background_jobs;
     while (curr_head != NULL && curr_head->done) {
         Process *to_free = curr_head;
         curr_head = curr_head->next;
         free(to_free);
     };
     
-    ctx->jobs = curr_head;
+    ctx->background_jobs = curr_head;
 
     //traverse the linked list destroying cleared processes
-    for(Process *curr = ctx->jobs; curr != NULL; curr = curr->next) {
+    for(Process *curr = ctx->background_jobs; curr != NULL; curr = curr->next) {
         if (curr->next != NULL && curr->next->done) {
             Process *to_free = curr->next;
             curr->next = curr->next->next;
@@ -181,8 +182,6 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
     static const int N = 1024; //max number of things that can be peipes
     int pipe_filedesc[N][2];
 
-    Process *foreground_process = NULL;
-
     int count = 0;
     
     for(const Command *c = command; c != NULL; c = c->pipe, count++) {
@@ -206,11 +205,16 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
         int pid = single_command_launch(c, pipe_back, pipe_forward, context);
         
         if (pid != -1) {
+           //add child to custom process group
+           setpgid(pid, 0); 
 
             Process *p = process_new(pid, command);
             if(command->background) {
-                context_add_job(context, p);
+                context_add_background_job(context, p);
             } else {
+                context_add_foreground_job(context, p);
+            }
+            /*
                 //append to foreground_processes
                 if (foreground_process == NULL) {
                     foreground_process = p;
@@ -220,6 +224,9 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
                     end->next = p;
                 }
             }
+            */
+        } else {
+            perror("unable to launch process");
         }
 
         if (pipe_back != NULL) {
@@ -229,7 +236,7 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
 
 
     //wait for process and print status of all foreground jobs
-    for(Process *p = foreground_process; p != NULL;) { 
+    for(Process *p = context->foreground_jobs; p != NULL;) { 
         int wpid;
         int status;
         wpid = waitpid(p->pid, &status, WUNTRACED);
@@ -245,6 +252,8 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
         free(p); 
         p = next;
     }
+    context->foreground_jobs = NULL;
+    
     return 1;
 }
 
@@ -375,15 +384,41 @@ void repl_shutdown(const Context *context) {
 
 Context *g_ctx;
 
-void sigint_handler(int status) { }
-void sigstp_handler(int status) { }
-void sigchld_handler(int status) { }
-void sigquit_handler(int status) { }
+void sigint_handler(int status) {
+    if (g_ctx->debug_mode) {
+        printf("\n>received SIGINT\n");
+    }
+
+    for (Process *p = g_ctx->foreground_jobs; p !=  NULL; p = p->next) {
+        kill(p->pid, SIGINT);
+    }
+}
+void sigtstp_handler(int status) {
+    if (g_ctx->debug_mode) {
+        printf("\n>received SIGSTOP\n");
+    }
+    assert(g_ctx != NULL);
+    
+    for (Process *p = g_ctx->foreground_jobs; p !=  NULL; p = p->next) {
+        kill(p->pid, SIGTSTP);
+    }
+
+}
+void sigchld_handler(int status) {
+    if (g_ctx->debug_mode) {
+        printf("\n>received SIGCHLD\n");
+    }
+}
+void sigquit_handler(int status) { 
+    if (g_ctx->debug_mode) {
+        printf("\n>received SIGQUIT\n");
+    }
+}
 
 int main(int argc, char **argv) {
 
     signal(SIGINT,  sigint_handler);   // ctrl-c
-    signal(SIGTSTP, sigstp_handler);  // ctrl-z
+    signal(SIGTSTP, sigtstp_handler);  // ctrl-z
     signal(SIGCHLD, sigchld_handler);  // Terminated or stopped child
     g_ctx = context_new();
     //

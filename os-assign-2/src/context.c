@@ -29,6 +29,7 @@ Context *context_new() {
     ctx->should_quit = FALSE;
     ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
     ctx->debug_mode = FALSE;
+    ctx->background_jobs = ctx->foreground_jobs = NULL;
 
     
     getcwd(ctx->homedir, MAX_HOMEDIR_LENGTH); 
@@ -42,15 +43,27 @@ void context_update(Context *context) {
     strncpy(context->username, getlogin(), MAX_USERNAME_LENGTH);
 }
 
-void context_add_job(Context *context, Process *p) {
-    if (context->jobs == NULL) {
-        context->jobs = p;
+void context_add_background_job(Context *context, Process *p) {
+    if (context->background_jobs == NULL) {
+        context->background_jobs= p;
     }  else {
-        Process *last = context->jobs;
+        Process *last = context->background_jobs;
         for(; last->next != NULL; last = last->next){};
         last->next = p;
     }
 }
+
+
+void context_add_foreground_job(Context *context, Process *p) {
+    if (context->foreground_jobs == NULL) {
+        context->foreground_jobs= p;
+    }  else {
+        Process *last = context->foreground_jobs;
+        for(; last->next != NULL; last = last->next){};
+        last->next = p;
+    }
+}
+
 /* *** Command Implementation *** */
 
 /* *** REPL Implementation *** */

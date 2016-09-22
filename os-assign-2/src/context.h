@@ -23,13 +23,15 @@ typedef struct  {
     char homedir[MAX_HOMEDIR_LENGTH];
     boolean should_quit;
     boolean debug_mode;
-    struct Process *jobs;
+    struct Process *background_jobs;
+    struct Process *foreground_jobs;
 } Context;
 
 Context *context_new();
 void context_update(Context *context);
 boolean context_should_quit(const Context *ctx);
-void context_add_job(Context *context, Process *p);
+void context_add_background_job(Context *context, Process *p);
+void context_add_foreground_job(Context *context, Process *p);
 give char* context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */

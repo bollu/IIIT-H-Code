@@ -20,3 +20,13 @@ typedef enum boolean{
 #define KMAG  "\x1B[35m"
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
+
+
+typedef struct List {
+    void *data;
+    struct List *next;
+} List;
+
+
+void list_add(List **head, void *data);
+
