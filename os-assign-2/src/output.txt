@@ -1,13 +1,34 @@
-20161105_assign_2.zip
-README.md
-bin
-common.h
-context.c
-context.h
-crash.c
-input.txt
-makefile
-output.txt
-parser.c
-parser.h
-shell.c
+total 92
+drwxr-xr-x   35 root  wheel   1258 Sep  3 17:09 .
+drwxr-xr-x   35 root  wheel   1258 Sep  3 17:09 ..
+-rw-r--r--    1 root  wheel   1375 May  2 18:17 .AppleBundledSoftware.plist
+-rw-rw-r--    1 root  admin  10244 Feb 22  2016 .DS_Store
+d--x--x--x    9 root  wheel    306 Sep  3 17:10 .DocumentRevisions-V100
+drwxr-xr-x    2 root  admin     68 May  1  2015 .PKInstallSandboxManager
+drwx------    5 root  wheel    170 Jun 26  2015 .Spotlight-V100
+d-wx-wx-wt    2 root  wheel     68 Jul 22  2015 .Trashes
+srwxrwxrwx    1 root  wheel      0 Apr  4 11:26 .dbfseventsd
+----------    1 root  admin      0 Feb 26  2016 .file
+drwx------  492 root  wheel  16728 Sep 22 18:18 .fseventsd
+drwxr-xr-x@   2 root  wheel     68 Oct  3  2015 .vol
+drwxrwxr-x+  91 root  admin   3094 Sep 22 17:33 Applications
+drwxr-xr-x+  65 root  wheel   2210 Jan  3  2016 Library
+drwxr-xr-x@   2 root  wheel     68 Oct  3  2015 Network
+drwxr-xr-x@   4 root  wheel    136 Sep  3 17:10 System
+-rw-r--r--@   1 root  wheel      4 Aug 13 11:16 TEST.txt
+drwxr-xr-x    7 root  admin    238 Mar 18  2016 Users
+drwxrwxrwt@  12 root  admin    408 Sep 22 01:24 Volumes
+drwxr-xr-x@  39 root  wheel   1326 Jul 26 08:29 bin
+drwxrwxr-t@   2 root  admin     68 Oct  3  2015 cores
+drwxr-xr-x    3 root  wheel    102 Dec 21  2015 data
+dr-xr-xr-x    3 root  wheel   7820 Sep  3 17:10 dev
+lrwxr-xr-x@   1 root  wheel     11 Oct  3  2015 etc -> private/etc
+dr-xr-xr-x    2 root  wheel      1 Sep  3 17:10 home
+-rw-r--r--@   1 root  wheel    313 Aug 23  2015 installer.failurerequests
+dr-xr-xr-x    2 root  wheel      1 Sep  3 17:10 net
+drwxr-xr-x@   5 root  wheel    170 Sep 14  2015 opt
+drwxr-xr-x@   6 root  wheel    204 Oct  3  2015 private
+drwxr-xr-x@  63 root  wheel   2142 Jul 26 08:29 sbin
+lrwxr-xr-x@   1 root  wheel     11 Oct  3  2015 tmp -> private/tmp
+drwxr-xr-x@  13 root  wheel    442 Jan  3  2016 usr
+lrwxr-xr-x@   1 root  wheel     11 Oct  3  2015 var -> private/var

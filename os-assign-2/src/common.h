@@ -20,4 +20,3 @@ typedef enum boolean{
 #define KMAG  "\x1B[35m"
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
-

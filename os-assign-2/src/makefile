@@ -1,7 +1,6 @@
 CC=clang
 CC_SAFE=$(CC) -Wall -Werror
 
-all: build run
 
 build:
 	@mkdir -p bin/
@@ -15,3 +14,4 @@ run: build
 zip:
 	zip  20161105_assign_3.zip  shell.c crash.c makefile  context.c context.h parser.c parser.h common.h README.md
 
+all: build run

@@ -37,6 +37,10 @@ give Command* command_new(CommandType type) {
     command->pipe = NULL;
     command->redirect_input_path = NULL;
     command->redirect_output_path = NULL;
+
+    for(int i = 0; i < COMMAND_TOTAL_ARGS_LENGTH; i++) {
+        command->args[i] = NULL;
+    }
     return command;
 }
 
@@ -55,6 +59,7 @@ void command_make_background(Command *command) {
 void command_add_arg(give Command *command, const char *arg) {
     assert(command->num_args < COMMAND_TOTAL_ARGS_LENGTH);
     command->args[command->num_args] = malloc(strlen(arg) + 1);
+    
     strcpy(command->args[command->num_args], arg);
     command->num_args++;
 }
