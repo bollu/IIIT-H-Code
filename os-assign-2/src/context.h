@@ -25,6 +25,7 @@ typedef struct  {
     boolean debug_mode;
     struct Process *background_jobs;
     struct Process *foreground_jobs;
+    struct Process *stopped_jobs;
 } Context;
 
 Context *context_new();
@@ -32,6 +33,8 @@ void context_update(Context *context);
 boolean context_should_quit(const Context *ctx);
 void context_add_background_job(Context *context, Process *p);
 void context_add_foreground_job(Context *context, Process *p);
+void context_add_stopped_job(Context *context, Process *p);
+
 give char* context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */

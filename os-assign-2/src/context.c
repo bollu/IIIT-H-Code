@@ -20,6 +20,8 @@ give Process* process_new(int pid, const Command *command) {
 
 void process_delete(take Process *p) {
     free(p->pname);
+    p->pname = NULL;
+    p->next = NULL;
 }
 
 
@@ -29,7 +31,7 @@ Context *context_new() {
     ctx->should_quit = FALSE;
     ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
     ctx->debug_mode = FALSE;
-    ctx->background_jobs = ctx->foreground_jobs = NULL;
+    ctx->background_jobs = ctx->foreground_jobs = ctx->stopped_jobs =  NULL;
 
     
     getcwd(ctx->homedir, MAX_HOMEDIR_LENGTH); 
@@ -43,6 +45,7 @@ void context_update(Context *context) {
     strncpy(context->username, getlogin(), MAX_USERNAME_LENGTH);
 }
 
+//cleanup this duplicate code cancer
 void context_add_background_job(Context *context, Process *p) {
     if (context->background_jobs == NULL) {
         context->background_jobs= p;
@@ -63,6 +66,19 @@ void context_add_foreground_job(Context *context, Process *p) {
         last->next = p;
     }
 }
+
+void context_add_stopped_job(Context *context, Process *p) {
+    assert(p != NULL);
+    if (context->stopped_jobs == NULL) {
+        printf("\n>added job to stopped jobs head. name: %s", p->pname);
+        context->stopped_jobs = p;
+    }  else {
+        Process *last = context->stopped_jobs;
+        for(; last->next != NULL; last = last->next){};
+        last->next = p;
+    }
+}
+
 
 /* *** Command Implementation *** */
 

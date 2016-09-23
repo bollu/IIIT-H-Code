@@ -85,6 +85,12 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_ECHO:
             printf("echo: "); break;
+
+        case COMMAND_TYPE_LISTJOBS:
+            printf("listjobs: "); break;
+
+        case COMMAND_TYPE_FG:
+            printf("fg: "); break;
     }
     for(int i = 0; i < c->num_args; i++) {
         printf("%s ", c->args[i]);
@@ -189,6 +195,14 @@ Token *parse_command(Token *head, Command **result, int *status,
             }
             else if (!strcmp(head->string, "pinfo")) {
                 *result = command_new(COMMAND_TYPE_PINFO);
+                head = head->next;
+            }
+            else if (!strcmp(head->string, "listjobs")) {
+                *result = command_new(COMMAND_TYPE_LISTJOBS);
+                head = head->next;
+            }
+            else if (!strcmp(head->string, "fg")) {
+                *result = command_new(COMMAND_TYPE_FG);
                 head = head->next;
             }
             else if (!strcmp(head->string, "exit") ||

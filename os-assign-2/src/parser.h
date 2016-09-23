@@ -17,6 +17,12 @@ typedef enum CommandType{
     COMMAND_TYPE_LAUNCH,
     COMMAND_TYPE_PINFO,
     COMMAND_TYPE_ECHO,
+    
+    COMMAND_TYPE_LISTJOBS,
+    //COMMAND_TYPE_SENDSIG,
+    COMMAND_TYPE_FG,
+    //COMMAND_TYPE_KILLALLBG,
+    //COMMAND_TYPE_QUIT
 
 } CommandType;
 //TODO: this is pretty hacky, fix this
