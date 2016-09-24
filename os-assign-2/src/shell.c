@@ -106,31 +106,64 @@ void clear_ended_jobs(Context *ctx) {
         if (curr->next != NULL && curr->next->done) {
             Process *to_free = curr->next;
             curr->next = curr->next->next;
-            process_delete(to_free);
+            //HACK!
+            //process_delete(to_free);
             free(to_free);
         }
     }
 }
 
 
-void repl_update_stopped_jobs(Context *context) {
-    return;
+void update_stopped_jobs(Context *context) {
     if(context->debug_mode) {
         printf("updating stopped jobs...\n");
     }
-    for(Process *p = context->foreground_jobs; p != NULL; p = p->next) {
-        printf("checking job: [%d]:[%s]\n", p->pid, p->pname);
-        int status;
-        static const int options = WNOHANG;
-        pid_t result = waitpid(- p->pid, &status, options);
 
-        assert(result != -1 && "result was -1 when updating stopped jobs status");
-
-        if (WIFSIGNALED(status) && WTERMSIG(status) == SIGTSTP) {
-            printf("process [%d]:%s was stopped by C-Z\n", p->pid, p->pname);
+    Process *prev = NULL;
+    for(Process *p = context->foreground_jobs; p != NULL;) {
+        if (context->debug_mode) {
+            printf("checking job: [%d]:[%s]\n", p->pid, p->pname);
         }
+        Process *const next = p->next;
+
+        //process does not exist
+        if (kill(p->pid, 0) != 0) {
+
+            if (context->debug_mode) {
+                printf("\tdoes not exist\n");
+            }
+
+            process_delete(p);
+            free(p);
+
+
+        } 
+        //process exists, is stopped
+        else {
+            if (context->debug_mode) {
+                printf("\tstopped\n");
+            }
+
+            p->next = NULL;
+            context_add_stopped_job(context, p);
+        }
+
+        //remove process from list
+        if (prev == NULL) {
+            context->foreground_jobs = next;
+        } else {
+            prev->next = next;
+        }
+        p = next;
     }
 
+    if (context->debug_mode) {
+        printf("stopped jobs:\n=========\n");
+
+        for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
+            printf("[%d]:[%s]\n", p->pid, p->pname);
+        }
+    }
 
 };
 
@@ -144,8 +177,6 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
 
     if (pid == 0) {
         /* CHILD */
-        //make separate process group
-
         //reset signal handlers
         signal(SIGINT,  SIG_DFL);   // ctrl-c
         signal(SIGTSTP, SIG_DFL);  // ctrl-z
@@ -288,7 +319,7 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
     }
 
 
-    //launch separate process froup
+    //launch separate process group
     assert (pgid != -1);
     if (-1 == tcsetpgrp(STDIN_FILENO, pgid)) {
         perror("tcsetpgrp failed");
@@ -299,11 +330,8 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
     for(Process *p = context->foreground_jobs; p != NULL;) { 
         wait_for_process_termination(p);
         Process *next = p->next;
-        free(p); 
         p = next;
     }
-
-    context->foreground_jobs = NULL;
 
     return 1;
 }
@@ -406,7 +434,7 @@ int repl_pinfo(const Command *command, const Context *context) {
     return 0;
 }
 
-int repl_fg(const Command *command, const Context *context) {
+int repl_fg(const Command *command, Context *context) {
     if (command->num_args != 1) {
         printf("usage: fg <command-pid>\n");
 
@@ -422,16 +450,55 @@ int repl_fg(const Command *command, const Context *context) {
     } else {
         //first look in stopped jobs
         //HACK: I'm looking in foreground jobs
-        for(Process *p = context->foreground_jobs; p != NULL; p = p->next) {
+        Process *prev = NULL;
+        for(Process *p = context->stopped_jobs; p != NULL;) {
+            Process *const next = p->next;
             if(p->pid == pid) {
                 printf("found child process [%s] with pid[%ld]. "
                         "Continuing...\n", p->pname, pid);
-                kill(p->pid, SIGCONT);
+
+                //remove job from stopped jobs
+                if (prev == NULL) {
+                    context->stopped_jobs = next;
+                } else {
+                    prev->next = next;
+                }
+
+                //FIXME: pull info from process
+                const int is_background = 0;
+                //TODO: this needs to be delicate
+                //add to the current chain
+                if (is_background) {
+                    context_add_background_job(context, p);
+                } else {
+                    context_add_foreground_job(context, p);
+                }
+
+                //launch separate process group
+                kill(- p->pid, SIGCONT);
+
+                //give terminal access
+                if (-1 == tcsetpgrp(STDIN_FILENO, p->pid)) {
+                    perror("tcsetpgrp failed");
+                    assert(FALSE && "tcsetpgrp failed");
+                } 
+                
+
+                //wait for termination if this is the foreground process
+                if (!is_background) {
+                    wait_for_process_termination(p);
+                }
                 return 0;
+
             }
-            else if (context->debug_mode) {
-                printf("process [%d]:[%s] is not the correct one.\n",
+            else {
+                if (context->debug_mode) {
+                    printf("process [%d]:[%s] is not the correct one.\n",
                         p->pid, p->pname);
+                }
+
+                prev = p;
+                p = next;
             }
         }
 
@@ -499,10 +566,6 @@ void sigint_handler(int status) {
     if (g_ctx->debug_mode) {
         printf("\n>received SIGINT\n");
     }
-
-    for (Process *p = g_ctx->foreground_jobs; p !=  NULL; p = p->next) {
-        kill(p->pid, SIGINT);
-    }
 }
 void sigtstp_handler(int status) {
     printf("\n>RECEIVED SIGTSTP\n");
@@ -521,16 +584,15 @@ void sigquit_handler(int status) {
 
 int main(int argc, char **argv) {
 
-    /*
     signal(SIGINT,  sigint_handler);   // ctrl-rtc
     signal(SIGTSTP, sigtstp_handler);  // ctrl-z
     signal(SIGCHLD, sigchld_handler);  // Terminated or stopped child
-    */
+    
     g_ctx = context_new();
     //
     // This one provides a clean way to kill the shell
     //
-    signal(SIGQUIT, sigquit_handler); 
+    //signal(SIGQUIT, sigquit_handler); 
 
     if (argc >= 2) {
         if (!strcmp(argv[1], "--debug") || !strcmp(argv[1], "-d")) {
@@ -542,7 +604,7 @@ int main(int argc, char **argv) {
     while(TRUE) {
         repl_print_ended_jobs(g_ctx);
         clear_ended_jobs(g_ctx);
-        repl_update_stopped_jobs(g_ctx);
+        update_stopped_jobs(g_ctx);
         repl_print_prompt(g_ctx);
 
 
