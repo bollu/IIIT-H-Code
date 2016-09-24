@@ -145,7 +145,6 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
     if (pid == 0) {
         /* CHILD */
         //make separate process group
-        setpgid(0, 0);
 
         //reset signal handlers
         signal(SIGINT,  SIG_DFL);   // ctrl-c
@@ -188,10 +187,6 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
             close(fd);
         }
 
-        if (!command->background) {
-            tcsetpgrp(STDIN_FILENO, pid);
-            tcsetpgrp(STDOUT_FILENO, pid);
-        }
         // child process
         if (execvp(command->args[0], command->args) == -1) {
             perror("failed to run command");
@@ -260,13 +255,21 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
         int pid = single_command_launch(c, pipe_back, pipe_forward, context);
 
         if (pid != -1) {
-            assert(pid > 0);
+            //figure out why this assert is failing
+            assert(pid > 0 && "process is legal child");
             //make pgid the id of the first child process launched
             if (pgid == -1) { pgid = pid; }
+            if (context->debug_mode) {
+                printf("pgid: %d | pid: %d\n", pgid, pid);
+            }
 
             //move child into custom process group
             assert (pgid != -1);
-            setpgid(pid, pgid);
+            if (setpgid(pid, pgid) == -1) {
+                perror("setpgid returned -1");
+                assert(FALSE && "setpgid failed");
+            };
+
             Process *p = process_new(pid, command);
 
             if(command->background) {
@@ -291,6 +294,7 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
         perror("tcsetpgrp failed");
         assert(FALSE && "tcsetpgrp failed");
     } 
+
     //wait for process and print status of all foreground jobs
     for(Process *p = context->foreground_jobs; p != NULL;) { 
         wait_for_process_termination(p);
@@ -538,26 +542,18 @@ int main(int argc, char **argv) {
     while(TRUE) {
         repl_print_ended_jobs(g_ctx);
         clear_ended_jobs(g_ctx);
-        printf("%s:%d\n", __FILE__, __LINE__);
         repl_update_stopped_jobs(g_ctx);
-        printf("%s:%d\n", __FILE__, __LINE__);
         repl_print_prompt(g_ctx);
-        printf("%s:%d\n", __FILE__, __LINE__);
 
-        //take back control of stdin
-        printf("%s:%d\n", __FILE__, __LINE__);
 
         signal(SIGTTOU, SIG_IGN);
         if(tcsetpgrp(STDIN_FILENO, getpgid(0)) == -1) {
             perror("unable to gain control of STDIN_FILENO");
         }
         signal(SIGTTOU, SIG_DFL);
-        printf("%s:%d\n", __FILE__, __LINE__);
 
         int status = 1; char *error_message = NULL;
-        printf("%s:%d\n", __FILE__, __LINE__);
         Command *commands = repl_read(g_ctx, &status, &error_message);
-        printf("%s:%d\n", __FILE__, __LINE__);
 
         if (status == -1) {
             assert(error_message != NULL);
