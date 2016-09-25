@@ -21,7 +21,7 @@ typedef enum CommandType{
     COMMAND_TYPE_LISTJOBS,
     //COMMAND_TYPE_SENDSIG,
     COMMAND_TYPE_FG,
-    //COMMAND_TYPE_KILLALLBG,
+    COMMAND_TYPE_KILLALLBG,
     //COMMAND_TYPE_QUIT
 
 } CommandType;
@@ -39,6 +39,7 @@ typedef struct Command {
 
     char *redirect_input_path;
     char *redirect_output_path;
+    int append_redirect_output;
     //Redirect *redirects[COMMAND_TOTAL_REDIRECTS];
     struct Command *pipe;
 } Command;

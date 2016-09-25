@@ -60,7 +60,6 @@ give char* get_process_end_string(const Process *p, int status) {
 
 }
 
-//
 //TODO: clean up. This is doing both printing and
 //cleaning up the linked list
 void repl_print_ended_jobs(Context *ctx) {
@@ -204,8 +203,25 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
 
         // IO redirection
         if (command->redirect_output_path) {
-            //open the file, truncate
-            int fd = open(command->redirect_output_path, O_CREAT | O_TRUNC | O_WRONLY, 0600); 
+            int flags = 0;
+
+            //open file correctly based on
+            //redirection needed or not
+            if (command->redirect_output_path) {
+                printf ("redirectiong output\n");
+                flags = O_APPEND | O_WRONLY;
+            }
+            else {
+                flags = O_CREAT | O_TRUNC | O_WRONLY;
+            }
+            assert (flags != 0);
+
+            int fd = open(command->redirect_output_path, flags, 0600);
+            if (fd == -1) {
+                printf("ERROR: unable to open file [%s] for redirection\n",
+                        command->redirect_output_path);
+                return -1;
+            }
             //replace stdout
             dup2(fd, STDOUT_FILENO); 
             close(fd);
@@ -526,7 +542,15 @@ int repl_listjobs(const Command *command, const Context *context) {
 
     return 0;
 }
+int repl_killallbg(const Command *command, const Context *context) {
+    for(Process *p = context->background_jobs; p != NULL; p = p->next) {
+        kill(p->pid, SIGKILL);
+        p->done = TRUE;
+        printf("killed [%d]:[%s]\n", p->pid, p->pname);
+    }
 
+    return 1;
+}
 void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
@@ -552,6 +576,8 @@ void repl_eval(const Command *command, Context *context) {
         case COMMAND_TYPE_LISTJOBS:
             repl_listjobs(command, context);
             break;
+        case COMMAND_TYPE_KILLALLBG:
+            repl_killallbg(command, context);
     };
 
 }

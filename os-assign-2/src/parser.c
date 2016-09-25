@@ -19,6 +19,7 @@ typedef enum {
     TOKEN_TYPE_WORD,
     TOKEN_TYPE_PIPE,
     TOKEN_TYPE_REDIRECT_OUTPUT,
+    TOKEN_TYPE_REDIRECT_APPEND_OUTPUT,
     TOKEN_TYPE_REDIRECT_INPUT
 } TokenType;
 
@@ -37,6 +38,7 @@ give Command* command_new(CommandType type) {
     command->pipe = NULL;
     command->redirect_input_path = NULL;
     command->redirect_output_path = NULL;
+    command->append_redirect_output = 0;
 
     for(int i = 0; i < COMMAND_TOTAL_ARGS_LENGTH; i++) {
         command->args[i] = NULL;
@@ -91,6 +93,9 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_FG:
             printf("fg: "); break;
+
+        case COMMAND_TYPE_KILLALLBG:
+            printf("killallbg: "); break;
     }
     for(int i = 0; i < c->num_args; i++) {
         printf("%s ", c->args[i]);
@@ -173,6 +178,7 @@ Token *parse_command(Token *head, Command **result, int *status,
             
         case TOKEN_TYPE_PIPE:
         case TOKEN_TYPE_REDIRECT_OUTPUT:
+        case TOKEN_TYPE_REDIRECT_APPEND_OUTPUT:
         case TOKEN_TYPE_REDIRECT_INPUT:
             *status = -1;
             *message = (char *)malloc(sizeof(char) * 1024);
@@ -201,6 +207,11 @@ Token *parse_command(Token *head, Command **result, int *status,
                 *result = command_new(COMMAND_TYPE_LISTJOBS);
                 head = head->next;
             }
+
+            else if (!strcmp(head->string, "killallbg")) {
+                *result = command_new(COMMAND_TYPE_KILLALLBG);
+                head = head->next;
+            }
             else if (!strcmp(head->string, "fg")) {
                 *result = command_new(COMMAND_TYPE_FG);
                 head = head->next;
@@ -224,7 +235,8 @@ Token *parse_command(Token *head, Command **result, int *status,
             command_make_background(*result);
             break;
         } else if (head->type == TOKEN_TYPE_REDIRECT_INPUT ||
-                   head->type == TOKEN_TYPE_REDIRECT_OUTPUT){
+                   head->type == TOKEN_TYPE_REDIRECT_OUTPUT ||
+                   head->type == TOKEN_TYPE_REDIRECT_APPEND_OUTPUT){
 
             if (head->type == TOKEN_TYPE_REDIRECT_INPUT &&
                 (*result)->redirect_input_path != NULL) {
@@ -261,8 +273,14 @@ Token *parse_command(Token *head, Command **result, int *status,
 
             if (redirect_type == TOKEN_TYPE_REDIRECT_INPUT) {
                 out = &((*result)->redirect_input_path);
-            } else if (redirect_type == TOKEN_TYPE_REDIRECT_OUTPUT) {
+            }
+            else if (redirect_type == TOKEN_TYPE_REDIRECT_APPEND_OUTPUT) {
                 out = &((*result)->redirect_output_path);
+                (*result)->append_redirect_output = 1;
+            }
+            else if (redirect_type == TOKEN_TYPE_REDIRECT_OUTPUT) {
+                out = &((*result)->redirect_output_path);
+                (*result)->append_redirect_output = 0;
             } else {
                 assert(FALSE && "ERROR: unknown redirect_type.");
             }
@@ -291,9 +309,11 @@ Token *parse_command(Token *head, Command **result, int *status,
                 }
             }
         }
-        else {
+        else if (head->type == TOKEN_TYPE_WORD){
             command_add_arg((*result), head->string);
             head = head->next;
+        } else {
+            assert (FALSE && "got unknown token type during parse_command");
         }
     }
 
@@ -344,6 +364,13 @@ give Token* token_new_redirect_out() {
     return t;
 }
 
+
+give Token* token_new_redirect_append_out() {
+    Token *t = _token_new_empty();
+    t->type = TOKEN_TYPE_REDIRECT_APPEND_OUTPUT;
+    return t;
+}
+
 give Token* token_new_redirect_in() {
     Token *t = _token_new_empty();
     t->type = TOKEN_TYPE_REDIRECT_INPUT;
@@ -368,6 +395,8 @@ void token_print(Token t) {
             printf("t[|]"); break;
         case TOKEN_TYPE_REDIRECT_OUTPUT:
             printf("t[>]"); break;
+        case TOKEN_TYPE_REDIRECT_APPEND_OUTPUT:
+            printf("t[>>]"); break;
         case TOKEN_TYPE_REDIRECT_INPUT:
             printf("t[<]"); break;
     }
@@ -409,7 +438,15 @@ give Token* tokenize_line(char *line) {
             if (op == ';') { new =  token_new_semicolon(); }
             else if (op == '&') { new = token_new_ampersand(); }
             else if (op == '|') { new = token_new_pipe(); }
-            else if (op == '>') { new = token_new_redirect_out(); }
+            else if (op == '>') { 
+                //1 lookahead for >>
+                if (i  < strlen(line) && line[i] == '>') {
+                    i++;
+                    new = token_new_redirect_append_out();
+                } else {
+                    new = token_new_redirect_out();
+                }
+            }
             else if (op == '<') { new = token_new_redirect_in(); }
             else { assert(FALSE && "should not reach here: found symbol"
                           "that has no associated token"); }
