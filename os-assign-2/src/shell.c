@@ -252,10 +252,11 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
 
             int fd = open(command->redirect_output_path, flags, 0600);
             if (fd == -1) {
-                printf("ERROR: unable to open file [%s] for redirection\n",
-                        command->redirect_output_path);
+                perror("REDIRECTION ERROR: ");
+                abort();
                 return -1;
             }
+            
             //replace stdout
             dup2(fd, STDOUT_FILENO); 
             close(fd);
@@ -263,6 +264,12 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
         if (command->redirect_input_path) {
             //open read file
             int fd = open(command->redirect_input_path, O_RDONLY);
+            if (fd == -1) {
+                perror("REDIRECTION ERROR: ");
+                abort();
+                return -1;
+            }
+            
             //replace stdin
             dup2(fd, STDIN_FILENO); 
             close(fd);
@@ -271,13 +278,16 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
         // child process
         if (execvp(command->args[0], command->args) == -1) {
             perror("failed to run command");
+            abort();
+            return -1;
         }
 
 
 
-        // exit(EXIT_FAILURE);
     } else if (pid < 0) {
         perror("unable to fork child");
+        abort();
+        return -1;
     } 
     // Parent process
     return pid;
@@ -366,6 +376,7 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
 
         } else {
             perror("unable to launch process");
+            return -1;
         }
 
         if (pipe_back != NULL) {
