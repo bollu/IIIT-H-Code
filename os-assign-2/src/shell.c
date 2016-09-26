@@ -113,11 +113,49 @@ void clear_ended_jobs(Context *ctx) {
 }
 
 
+int does_process_exist(int pid) {
+    return kill(pid, 0) == 0;
+}
+
 void update_stopped_jobs(Context *context) {
     if (context->debug_mode) {
         printf("***updating stopped jobs***\n");
     }
 
+    {
+        //go through the stopped processes, removing the ones
+        //that don't exist
+        Process *prev = NULL;
+        for (Process *p = context->stopped_jobs; p != NULL;)
+        {
+            Process *const next = p->next;
+            if (!does_process_exist(p->pid) || p->done == TRUE) {
+                if (context->debug_mode) {
+                    printf("\t[%s]:[%d] DOES NOT exist\n", p->pname, p->pid);
+                }
+                process_delete(p);
+                free(p);
+
+                if (prev == NULL) {
+                    context->stopped_jobs = next;
+                } else {
+                    prev->next = next;
+                }
+                p = next;            
+            }
+            else {
+                if (context->debug_mode) {
+                    printf("\t[%s]:[%d] exists\n", p->pname, p->pid);
+                }
+                prev = p;
+                p = next;
+            }
+        }
+    }   
+
+    //go through foreground jobs, removing the ones that
+    //don't exist (i.e, have ended) and pushing the ones that
+    //have stopped into the stopped queue
     Process *prev = NULL;
     for(Process *p = context->foreground_jobs; p != NULL;) {
         if (context->debug_mode) {
@@ -126,11 +164,10 @@ void update_stopped_jobs(Context *context) {
         Process *const next = p->next;
 
         //process does not exist
-        if (kill(p->pid, 0) != 0) {
+        if (!does_process_exist(p->pid)) {
             if (context->debug_mode) {
                 printf("\t\tdoes not exist\n");
             }
-
             process_delete(p);
             free(p);
 
@@ -140,8 +177,6 @@ void update_stopped_jobs(Context *context) {
             if (context->debug_mode) {
                 printf("\t\tstopped\n");
             }
-
-            p->next = NULL;
             context_add_stopped_job(context, p);
         }
 
@@ -151,6 +186,7 @@ void update_stopped_jobs(Context *context) {
         } else {
             prev->next = next;
         }
+
         p = next;
     }
 
@@ -545,16 +581,24 @@ int repl_killallbg(const Command *command, const Context *context) {
 
     for (Process *p = context->background_jobs; p != NULL; p = p->next)
     {
-        kill(p->pid, SIGKILL);
-        p->done = TRUE;
-        printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+        if (kill(p->pid, SIGKILL) == 0) {
+            p->done = TRUE;
+            printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+        } else {
+            perror("unable to kill process");
+        }
     }
+
 
     printf(KBLU "***killing stopped jobs***" KNRM "\n");
     for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
-        kill(p->pid, SIGKILL);
-        p->done = TRUE;
-        printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+        if (kill(p->pid, SIGKILL) == 0) {
+            p->done = TRUE;
+            printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+        } else {
+            printf("failed to kill [%d]:[%s]\n", p->pid, p->pname);
+            perror("unable to kill process");
+        }
     }
 
     
@@ -565,6 +609,7 @@ int repl_killallbg(const Command *command, const Context *context) {
 int repl_sendsig(const Command *command, const Context *context) {
     if (command->num_args != 2) {
         printf(KRED "usage: sendsig <pid> <signal>\n" KNRM);
+        return -1;
     }
 
     char *endptr = NULL;
@@ -582,9 +627,14 @@ int repl_sendsig(const Command *command, const Context *context) {
         return -1;
     }
 
+    printf("sending signal"KGRN"[%ld]"KNRM" to process "
+            KGRN"[%ld]"KNRM"\n", signal, pid);
+
     if (kill(pid, signal) == -1) {
         perror("kill failed");
-    };
+    } else {
+        printf("successfully sent signal to process [%ld]\n", pid);
+    }
 
     return 0;
 }

@@ -47,6 +47,8 @@ void context_update(Context *context) {
 
 //cleanup this duplicate code cancer
 void context_add_background_job(Context *context, Process *p) {
+    p->next = NULL;
+    
     if (context->background_jobs == NULL) {
         context->background_jobs= p;
     }  else {
@@ -58,6 +60,7 @@ void context_add_background_job(Context *context, Process *p) {
 
 
 void context_add_foreground_job(Context *context, Process *p) {
+    p->next = NULL;
     if (context->foreground_jobs == NULL) {
         context->foreground_jobs= p;
     }  else {
@@ -69,7 +72,9 @@ void context_add_foreground_job(Context *context, Process *p) {
 
 void context_add_stopped_job(Context *context, Process *p) {
     assert(p != NULL);
-    if (context->stopped_jobs == NULL) {
+    p->next = NULL;
+    if (context->stopped_jobs == NULL)
+    {
         context->stopped_jobs = p;
     }  else {
         Process *last = context->stopped_jobs;

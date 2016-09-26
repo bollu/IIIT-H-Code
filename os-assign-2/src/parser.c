@@ -210,7 +210,12 @@ Token *parse_command(Token *head, Command **result, int *status,
                 *result = command_new(COMMAND_TYPE_LISTJOBS);
                 head = head->next;
             }
-
+            
+            else if (!strcmp(head->string, "sendsig")) {
+                *result = command_new(COMMAND_TYPE_SENDSIG);
+                head = head->next;
+            }
+       
             else if (!strcmp(head->string, "killallbg")) {
                 *result = command_new(COMMAND_TYPE_KILLALLBG);
                 head = head->next;
