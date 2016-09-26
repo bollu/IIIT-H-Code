@@ -27,7 +27,6 @@ typedef enum CommandType{
 //TODO: this is pretty hacky, fix this
 static const int COMMAND_TOTAL_ARGS_LENGTH = 1024;
 
-
 typedef struct Command {
     CommandType type;
     char *args[COMMAND_TOTAL_ARGS_LENGTH];
@@ -41,8 +40,9 @@ typedef struct Command {
     int append_redirect_output;
     //Redirect *redirects[COMMAND_TOTAL_REDIRECTS];
     struct Command *pipe;
-} Command;
 
+    int id;
+} Command;
 
 give Command* command_new(CommandType type);
 void command_delete(Command *command);

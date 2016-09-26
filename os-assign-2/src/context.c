@@ -1,12 +1,12 @@
 #include "common.h"
 #include "parser.h"
 
-give Process* process_new(int pid, const Command *command) {
+give Process* process_new(int pid, int jobid, const Command *command) {
     Process *p = (Process *)malloc(sizeof(Process));
     p->pid = pid;
     p->next = NULL;
     p->done = FALSE;
-
+    p->jobid = jobid;
 
     assert (command->type == COMMAND_TYPE_LAUNCH && 
             command->num_args > 0 &&
@@ -32,8 +32,8 @@ Context *context_new() {
     ctx->username[0] = ctx->hostname[0] = ctx->cwd[0] = '\0';
     ctx->debug_mode = FALSE;
     ctx->background_jobs = ctx->foreground_jobs = ctx->stopped_jobs =  NULL;
+    ctx->next_jobid = 0;
 
-    
     getcwd(ctx->homedir, MAX_HOMEDIR_LENGTH); 
     context_update(ctx);
     return ctx;
@@ -48,7 +48,7 @@ void context_update(Context *context) {
 //cleanup this duplicate code cancer
 void context_add_background_job(Context *context, Process *p) {
     p->next = NULL;
-    
+
     if (context->background_jobs == NULL) {
         context->background_jobs= p;
     }  else {

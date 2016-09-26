@@ -16,6 +16,7 @@
 #include "context.h"
 #include "common.h"
 
+
 //TODO: This is stateful, need to clean this up dude
 void repl_print_prompt(const Context *ctx) {
 
@@ -350,9 +351,11 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
                 assert(FALSE && "setpgid failed");
             };
 
-            Process *p = process_new(pid, command);
-
-            if(command->background) {
+            Process *p = process_new(pid, context->next_jobid, command);
+            context->next_jobid += 1;
+            
+            if (command->background)
+            {
                 context_add_background_job(context, p);
             } else {
                 context_add_foreground_job(context, p);
@@ -485,26 +488,25 @@ int repl_pinfo(const Command *command, const Context *context) {
 
 int repl_fg(const Command *command, Context *context) {
     if (command->num_args != 1) {
-        printf("usage: fg <command-pid>\n");
+        printf("usage: fg <command-jobid>\n");
 
         return -1;
     }
 
     assert(command->num_args == 1);
     char *endptr = NULL;
-    long int pid = strtol(command->args[0], &endptr, 10);
+    const long int jobid = strtol(command->args[0], &endptr, 10);
 
     if (endptr == command->args[0]) {
-        printf("invalid pid given: %s\n", endptr);
+        printf("invalid jobid given: %s\n", endptr);
     } else {
         //first look in stopped jobs
-        //HACK: I'm looking in foreground jobs
         Process *prev = NULL;
         for(Process *p = context->stopped_jobs; p != NULL;) {
             Process *const next = p->next;
-            if(p->pid == pid) {
-                printf("found child process [%s] with pid[%ld]. "
-                        "Continuing...\n", p->pname, pid);
+            if(p->jobid == jobid) {
+                printf("found child process [%s] with jobid[%d]. "
+                        "Continuing...\n", p->pname, p->jobid);
 
                 //remove job from stopped jobs
                 if (prev == NULL) {
@@ -542,8 +544,9 @@ int repl_fg(const Command *command, Context *context) {
             }
             else {
                 if (context->debug_mode) {
-                    printf("process [%d]:[%s] is not the correct one.\n",
-                        p->pid, p->pname);
+                    printf("process jobid[%d]:name[%s]"
+                    " is not the correct one.\n",
+                        p->jobid, p->pname);
                 }
 
                 prev = p;
@@ -552,7 +555,7 @@ int repl_fg(const Command *command, Context *context) {
         }
 
         //could not find a process
-        printf("unable to find job with pid: [%ld]\n", pid);
+        printf("unable to find job with jobid: [%ld]\n", jobid);
     }
 
     return 0;
@@ -563,14 +566,14 @@ int repl_listjobs(const Command *command, const Context *context) {
     printf(KBLU "\n***background***\n" KNRM );
     for(Process *p = context->background_jobs; p != NULL; p = p->next) {
         assert(p->pname != NULL);
-        printf("[%d]:[%s]\n", p->pid, p->pname);
+        printf("job:[%d] pid:[%d] name:[%s]\n", p->jobid, p->pid, p->pname);
     }
 
     printf(KBLU "\n***stopped***\n" KNRM);
     for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
         assert(p != NULL);
         assert(p->pname != NULL);
-        printf("[%d]:[%s]\n", p->pid, p->pname);
+        printf("job:[%d] pid:[%d] name:[%s]\n", p->jobid, p->pid, p->pname);
     }
 
     return 0;
@@ -583,7 +586,7 @@ int repl_killallbg(const Command *command, const Context *context) {
     {
         if (kill(p->pid, SIGKILL) == 0) {
             p->done = TRUE;
-            printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+            printf("killed" KGRN "job:[%d] pid:[%d] name:[%s]" KNRM "\n", p->jobid, p->pid, p->pname);
         } else {
             perror("unable to kill process");
         }
@@ -594,9 +597,10 @@ int repl_killallbg(const Command *command, const Context *context) {
     for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
         if (kill(p->pid, SIGKILL) == 0) {
             p->done = TRUE;
-            printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+             printf("killed" KGRN "job:[%d] pid:[%d] name:[%s]" KNRM "\n", p->jobid, p->pid, p->pname);
         } else {
-            printf("failed to kill [%d]:[%s]\n", p->pid, p->pname);
+            printf("failed to kill "
+            KGRN "job:[%d] pid:[%d] name:[%s]" KNRM "\n", p->jobid, p->pid, p->pname);
             perror("unable to kill process");
         }
     }
@@ -608,34 +612,58 @@ int repl_killallbg(const Command *command, const Context *context) {
 
 int repl_sendsig(const Command *command, const Context *context) {
     if (command->num_args != 2) {
-        printf(KRED "usage: sendsig <pid> <signal>\n" KNRM);
+        printf(KRED "usage: sendsig <jobid> <signal>\n" KNRM);
         return -1;
     }
 
     char *endptr = NULL;
-    long int pid = strtol(command->args[0], &endptr, 10);
+    const long int jobid = strtol(command->args[0], &endptr, 10);
     
     //error out 
     if (endptr == command->args[0]) {
-        printf(KRED "invalid pid given: %s\n" KNRM, endptr);
+        printf(KRED "invalid jobid given: %s\n" KNRM, endptr);
         return -1;
     }
 
-    long int signal = strtol(command->args[1], &endptr, 10);
+    const long int signal = strtol(command->args[1], &endptr, 10);
     if (endptr == command->args[1]) {
         printf(KRED "invalid signal given: %s\n" KNRM, endptr);
         return -1;
     }
 
-    printf("sending signal"KGRN"[%ld]"KNRM" to process "
-            KGRN"[%ld]"KNRM"\n", signal, pid);
-
-    if (kill(pid, signal) == -1) {
-        perror("kill failed");
-    } else {
-        printf("successfully sent signal to process [%ld]\n", pid);
+    Process *target = NULL;
+    for (Process *p = context->background_jobs; p != NULL; p = p->next)
+    {
+        if (p->jobid == jobid) {
+            target = p;
+            break;
+        }
+    }
+    if (target == NULL){
+        for (Process *p = context->stopped_jobs; p != NULL; p = p->next) {
+            if (p->jobid == jobid) {
+                target = p;
+                break;
+            }
+        }
     }
 
+    if (target == NULL) {
+        printf(KRED "unable to find job with id: [%ld]\n" KNRM, jobid);
+        return 0;
+    }
+    else {
+        
+        printf("sending signal"KGRN"[%ld]"KNRM" to process "
+            KGRN"job:[%d] pid:[%d] name: [%s]"KNRM"...\n", signal, target->jobid, target->pid, target->pname);
+
+        if (kill(target->pid, signal) == -1) {
+            perror(KRED "signal send failed\n" KNRM);
+        } else {
+            printf("successfully sent signal");
+        }
+    }
+    
     return 0;
 }
 
@@ -658,6 +686,7 @@ void repl_eval(const Command *command, Context *context) {
             break;
         case COMMAND_TYPE_PINFO:
             repl_pinfo(command, context);
+            break;
         case COMMAND_TYPE_FG:
             repl_fg(command, context);
             break;

@@ -14,6 +14,9 @@ typedef struct Process {
     struct Process *next;
     char *pname;
     boolean done;
+
+    //id given to the process inside the shell
+    int jobid;
 } Process;
 
 typedef struct  {
@@ -26,6 +29,8 @@ typedef struct  {
     struct Process *background_jobs;
     struct Process *foreground_jobs;
     struct Process *stopped_jobs;
+
+    int next_jobid;
 } Context;
 
 Context *context_new();
@@ -35,10 +40,8 @@ void context_add_background_job(Context *context, Process *p);
 void context_add_foreground_job(Context *context, Process *p);
 void context_add_stopped_job(Context *context, Process *p);
 
-give char* context_tildefy_directory(const Context *ctx, const char *dirpath);
+give char *context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */
-
-give Process* process_new(int pid, const struct Command *command);
+give Process *process_new(int pid, int jobid, const struct Command *command);
 void process_delete(take Process *p);
-
