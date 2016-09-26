@@ -114,10 +114,6 @@ void clear_ended_jobs(Context *ctx) {
 
 
 void update_stopped_jobs(Context *context) {
-    if(context->debug_mode) {
-        printf("updating stopped jobs...\n");
-    }
-
     Process *prev = NULL;
     for(Process *p = context->foreground_jobs; p != NULL;) {
         if (context->debug_mode) {
@@ -127,14 +123,12 @@ void update_stopped_jobs(Context *context) {
 
         //process does not exist
         if (kill(p->pid, 0) != 0) {
-
             if (context->debug_mode) {
                 printf("\tdoes not exist\n");
             }
 
             process_delete(p);
             free(p);
-
 
         } 
         //process exists, is stopped
@@ -157,7 +151,7 @@ void update_stopped_jobs(Context *context) {
     }
 
     if (context->debug_mode) {
-        printf("stopped jobs:\n=========\n");
+        printf(KBLU "***stopped jobs:***\n" KNRM);
 
         for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
             printf("[%d]:[%s]\n", p->pid, p->pname);
@@ -274,7 +268,7 @@ void wait_for_process_termination(Process *p) {
 int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *context) {
     assert (command != NULL);
 
-    static const int N = 1024; //max number of things that can be peipes
+    static const int N = 1024; //max number of things that can be pipes
     int pipe_filedesc[N][2];
 
     int count = 0;
@@ -527,30 +521,71 @@ int repl_fg(const Command *command, Context *context) {
 
 
 int repl_listjobs(const Command *command, const Context *context) {
-    printf("\nbackground\n========\n");
+    printf(KBLU "\n***background***\n" KNRM );
     for(Process *p = context->background_jobs; p != NULL; p = p->next) {
         assert(p->pname != NULL);
-        printf("[%d] %s\n", p->pid, p->pname);
+        printf("[%d]:[%s]\n", p->pid, p->pname);
     }
 
-    printf("\nstopped\n=======\n");
-    for(Process *p = context->foreground_jobs; p != NULL; p = p->next) {
+    printf(KBLU "\n***stopped***\n" KNRM);
+    for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
         assert(p != NULL);
         assert(p->pname != NULL);
-        printf("STOPPED JOB: [%d]\n", p->pid);
+        printf("[%d]:[%s]\n", p->pid, p->pname);
     }
 
     return 0;
 }
+
 int repl_killallbg(const Command *command, const Context *context) {
-    for(Process *p = context->background_jobs; p != NULL; p = p->next) {
+    printf(KBLU "***killing background jobs***" KNRM "\n");
+
+    for (Process *p = context->background_jobs; p != NULL; p = p->next)
+    {
         kill(p->pid, SIGKILL);
         p->done = TRUE;
-        printf("killed [%d]:[%s]\n", p->pid, p->pname);
+        printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
     }
 
-    return 1;
+    printf(KBLU "***killing stopped jobs***" KNRM "\n");
+    for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
+        kill(p->pid, SIGKILL);
+        p->done = TRUE;
+        printf("killed" KGRN "[%d]:[%s]" KNRM "\n", p->pid, p->pname);
+    }
+
+    
+
+    return 0;
 }
+
+int repl_sendsig(const Command *command, const Context *context) {
+    if (command->num_args != 2) {
+        printf(KRED "usage: sendsig <pid> <signal>\n" KNRM);
+    }
+
+    char *endptr = NULL;
+    long int pid = strtol(command->args[0], &endptr, 10);
+    
+    //error out 
+    if (endptr == command->args[0]) {
+        printf(KRED "invalid pid given: %s\n" KNRM, endptr);
+        return -1;
+    }
+
+    long int signal = strtol(command->args[1], &endptr, 10);
+    if (endptr == command->args[1]) {
+        printf(KRED "invalid signal given: %s\n" KNRM, endptr);
+        return -1;
+    }
+
+    if (kill(pid, signal) == -1) {
+        perror("kill failed");
+    };
+
+    return 0;
+}
+
 void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
@@ -578,8 +613,11 @@ void repl_eval(const Command *command, Context *context) {
             break;
         case COMMAND_TYPE_KILLALLBG:
             repl_killallbg(command, context);
-    };
-
+            break;
+        case COMMAND_TYPE_SENDSIG:
+            repl_sendsig(command, context);
+            break;
+        };
 }
 
 void repl_shutdown(const Context *context) {

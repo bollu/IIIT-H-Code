@@ -70,7 +70,6 @@ void context_add_foreground_job(Context *context, Process *p) {
 void context_add_stopped_job(Context *context, Process *p) {
     assert(p != NULL);
     if (context->stopped_jobs == NULL) {
-        printf("\n>added job to stopped jobs head. name: %s", p->pname);
         context->stopped_jobs = p;
     }  else {
         Process *last = context->stopped_jobs;

@@ -96,6 +96,9 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_KILLALLBG:
             printf("killallbg: "); break;
+        case COMMAND_TYPE_SENDSIG:
+            printf("sendsig: "); break;
+ 
     }
     for(int i = 0; i < c->num_args; i++) {
         printf("%s ", c->args[i]);
