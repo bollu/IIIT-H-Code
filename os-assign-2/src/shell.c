@@ -354,11 +354,14 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
             Process *p = process_new(pid, context->next_jobid, command);
             context->next_jobid += 1;
             
-            if (command->background)
-            {
-                context_add_background_job(context, p);
-            } else {
-                context_add_foreground_job(context, p);
+            //in a series of piped commands, only add the first command
+            if (launch_count == 0) {
+                if (command->background)
+                {
+                    context_add_background_job(context, p);
+                } else {
+                    context_add_foreground_job(context, p);
+                }
             }
 
         } else {

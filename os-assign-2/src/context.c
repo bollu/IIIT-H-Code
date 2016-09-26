@@ -11,17 +11,40 @@ give Process* process_new(int pid, int jobid, const Command *command) {
     assert (command->type == COMMAND_TYPE_LAUNCH && 
             command->num_args > 0 &&
             command->args[0] != NULL);
-    
-    p->pname =(char *)malloc(strlen(command->args[0]));
-    strcpy(p->pname, command->args[0]);
 
+    p->pname[0] = '\0';
+    for (const Command *c = command; c != NULL; c = c->pipe)
+    {
+        //write out the command arguments
+        for (int i = 0; i < c->num_args; i++) {
+            strcat(p->pname, c->args[i]);
+
+            if (i < c->num_args - 1) {
+                strcat(p->pname, " ");
+            }
+        }
+
+        if (c->redirect_input_path != NULL) {
+            strcat(p->pname, " < ");
+            strcat(p->pname, c->redirect_input_path);
+        }
+
+        if (c->redirect_output_path != NULL) {
+            strcat(p->pname, c->append_redirect_output ? " >> " :  " > ");
+            strcat(p->pname, c->redirect_output_path);
+        }
+
+        if (c->next != NULL) {
+            strcat(p->pname, " | ");
+        }
+    }
+    
     return p;
 }
 
 void process_delete(take Process *p) {
-    free(p->pname);
-    p->pname = NULL;
     p->next = NULL;
+
 }
 
 

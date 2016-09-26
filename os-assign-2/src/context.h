@@ -5,14 +5,14 @@ static const int MAX_CWD_LENGTH = 1024;
 static const int MAX_USERNAME_LENGTH = 1024;
 static const int MAX_HOSTNAME_LENGTH = 1024;
 static const int MAX_HOMEDIR_LENGTH = 1024;
-
+static const int MAX_PNAME_LENGTH = 4096;
 
 struct Command;
 
 typedef struct Process {
     int pid;
     struct Process *next;
-    char *pname;
+    char pname[MAX_PNAME_LENGTH];
     boolean done;
 
     //id given to the process inside the shell
