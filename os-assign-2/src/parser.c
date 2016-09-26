@@ -113,7 +113,7 @@ void command_print(Command *c) {
         printf("\npipe: ");
         command_print(c->pipe);
     }
-    printf("\n]");
+    printf("]");
 }
 
 
@@ -565,7 +565,7 @@ give Command* repl_read(Context *ctx, int *status, char **message){
     free(line);
 
     if (ctx->debug_mode) {
-        printf("\ndebug token list: ");
+        printf("\n***debug token list:***");
         for(Token *t = tokens; t != NULL; t = t->next) {
             token_print(*t);
             printf(" ");

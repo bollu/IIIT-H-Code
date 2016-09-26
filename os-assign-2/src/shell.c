@@ -114,17 +114,21 @@ void clear_ended_jobs(Context *ctx) {
 
 
 void update_stopped_jobs(Context *context) {
+    if (context->debug_mode) {
+        printf("***updating stopped jobs***\n");
+    }
+
     Process *prev = NULL;
     for(Process *p = context->foreground_jobs; p != NULL;) {
         if (context->debug_mode) {
-            printf("checking job: [%d]:[%s]\n", p->pid, p->pname);
+            printf("\tchecking job: [%d]:[%s]\n", p->pid, p->pname);
         }
         Process *const next = p->next;
 
         //process does not exist
         if (kill(p->pid, 0) != 0) {
             if (context->debug_mode) {
-                printf("\tdoes not exist\n");
+                printf("\t\tdoes not exist\n");
             }
 
             process_delete(p);
@@ -134,7 +138,7 @@ void update_stopped_jobs(Context *context) {
         //process exists, is stopped
         else {
             if (context->debug_mode) {
-                printf("\tstopped\n");
+                printf("\t\tstopped\n");
             }
 
             p->next = NULL;
@@ -151,7 +155,7 @@ void update_stopped_jobs(Context *context) {
     }
 
     if (context->debug_mode) {
-        printf(KBLU "***stopped jobs:***\n" KNRM);
+        printf("***stopped jobs:***\n");
 
         for(Process *p = context->stopped_jobs; p != NULL; p = p->next) {
             printf("[%d]:[%s]\n", p->pid, p->pname);
@@ -201,9 +205,8 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
 
             //open file correctly based on
             //redirection needed or not
-            if (command->redirect_output_path) {
-                printf ("redirectiong output\n");
-                flags = O_APPEND | O_WRONLY;
+            if (command->append_redirect_output == 1) {
+                flags = O_CREAT | O_APPEND | O_WRONLY;
             }
             else {
                 flags = O_CREAT | O_TRUNC | O_WRONLY;
@@ -688,7 +691,7 @@ int main(int argc, char **argv) {
 
             for(Command *c = commands; c != NULL; c = c->next) {
                 if (g_ctx->debug_mode) {
-                    printf("debug command info: \n");
+                    printf("***debug command info: \n***");
                     command_print(c);
                     printf("\n");
                 }
