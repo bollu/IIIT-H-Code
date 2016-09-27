@@ -384,7 +384,6 @@ int repl_launch(const Command *command, Context *context) {
         pid_t pid = single_command_launch(c, pipe_back, pipe_forward, context);
 
         if (pid != -1) {
-            printf("count: %d | name: %s | pid: %d\n", launch_count, c->args[0], pid);
             //figure out why this assert is failing
             assert(pid > 0 && "process is legal child");
             //make pgid the id of the first child process launched
