@@ -73,9 +73,6 @@ void command_print(Command *c) {
         case COMMAND_TYPE_CD:
             printf("cd: "); break;
 
-        case COMMAND_TYPE_PWD:
-            printf("pwd: "); break;
-
         case COMMAND_TYPE_EXIT:
             printf("exit: "); break;
 
@@ -84,9 +81,6 @@ void command_print(Command *c) {
 
         case COMMAND_TYPE_PINFO:
             printf("pinfo: "); break;
-
-        case COMMAND_TYPE_ECHO:
-            printf("echo: "); break;
 
         case COMMAND_TYPE_LISTJOBS:
             printf("listjobs: "); break;
@@ -190,18 +184,22 @@ Token *parse_command(Token *head, Command **result, int *status,
             break;
 
         case TOKEN_TYPE_WORD:
+            /*
             if (!strcmp(head->string, "pwd")) {
                 *result = command_new(COMMAND_TYPE_PWD);
                 head = head->next;
             }
-            else if (!strcmp(head->string, "cd")) {
+            */
+            if (!strcmp(head->string, "cd")) {
                 *result = command_new(COMMAND_TYPE_CD);
                 head = head->next;
             }
+            /*
             else if (!strcmp(head->string, "echo")) {
                 *result = command_new(COMMAND_TYPE_ECHO);
                 head = head->next;
             }
+            */
             else if (!strcmp(head->string, "pinfo")) {
                 *result = command_new(COMMAND_TYPE_PINFO);
                 head = head->next;
@@ -213,11 +211,13 @@ Token *parse_command(Token *head, Command **result, int *status,
             
             else if (!strcmp(head->string, "sendsig")) {
                 *result = command_new(COMMAND_TYPE_SENDSIG);
+                command_add_arg((*result), head->string);
                 head = head->next;
             }
        
             else if (!strcmp(head->string, "killallbg")) {
                 *result = command_new(COMMAND_TYPE_KILLALLBG);
+                command_add_arg((*result), head->string);
                 head = head->next;
             }
             else if (!strcmp(head->string, "fg")) {

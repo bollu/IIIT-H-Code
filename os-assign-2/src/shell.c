@@ -114,7 +114,7 @@ void clear_ended_jobs(Context *ctx) {
 }
 
 
-int does_process_exist(int pid) {
+int does_process_exist(pid_t pid) {
     return kill(pid, 0) == 0;
 }
 
@@ -201,20 +201,40 @@ void update_stopped_jobs(Context *context) {
 
 };
 
+
+int repl_pwd(const Command *command, const Context *context) {
+    if (command->num_args > 1) {
+        printf("usage: pwd\n");
+        return -1;
+    }
+    
+    printf("%s\n", context->cwd);
+    return 0;
+
+};
+
+int repl_echo(const Command *command, const Context *context) {
+    for(int i = 1; i < command->num_args; i++) {
+        printf("%s", command->args[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
 static const int WRITE_PIPE_INDEX = 1; static const int READ_PIPE_INDEX = 0;
 
-
-//returns the pid of the launched process, or -1 if no process was
-//launched
-int single_command_launch(const Command *command, int *pipe_back, int *pipe_forward, const Context *context){
+// returns the pid of the launched process, or -1 if no process was
+// launched
+pid_t single_command_launch(const Command *command, int *pipe_back, int *pipe_forward, const Context *context){
     pid_t pid = fork();
 
     if (pid == 0) {
         /* CHILD */
         //reset signal handlers
-        signal(SIGINT,  SIG_DFL);   // ctrl-c
-        signal(SIGTSTP, SIG_DFL);  // ctrl-z
-        signal(SIGCHLD, SIG_DFL);  //);  // Terminated or stopped child
+        signal(SIGINT,  SIG_DFL); // ctrl-c
+        signal(SIGTSTP, SIG_DFL); // ctrl-z
+        signal(SIGCHLD, SIG_DFL); //);  // Terminated or stopped child
 
         //we need to pull input from our back
         if (pipe_back != NULL) {
@@ -275,22 +295,40 @@ int single_command_launch(const Command *command, int *pipe_back, int *pipe_forw
             close(fd);
         }
 
-        // child process
-        if (execvp(command->args[0], command->args) == -1) {
-            perror("failed to run command");
+        
+        assert (command->type == COMMAND_TYPE_LAUNCH);
+        assert (command->num_args > 0);
+        if (!strcmp(command->args[0], "pwd")) {
+            repl_pwd(command, context);
             abort();
-            return -1;
         }
-
+        else if (!strcmp(command->args[0], "echo")) {
+            repl_echo(command, context);
+            abort();
+        }
+        else {
+            // child process
+            if (execvp(command->args[0], command->args) == -1) {
+                perror("failed to run command");
+                abort();
+                return -1;
+            }
+        }
 
 
     } else if (pid < 0) {
         perror("unable to fork child");
         abort();
         return -1;
-    } 
-    // Parent process
-    return pid;
+    }
+    else {
+        // Parent process
+        assert (pid > 0);
+        return pid;
+    }
+    
+    assert (FALSE && "control must never reach here");
+    return 0;
 };
 
 
@@ -304,7 +342,7 @@ void wait_for_process_start(Process *p) {
 }
 
 void wait_for_process_termination(Process *p) {
-    int wpid;
+    pid_t wpid;
     int status;
     wpid = waitpid(- p->pid, &status, WUNTRACED);
 
@@ -315,7 +353,7 @@ void wait_for_process_termination(Process *p) {
     }
 };
 
-int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *context) {
+int repl_launch(const Command *command, Context *context) {
     assert (command != NULL);
 
     static const int N = 1024; //max number of things that can be pipes
@@ -328,7 +366,7 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
         pipe(pipe_filedesc[count]);
     }
 
-    int pgid = -1;
+    pid_t pgid = -1;
 
     int launch_count = 0;
     for(const Command *c = command; c != NULL; c = c->pipe, launch_count++) {
@@ -343,9 +381,10 @@ int repl_launch(const Command *command, int *prev_pipe_filedesc, Context *contex
             pipe_forward = pipe_filedesc[launch_count];
         }
 
-        int pid = single_command_launch(c, pipe_back, pipe_forward, context);
+        pid_t pid = single_command_launch(c, pipe_back, pipe_forward, context);
 
         if (pid != -1) {
+            printf("count: %d | name: %s | pid: %d\n", launch_count, c->args[0], pid);
             //figure out why this assert is failing
             assert(pid > 0 && "process is legal child");
             //make pgid the id of the first child process launched
@@ -450,21 +489,6 @@ int repl_cd(const Command *command) {
 };
 
 
-int repl_pwd(const Command *command, const Context *context) {
-    if (command->num_args != 0) {
-        return -1;
-    }
-    printf("%s\n", context->cwd);
-    return 0;
-};
-
-int repl_echo(const Command *command) {
-    for(int i = 0; i < command->num_args; i++) {
-        printf("%s", command->args[i]);
-    }
-    printf("\n");
-    return 0;
-}
 
 int repl_pinfo(const Command *command, const Context *context) {
 
@@ -684,16 +708,10 @@ int repl_sendsig(const Command *command, const Context *context) {
 void repl_eval(const Command *command, Context *context) {
     switch(command->type) {
         case COMMAND_TYPE_LAUNCH:
-            repl_launch(command, NULL, context);
+            repl_launch(command, context);
             break;
         case COMMAND_TYPE_CD:
             repl_cd(command);
-            break;
-        case COMMAND_TYPE_PWD:
-            repl_pwd(command, context);
-            break;
-        case COMMAND_TYPE_ECHO:
-            repl_echo(command);
             break;
         case COMMAND_TYPE_EXIT:
             repl_quit(context);

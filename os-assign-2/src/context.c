@@ -1,7 +1,7 @@
 #include "common.h"
 #include "parser.h"
 
-give Process* process_new(int pid, int jobid, const Command *command) {
+give Process* process_new(pid_t pid, int jobid, const Command *command) {
     Process *p = (Process *)malloc(sizeof(Process));
     p->pid = pid;
     p->next = NULL;

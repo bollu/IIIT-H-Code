@@ -10,7 +10,7 @@ static const int MAX_PNAME_LENGTH = 4096;
 struct Command;
 
 typedef struct Process {
-    int pid;
+    pid_t pid;
     struct Process *next;
     char pname[MAX_PNAME_LENGTH];
     boolean done;
@@ -43,5 +43,5 @@ void context_add_stopped_job(Context *context, Process *p);
 give char *context_tildefy_directory(const Context *ctx, const char *dirpath);
 
 /* *** Process *** */
-give Process *process_new(int pid, int jobid, const struct Command *command);
+give Process *process_new(pid_t pid, int jobid, const struct Command *command);
 void process_delete(take Process *p);
