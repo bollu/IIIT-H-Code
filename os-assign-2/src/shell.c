@@ -445,12 +445,21 @@ int repl_quit(Context *ctx) {
     return 0;
 }
 
-int repl_cd(const Command *command) {
-    if (command->num_args != 1) {
+int repl_cd(const Command *command, const Context *context) {
+    if (command->num_args > 1) {
         return -1;
     }
 
-    int status = chdir(command->args[0]);
+
+    //no answer to life, the universe and everything
+    int status = -42;
+    if (command->num_args == 0) {
+        status = chdir(context->homedir);
+    }
+    else {
+        status = chdir(command->args[0]);
+    }
+    assert (status != -42);
 
     if (status == 0) {
         return 0;
@@ -710,7 +719,7 @@ void repl_eval(const Command *command, Context *context) {
             repl_launch(command, context);
             break;
         case COMMAND_TYPE_CD:
-            repl_cd(command);
+            repl_cd(command, context);
             break;
         case COMMAND_TYPE_EXIT:
             repl_quit(context);
