@@ -17,14 +17,12 @@
 #include "common.h"
 
 
-//TODO: This is stateful, need to clean this up dude
-void repl_print_prompt(const Context *ctx) {
-
+void get_prompt_string(const Context *ctx, char *out, int maxlen) {
     char *tilded_dirpath = context_tildefy_directory(ctx, ctx->cwd);
-    printf(KGRN "%s" KWHT "@%s:" KBLU "%s" KWHT ">", tilded_dirpath, ctx->username, ctx->hostname);
+    //snprintf(out, maxlen, KGRN "%s" KWHT "@%s:" KBLU "%s" KWHT ">", tilded_dirpath, ctx->username, ctx->hostname);
+    snprintf(out, maxlen, "%s@%s:%s>", tilded_dirpath, ctx->username, ctx->hostname);
     free(tilded_dirpath);
 }
-
 
 //holy memory juggling batman :/
 give char* get_process_end_string(const Process *p, int status) {
@@ -775,10 +773,8 @@ int main(int argc, char **argv) {
     signal(SIGCHLD, sigchld_handler);  // Terminated or stopped child
     
     g_ctx = context_new();
-    //
-    // This one provides a clean way to kill the shell
-    //
-    //signal(SIGQUIT, sigquit_handler); 
+
+    parser_init();
 
     if (argc >= 2) {
         if (!strcmp(argv[1], "--debug") || !strcmp(argv[1], "-d")) {
@@ -791,7 +787,6 @@ int main(int argc, char **argv) {
         repl_print_ended_jobs(g_ctx);
         clear_ended_jobs(g_ctx);
         update_stopped_jobs(g_ctx);
-        repl_print_prompt(g_ctx);
 
 
         signal(SIGTTOU, SIG_IGN);
@@ -801,7 +796,12 @@ int main(int argc, char **argv) {
         signal(SIGTTOU, SIG_DFL);
 
         int status = 1; char *error_message = NULL;
-        Command *commands = repl_read(g_ctx, &status, &error_message);
+
+        const int REPL_PROMPT_STRLEN = 4096;
+        char repl_prompt_str[REPL_PROMPT_STRLEN];
+        get_prompt_string(g_ctx, repl_prompt_str, 4096);
+
+        Command *commands = repl_read(g_ctx, repl_prompt_str, &status, &error_message);
 
         if (status == -1) {
             assert(error_message != NULL);

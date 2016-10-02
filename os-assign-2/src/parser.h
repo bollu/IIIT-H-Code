@@ -42,7 +42,8 @@ typedef struct Command {
     int id;
 } Command;
 
+void parser_init();
 give Command* command_new(CommandType type);
 void command_delete(Command *command);
 void command_print(Command *c);
-give Command* repl_read(Context *ctx, int *status, char **message);
+give Command* repl_read(Context *ctx, char *repl_prompt_str, int *status, char **message);

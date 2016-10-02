@@ -4,7 +4,7 @@ CC_SAFE=$(CC) -Wall -Werror
 
 build:
 	@mkdir -p bin/
-	$(CC_SAFE) shell.c context.c parser.c -o bin/shell
+	$(CC_SAFE) shell.c context.c parser.c linenoise.c -o bin/shell
 	$(CC) crash.c -o bin/crash
 
 run: build

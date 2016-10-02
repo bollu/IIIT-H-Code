@@ -10,6 +10,8 @@
 #include "context.h"
 #include "common.h"
 
+#include "linenoise.h"
+
 void command_make_background(Command *command);
 void command_add_arg(give Command *command, const char *arg);
 
@@ -519,15 +521,21 @@ give char* tilde_expand_path(const char *toexpand, const char *homedir) {
 }
 
 
-give char* read_single_line(boolean *should_quit) {
+
+give char* read_single_line(char *repl_prompt_str, boolean *should_quit) {
     assert(should_quit != NULL);
 
-    static const int BUFFER_BLOCK_SIZE = 1024;
-    int buffer_block_multiple = 1;
-
-
+    char *output = linenoise(repl_prompt_str);
+    linenoiseHistoryAdd(output);
+    if (output == NULL) {
+        *should_quit = TRUE;
+    }
+    //assert(output != NULL);
+    
+    /*
     char *output = (char*)malloc(sizeof(char) * BUFFER_BLOCK_SIZE);
     int buffer_pos = 0;
+
 
     while(1) {
         int c = getchar();
@@ -549,14 +557,15 @@ give char* read_single_line(boolean *should_quit) {
     }
 
     output[buffer_pos] = '\0';
+    */
     return output;
 
 }
 
 
-give Command* repl_read(Context *ctx, int *status, char **message){
+give Command* repl_read(Context *ctx, char *repl_prompt_str, int *status, char **message){
 
-    char *line = read_single_line(&(ctx->should_quit));
+    char *line = read_single_line(repl_prompt_str, &(ctx->should_quit));
     Token *tokens = tokenize_line(line);
     
     //tilde expand
@@ -594,3 +603,7 @@ give Command* repl_read(Context *ctx, int *status, char **message){
 
     return commands;
 };
+
+void parser_init() {
+    linenoiseHistorySetMaxLen(10000);
+}
