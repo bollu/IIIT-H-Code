@@ -25,6 +25,7 @@ number trim(number a) {
     while(a[a.size() - 1] == 0 && a.size() > 1) {
         a.pop_back();
     }
+    return a;
 }
 
 number add (number as, number bs) {
@@ -104,19 +105,23 @@ number product(number as, number bs) {
 
 //assumes a > b
 number sub(number a, number b) {
-    number sub;
-    for(int i = 0; i < a.size(); i++) {
-        sub.push_back(a[i]);
-    }
+    a = trim(a); b = trim(b);
+
+    number sub(a.begin(), a.end());
 
     int carry = 0;
-    for(int i = 0; i < b.size(); i++) {
-        if (a[i] - b[i] - carry >= 0) {
-            sub[i] = a[i] - b[i] - carry;
+    for(int i = 0; i < a.size(); i++) {
+         int diff = a[i] - carry;
+         if ( i < b.size() ){ 
+             diff -= b[i];
+         }
+
+        if (diff >= 0) {
+            sub[i] = diff;
             carry = 0;
         } else {
             carry = 1;
-            sub[i] = (10 + a[i]) - b[i] - carry;
+            sub[i] = 10 + diff;
         }
     }
 
@@ -125,20 +130,30 @@ number sub(number a, number b) {
     
 }
 
-const vector<int> one = [1];
-const vector<int> zero = [0];
-number exp_slow(number a, number exp) {
+number getone() {
+    vector<int> one; one.push_back(1);
+    return one;
+}
+
+number getzero() {
+    vector<int> zero; zero.push_back(0);
+    return zero;
+}
+number slowexp(number a, number exp) {
     exp = trim(exp);
     a = trim(a);
     
-
-    if (exp == zero)
-        return one;
-    } else if (exp == one)
+    if (exp == getzero()) {
+        return getone();
+    } else if (exp == getone()) {
         return a;
     }
     else {
-        return prod(a, sub(exp, one));
+        number subexp = sub(exp, getone());
+        number prod = product(a, slowexp(a, subexp));
+        
+        return prod;
+
     }
 }
 int main() {
@@ -155,8 +170,9 @@ int main() {
         reverse(n[i].begin(), n[i].end());
     }
 
-    number p = sub(n[0], n[1]);
+    number p = slowexp(n[0], n[1]);
     reverse(p.begin(), p.end());
+
 
     for(auto d : p) {
         cout<<d;
