@@ -114,21 +114,45 @@ int nosync_read_queue(Consumer *c, int *out) {
 }
 
 int sync_write_queue(Producer *p, int value) {
-     //pthread_mutex_lock(&mutex);
+     pthread_mutex_lock(&mutex);
      int ret = nosync_write_queue(p, value);
-     //pthread_mutex_unlock(&mutex);
+     pthread_mutex_unlock(&mutex);
      return ret;
 };
 
 int sync_read_queue(Consumer *c, int *out) {
-    //pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
     int ret = nosync_read_queue(c, out);
-    //pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
     return ret;
 };
 
+
+const int CONSUMER_SLEEP_TIME = 1e6 + 1e3;
+void *consumer_fn(void *vdata) {
+    Consumer *c = (Consumer *)vdata;
+
+    while(1) {
+        usleep(CONSUMER_SLEEP_TIME);
+        printf("---\n");
+        printf("c(%d): starting...\n", c->id);
+
+        int out;
+        int ret = sync_read_queue(c, &out);
+
+        if (ret == 0) {
+            printf("c(%d): consumed %d\n", c->id, out);
+        } else {
+            printf("c(%d): no data\n", c->id);
+        }
+    }
+    return NULL;
+};
+
+const int PRODUCER_SLEEP_TIME = 1e6;
+
 void circbuf_debug_print(const CircBuf *circbuf) {
-    printf("CIRCBUF: ");
+    printf("CIRCBUF\n");
     printf("|");
 
     for(int i = 0; i < circbuf->total_size; i++) {
@@ -137,38 +161,6 @@ void circbuf_debug_print(const CircBuf *circbuf) {
     }
     printf("\n");
 }
-
-
-
-const int CONSUMER_SLEEP_TIME = 1e6;
-void *consumer_fn(void *vdata) {
-    Consumer *c = (Consumer *)vdata;
-
-    while(1) {
-        usleep(rand() % (CONSUMER_SLEEP_TIME / 2));
-
-        pthread_mutex_lock(&mutex);
-        circbuf_debug_print(c->circbuf);
-
-        printf("CONSUMER(%d): i: %d| reading...", c->id, c->read_index);
-
-        int out;
-        int ret = sync_read_queue(c, &out);
-
-        if (ret == 0) {
-            printf(" !consumed %d\n", out);
-        } else {
-            printf(" !no data\n");
-        }
-        circbuf_debug_print(c->circbuf);
-        pthread_mutex_unlock(&mutex);
-
-        usleep(rand() % (CONSUMER_SLEEP_TIME / 2));
-    }
-    return NULL;
-};
-
-const int PRODUCER_SLEEP_TIME = 1e6;
 
 void producer_debug_print(Producer *p) {
     printf("PRODUCER i: %d | num_consumers: %d \n", p->write_index,
@@ -179,25 +171,18 @@ void producer_debug_print(Producer *p) {
 void *producer_fn(void *vdata) {
     Producer *p = (Producer *)vdata;
     while(1) {
-        usleep(rand() % (PRODUCER_SLEEP_TIME / 2));
-
-        pthread_mutex_lock(&mutex);
-        circbuf_debug_print(p->circbuf);
-
+        printf("---\n");
         int value = rand() % 10;
-        printf("PRODUCER: i: %d | producing: %d..", p->write_index, value);
+        producer_debug_print(p);
+        printf("p: trying to produce |%d|..\n", value);
         int ret = sync_write_queue(p,value);
 
         if (ret == 0) {
-            printf(" !produced %d\n", value);
+            printf("p: produced %d\n", value);
         } else {
-            printf(" !buffer full\n");
+            printf("p: buffer full\n");
         }
-        
-        circbuf_debug_print(p->circbuf);
-        pthread_mutex_unlock(&mutex);
-
-        usleep(rand() % (PRODUCER_SLEEP_TIME / 2));
+        usleep(PRODUCER_SLEEP_TIME);
     }
 }
 int main() {
