@@ -1,0 +1,3 @@
+select col1,   col3,   max(col2) from table1,table2 where cl1=10 and col2=20 or col3=40
+select col1 from table where col=10
+select col1 from table

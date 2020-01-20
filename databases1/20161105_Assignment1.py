@@ -78,11 +78,48 @@ class ColumnSelector:
         assert self.ty in [COLUMN_SELECT_ALL, COLUMN_SELECT_AVG,
                            COLUMN_SELECT_MAX, COLUMN_SELECT_MIN]
 
+    def __repr__(self):
+        return "%s(%s)" % (self.ty, self.col)
+
 class Query:
-    def __init__(self, tables, cols, conds):
+    def __init__(self, tables, cols, filters):
         self.tables = tables
         self.cols = cols
-        self.conds = conds
+        self.filters = filters
+
+class Filter:
+    def __init__(self): pass
+
+class FilterAnd:
+    def __init__(self, l, r):
+        self.l = l
+        self.r = r
+
+    def __repr__(self):
+        return "(AND %s %s)" % (self.l.__repr__(), self.r.__repr__())
+
+class FilterOr:
+    def __init__(self, l, r):
+        self.l = l
+        self.r = r
+
+    def __repr__(self):
+        return "(AND %s %s)" % (self.l.__repr__(), self.r.__repr__())
+
+FILTER_RELATIONAL_EQ = "filter_relational_eq"
+FILTER_RELATIONAL_GEQ = "filter_relational_geq"
+FILTER_RELATIONAL_LEQ = "filter_relational_leq"
+FILTER_RELATIONAL_LT = "filter_relational_lt"
+FILTER_RELATIONAL_GT = "filter_relational_gt"
+class FilterRelational:
+    def __init__(self, col, rel, val):
+        self.col = col
+        self.ty = ty
+        self.val = val
+        assert self.ty in [FILTER_RELATIONAL_LT, FILTER_RELATIONAL_LEQ,
+                           FILTER_RELATIONAL_EQ, FILTER_RELATIONAL_GT,
+                           FILTER_RELATIONAL_GEQ]
+
 
 # parse a single column selector
 def parse_col_selector(s):
@@ -118,8 +155,7 @@ def parse_col_selectors(l):
         l = [x for x in l if not x.is_whitespace]
         cs = []
         while l:
-          cs.append(parse_col_selector(l[0]))
-          l = l[1:]
+          cs.append(parse_col_selector(l[0])); l = l[1:]
           # l still has more. ensure there was comma next.
           # We need , <QUERY>
           if l:
@@ -127,7 +163,30 @@ def parse_col_selectors(l):
               l = l[1:]
         return cs
     else:
-        raise RuntimeError("unknown column selector query: |%s|" % (l))
+        raise RuntimeError("unknown column selector query: |%s:%s|" % (l, type(l)))
+
+# sqlparse.sql.query -> list[str]: table names
+def parse_tables(l):
+    if type(l) == sqlparse.sql.Token: return [l.value]
+    elif type(l) == sqlparse.sql.IdentifierList:
+        l = [x for x in l if not x.is_whitespace]
+        ts = []
+        while l:
+          assert type(l[0]) == sqlparse.sql.Identifier 
+          ts.append(l[0].value); l = l[1:]
+          # l still has more. ensure there was comma next.
+          # We need , <QUERY>
+          if l:
+              if str(l[0]) != ",": raise RuntimeError("expected comma in column selector")
+              l = l[1:]
+        return ts
+    else:
+        raise RuntimeError("unknown table selector: |%s:%s|" % (l, type(l)))
+
+# sqlparse.sql.where -> list[filter]
+def parse_filters(l):
+    pass
+
 
 # really parse the query. The current thing returns some stupid tokenized
 # list.
@@ -143,8 +202,15 @@ def parse_query(q):
         raise RuntimeError("expected SELECT queries. Received: |%s|" % (q, ))
 
     cols = parse_col_selectors(q[COLSIX])
-    print("cols: %s" % cols)
+    tables = parse_tables(q[TABLESIX])
 
+    if len(q.tokens) != 9: filters = []
+    else: filters = parse_filters(q[WHEREIX])
+
+    print("cols: %s" % (cols, ))
+    print("tables: %s" % (tables, ))
+    print("filters: %s" % (filters, ))
+    return Query(cols, tables, filters)
 
 
 def execute_query(db, q):
@@ -154,11 +220,22 @@ def execute_query(db, q):
 if __name__ == "__main__":
     db = load_db(os.path.join(BASEPATH, "metadata.txt"))
 
-    raw = sys.argv[1]
-    logging.debug("raw query string:|%s|" %(raw, ))
-    qs = list(sqlparse.parse(raw))
-    logging.debug("raw query object:|%s|" %(qs, ))
+    if sys.argv[1] == "--inputfile":
+        with open(sys.argv[2], "r") as f: 
+            for raw in f:
+                logging.debug("raw query string:|%s|" %(raw, ))
+                qs = list(sqlparse.parse(raw))
+                logging.debug("raw query object:|%s|" %(qs, ))
 
-    for q in qs:
-        q = parse_query(q)
-        execute_query(db, q)
+                for q in qs:
+                    q = parse_query(q)
+                    execute_query(db, q)
+    else:
+        raw = sys.argv[1]
+        logging.debug("raw query string:|%s|" %(raw, ))
+        qs = list(sqlparse.parse(raw))
+        logging.debug("raw query object:|%s|" %(qs, ))
+
+        for q in qs:
+            q = parse_query(q)
+            execute_query(db, q)
