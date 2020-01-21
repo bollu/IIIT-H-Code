@@ -87,38 +87,60 @@ class Query:
         self.cols = cols
         self.filters = filters
 
-class Filter:
-    def __init__(self): pass
+    def __repr__(self):
+        return "tables: %s | cols: %s | filters: %s" % (self.tables, self.cols, self.filters)
 
-class FilterAnd:
-    def __init__(self, l, r):
-        self.l = l
-        self.r = r
+class Filter: pass
+
+
+class FilterAnd(Filter):
+    def __init__(self, lhs, rhs):
+        self.lhs = lhs
+        self.rhs = rhs
+        assert(isinstance(self.lhs, (Identifier, Int, Filter)))
+        assert(isinstance(self.rhs, (Identifier, Int, Filter)))
 
     def __repr__(self):
-        return "(AND %s %s)" % (self.l.__repr__(), self.r.__repr__())
+        return "(OR %s %s)" % (self.lhs.__repr__(), self.rhs.__repr__())
 
-class FilterOr:
-    def __init__(self, l, r):
-        self.l = l
-        self.r = r
+class FilterOr(Filter):
+    def __init__(self, lhs, rhs):
+        self.lhs = lhs
+        self.rhs = rhs
+        assert(isinstance(self.lhs, (Identifier, Int, Filter)))
+        assert(isinstance(self.rhs, (Identifier, Int, Filter)))
 
     def __repr__(self):
-        return "(AND %s %s)" % (self.l.__repr__(), self.r.__repr__())
+        return "(OR %s %s)" % (self.lhs.__repr__(), self.rhs.__repr__())
+
 
 FILTER_RELATIONAL_EQ = "filter_relational_eq"
 FILTER_RELATIONAL_GEQ = "filter_relational_geq"
 FILTER_RELATIONAL_LEQ = "filter_relational_leq"
 FILTER_RELATIONAL_LT = "filter_relational_lt"
 FILTER_RELATIONAL_GT = "filter_relational_gt"
-class FilterRelational:
-    def __init__(self, col, rel, val):
-        self.col = col
+class FilterRelational(Filter):
+    def __init__(self, lhs, ty, rhs):
+        assert(isinstance(lhs, (Identifier, Int, Filter)))
+        assert(isinstance(rhs, (Identifier, Int, Filter)))
+        self.lhs = lhs
         self.ty = ty
-        self.val = val
+        self.rhs = rhs
         assert self.ty in [FILTER_RELATIONAL_LT, FILTER_RELATIONAL_LEQ,
                            FILTER_RELATIONAL_EQ, FILTER_RELATIONAL_GT,
                            FILTER_RELATIONAL_GEQ]
+        
+    def __repr__(self):
+        return "(%s %s %s)" % (self.ty, self.lhs.__repr__(), self.rhs.__repr__())
+
+class Identifier:
+    def __init__(self, s): self.s = s; assert(isinstance(s, str))
+    def __repr__(self): return "Identifier(%s)" % (self.s, )
+
+class Int:
+    def __init__(self, i): self.i = i; assert(isinstance(i, int))
+    def __repr__(self): return "Int(%s)" % (self.i, )
+
 
 
 # parse a single column selector
@@ -183,9 +205,54 @@ def parse_tables(l):
     else:
         raise RuntimeError("unknown table selector: |%s:%s|" % (l, type(l)))
 
-# sqlparse.sql.where -> list[filter]
-def parse_filters(l):
-    pass
+# string -> COMPARE_TYPE
+def parse_compare_op(opstr):
+    if opstr == "=": return FILTER_RELATIONAL_EQ
+    elif opstr == ">=": return FILTER_RELATIONAL_GEQ
+    elif opstr == "<=": return FILTER_RELATIONAL_LEQ
+    elif opstr == "<": return FILTER_RELATIONAL_LT
+    elif opstr == ">": return FILTER_RELATIONAL_GT
+    else: raise RuntimeError("unknown comparison: |%s|" % (opstr))
+
+# string -> [identifier, int]
+def parse_raw_param(p):
+    assert(isinstance(p, str))
+    def try_number(s):
+        try: return Int(int(s))
+        except ValueError: return None
+
+    n = try_number(p)
+    if n: return n
+    return Identifier(str(p))
+
+# list -> filter
+def parse_where_clause(l):
+    while l:
+        assert(isinstance(l[0], sqlparse.sql.Comparison))
+        raw_compare = l[0]; l = l[1:]
+        op = raw_compare[1]
+        f = FilterRelational(parse_raw_param(raw_compare[0].value),
+                    parse_compare_op(raw_compare[1].value), 
+                    parse_raw_param(raw_compare[2].value))
+        # there's no more
+        if not l: return f
+        else: # there's more, parse it
+            if (l[0].value == 'and'):
+                return FilterAnd(f, parse_where_clause(l[1:]))
+            elif (l[0].value == 'or'):
+                return FilterOr(f, parse_where_clause(l[1:]))
+            else:
+                raise RuntimeError("unknown comparison joiner: |%s|, where clause: |%s|" % (l[1], w))
+
+    raise RuntimeError("parse_where_clause: UNREACHABLE")
+
+# sqlparse.sql.where -> filter
+def parse_where(w):
+    assert(isinstance(w, sqlparse.sql.Where))
+    # why the FUCK does it have whitespace
+    import pudb; pudb.set_trace()
+    l = [x for x in w[1:] if not x.is_whitespace]
+    return parse_where_clause(l)
 
 
 # really parse the query. The current thing returns some stupid tokenized
@@ -193,11 +260,14 @@ def parse_filters(l):
 def parse_query(q):
     assert(isinstance(q, sqlparse.sql.Statement))
 
+
+
+
     # <0|DML select> <1|WS> [2|cols:Ident|IdentList] <3|WS> 
-    # <4|Keyword From> <5|WS> [6|tables:Ident|IdentList] <6|WS> <7|Where>
+    # <4|Keyword From> <5|WS> [6|tables:Ident|IdentList] <7|WS> <8|Where>
     COLSIX=2
     TABLESIX=6
-    WHEREIX=7
+    WHEREIX=8
     if q[0].value != 'select':
         raise RuntimeError("expected SELECT queries. Received: |%s|" % (q, ))
 
@@ -205,16 +275,16 @@ def parse_query(q):
     tables = parse_tables(q[TABLESIX])
 
     if len(q.tokens) != 9: filters = []
-    else: filters = parse_filters(q[WHEREIX])
-
-    print("cols: %s" % (cols, ))
-    print("tables: %s" % (tables, ))
-    print("filters: %s" % (filters, ))
+    else: 
+        print("parsing filters...")
+        filters = parse_where(q[WHEREIX])
     return Query(cols, tables, filters)
-
 
 def execute_query(db, q):
     assert(isinstance(db, DB))
+    assert(isinstance(q, Query))
+
+    print("executing query: |%s|" % (q, ))
 
 
 if __name__ == "__main__":
@@ -223,11 +293,10 @@ if __name__ == "__main__":
     if sys.argv[1] == "--inputfile":
         with open(sys.argv[2], "r") as f: 
             for raw in f:
-                logging.debug("raw query string:|%s|" %(raw, ))
                 qs = list(sqlparse.parse(raw))
-                logging.debug("raw query object:|%s|" %(qs, ))
-
                 for q in qs:
+                    print("---")
+                    print("raw query: |%s|" % (q, ))
                     q = parse_query(q)
                     execute_query(db, q)
     else:
