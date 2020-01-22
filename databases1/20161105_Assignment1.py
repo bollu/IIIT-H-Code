@@ -432,7 +432,6 @@ def canonical_col_names(col2ix):
 
     return canon
 
-
 def execute_query(db, q):
     assert(isinstance(db, DB))
     assert(isinstance(q, Query))
@@ -447,7 +446,33 @@ def execute_query(db, q):
         else: raise RuntimeError("unknown table: |%s|" % (traw, ))
     
     # build the cartesian product
-    (rows, col2ix) = tables_cartesian_product(ts)
+    # create a map between column to tables containing the column
+    col2table = defaultdict(list)
+    for t in ts:
+        for c in t.cols: 
+            col2table[c].append(t)
+
+    # map each table to new column names
+    col2ix= {}
+    cols = []
+    # rename all columns that have multiple tables
+    for t in ts:
+        for c in t.cols:
+            assert c in col2table 
+            # this column occurs in multiple tables; rename it
+            if len(col2table[c]) > 1: 
+                cols.append(t.name + "." + c)
+                col2ix[t.name + "." + c] = len(cols)-1
+            else: 
+                cols.append(c)
+                col2ix[t.name + "." + c] = len(cols)-1
+                col2ix[c] = len(cols)-1
+
+
+    rows =  ts[0].rows
+    for t in ts[1:]: 
+        assert(isinstance(t, Table))
+        rows = rows_cartesian_product(rows, t.rows)
     
     # TODO: run column selectors
     print("columns in full table: %s" % set(col2ix))
