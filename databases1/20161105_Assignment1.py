@@ -72,13 +72,14 @@ COLUMN_SELECT_MAX = "column_select_max"
 COLUMN_SELECT_MIN = "column_select_min"
 COLUMN_SELECT_AVG = "column_select_avg"
 COLUMN_SELECT_STAR = "column_select_star"
+COLUMN_SELECT_DISTINCT = "column_select_distinct"
 class ColumnSelector:
     def __init__(self, col, ty):
         self.col = col
         self.ty = ty
         assert self.ty in [COLUMN_SELECT_ALL, COLUMN_SELECT_AVG,
                            COLUMN_SELECT_MAX, COLUMN_SELECT_MIN,
-                           COLUMN_SELECT_STAR]
+                           COLUMN_SELECT_STAR, COLUMN_SELECT_DISTINCT]
         if self.ty != COLUMN_SELECT_STAR: assert self.col is not None
 
     def __repr__(self):
@@ -164,6 +165,8 @@ def parse_col_selector(s):
             return ColumnSelector(col, COLUMN_SELECT_MIN)
         elif name == "avg":
             return ColumnSelector(col, COLUMN_SELECT_AVG)
+        elif name == "distinct":
+            return ColumnSelector(col, COLUMN_SELECT_DISTINCT)
         else:
             raise RuntimeError("unknown column filter function: |%s|" % (s, ))
     else: # neither identifier nor function
@@ -189,8 +192,8 @@ def parse_col_selectors(l):
         return cs
     elif type(l) == sqlparse.sql.Token and l.value == "*":
         return [ColumnSelector(None, COLUMN_SELECT_STAR)]
-    else:
-        raise RuntimeError("unknown column selector query: |%s:%s|" % (l, type(l)))
+    else: # attempt to parse it as a query selector!
+        return parse_col_selector(l)
 
 # sqlparse.sql.query -> list[str]: table names
 def parse_tables(l):
@@ -235,7 +238,10 @@ def parse_raw_param(p):
 def parse_where_clause(l):
     while l:
         assert(isinstance(l[0], sqlparse.sql.Comparison))
+        # each where clause is an element of the list
+        l = [x for x in l if not x.is_whitespace]
         raw_compare = l[0]; l = l[1:]
+        raw_compare = [x for x in raw_compare if not x.is_whitespace]
         op = raw_compare[1]
         f = FilterRelational(parse_raw_param(raw_compare[0].value),
                     parse_compare_op(raw_compare[1].value), 
@@ -265,7 +271,6 @@ def parse_where(w):
 def parse_query(q):
     assert(isinstance(q, sqlparse.sql.Statement))
     q = [x for x in q if not x.is_whitespace]
-    import pudb; pudb.set_trace()
 
     # <0|DML select> [1|cols:Ident|IdentList] 
     # <2|Keyword From>  [3|tables:Ident|IdentList]  <4|Where>
