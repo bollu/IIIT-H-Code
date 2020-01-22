@@ -29,8 +29,8 @@ class DB:
     def __init__(self, metapath, tables):
         self.metapath = metapath
         self.tables = tables
-        for (i, t) in enumerate(self.tables):
-            if not isinstance(t, Table):
+        for (i, k) in enumerate(self.tables):
+            if not isinstance(self.tables[k], Table):
                 logging.error("DB received non-table object at index %s: %s" % 
                               (i, t))
                 raise RuntimeError("DB received non-table object at index %s: %s" % 
@@ -51,7 +51,7 @@ def load_db(path):
     ls = [l.strip() for l in ls]
     logging.debug("metadata file:\n%s\n--\n" % ls)
 
-    tables = []
+    tables = {}
     while ls:
         assert(ls[0] == "<begin_table>")
         i = 0
@@ -61,8 +61,8 @@ def load_db(path):
         # ls[2..i-1] = TABLE column names
         #  ls[i] = end_table
         name = ls[1]; cols=ls[2:i]; ls=ls[i+1:]
-        tables.append(load_table(name, 
-                                 os.path.join(BASEPATH, name + ".csv"), cols))
+        tables[name] = load_table(name, 
+                                 os.path.join(BASEPATH, name + ".csv"), cols)
     return DB(path, tables)
 
 
@@ -71,12 +71,15 @@ COLUMN_SELECT_ALL = "column_select_all"
 COLUMN_SELECT_MAX = "column_select_max"
 COLUMN_SELECT_MIN = "column_select_min"
 COLUMN_SELECT_AVG = "column_select_avg"
+COLUMN_SELECT_STAR = "column_select_star"
 class ColumnSelector:
     def __init__(self, col, ty):
         self.col = col
         self.ty = ty
         assert self.ty in [COLUMN_SELECT_ALL, COLUMN_SELECT_AVG,
-                           COLUMN_SELECT_MAX, COLUMN_SELECT_MIN]
+                           COLUMN_SELECT_MAX, COLUMN_SELECT_MIN,
+                           COLUMN_SELECT_STAR]
+        if self.ty != COLUMN_SELECT_STAR: assert self.col is not None
 
     def __repr__(self):
         return "%s(%s)" % (self.ty, self.col)
@@ -184,12 +187,15 @@ def parse_col_selectors(l):
               if str(l[0]) != ",": raise RuntimeError("expected comma in column selector")
               l = l[1:]
         return cs
+    elif type(l) == sqlparse.sql.Token and l.value == "*":
+        return [ColumnSelector(None, COLUMN_SELECT_STAR)]
     else:
         raise RuntimeError("unknown column selector query: |%s:%s|" % (l, type(l)))
 
 # sqlparse.sql.query -> list[str]: table names
 def parse_tables(l):
     if type(l) == sqlparse.sql.Token: return [l.value]
+    elif type(l) == sqlparse.sql.Identifier: return [l.value]
     elif type(l) == sqlparse.sql.IdentifierList:
         l = [x for x in l if not x.is_whitespace]
         ts = []
@@ -250,7 +256,6 @@ def parse_where_clause(l):
 def parse_where(w):
     assert(isinstance(w, sqlparse.sql.Where))
     # why the FUCK does it have whitespace
-    import pudb; pudb.set_trace()
     l = [x for x in w[1:] if not x.is_whitespace]
     return parse_where_clause(l)
 
@@ -259,32 +264,77 @@ def parse_where(w):
 # list.
 def parse_query(q):
     assert(isinstance(q, sqlparse.sql.Statement))
+    q = [x for x in q if not x.is_whitespace]
+    import pudb; pudb.set_trace()
 
-
-
-
-    # <0|DML select> <1|WS> [2|cols:Ident|IdentList] <3|WS> 
-    # <4|Keyword From> <5|WS> [6|tables:Ident|IdentList] <7|WS> <8|Where>
-    COLSIX=2
-    TABLESIX=6
-    WHEREIX=8
+    # <0|DML select> [1|cols:Ident|IdentList] 
+    # <2|Keyword From>  [3|tables:Ident|IdentList]  <4|Where>
+    COLSIX=1
+    TABLESIX=3
+    WHEREIX=4
     if q[0].value != 'select':
         raise RuntimeError("expected SELECT queries. Received: |%s|" % (q, ))
 
     cols = parse_col_selectors(q[COLSIX])
     tables = parse_tables(q[TABLESIX])
 
-    if len(q.tokens) != 9: filters = []
+    if len(q) != 5: filters = []
     else: 
         print("parsing filters...")
         filters = parse_where(q[WHEREIX])
-    return Query(cols, tables, filters)
+    return Query(tables, cols, filters)
+
+# return a cross product of the rows
+def table_cross(t1, t2):
+    arr = np.empty((len(t1.rows) * len(t2.rows), t1.cols + t2.cols))
+    # t1: 
+    # a
+    # b
+    # c
+    # t2:
+    # x
+    # y
+
+    # arr: 
+    # a x
+    # b x
+    # c x
+    # a y
+    # b y 
+    # c y
+    # >>> np.repeat([1, 2, 3], 3) := array([1, 1, 1, 2, 2, 2, 3, 3, 3])
+    # >>> np.tile([1, 2, 3], 3) := array([1, 2, 3, 1, 2, 3, 1, 2, 3])
+
+    arr[:, 0:t2.cols] = np.repeat(t1.rows, len(t2.rows))
+    arr[:, t2.cols:] = np.tile(t2.rows, len(t1.rows))
+
+    return Table(t1.name + "*" + t2.name, "NOPATH", t1.cols + t2.cols, rows)
 
 def execute_query(db, q):
     assert(isinstance(db, DB))
     assert(isinstance(q, Query))
 
+
     print("executing query: |%s|" % (q, ))
+
+    ts = []
+    for traw in q.tables:
+        if traw in db.tables: ts.append(db.tables[traw])
+        else: raise RuntimeError("unknown table: |%s|" % (traw, ))
+
+    # for each table, build the full cartesian product
+    tfull = ts[0]
+    assert(isinstance(tfull, Table))
+    for t in ts[1:]: 
+        assert(isinstance(t, Table))
+        tfull = table_cross(t, tfull)
+
+    print("full table:\n")
+    print(tfull)
+    print(tfull.cols)
+    print(tfull.rows)
+
+
 
 
 if __name__ == "__main__":

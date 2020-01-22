@@ -1,3 +1,4 @@
+select * from table1 
+select col1,col2 from table where col1.A=col2.B
 select col1,   col3,   max(col2) from table1,table2 where cl1=10 and col2>=10
-select col1 from table where col=10
 select col1 from table
