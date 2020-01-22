@@ -5,6 +5,7 @@ import os.path
 import csv
 import logging
 import sqlparse
+from collections import defaultdict
 import numpy as np
 
 logging.basicConfig(filename='db.log', level=logging.DEBUG)
@@ -289,20 +290,15 @@ def parse_query(q):
         filters = parse_where(q[WHEREIX])
     return Query(tables, cols, filters)
 
-# return a cross product of the rows
-def table_cross(t1, t2):
-    import pudb; pudb.set_trace()
-    t1_nrows = t1.rows.shape[0]; t1_ncols = t1.rows.shape[1];
-    t2_nrows = t2.rows.shape[0]; t2_ncols = t2.rows.shape[1];
+# return a cross product of all the rows
+# r1: NROWS1 x NCOLS1 | r2: NROWS2 x NCOLS2
+# r1xr2: (NROWS1*NROWS2) x (NCOLS1+NCOLS2)
+def rows_cartesian_product(r1s, r2s):
+    nr1 = r1s.shape[0]; nc1 = r1s.shape[1]
+    nr2 = r2s.shape[0]; nc2 = r2s.shape[1]
     
-    arr = np.empty([t1_nrows * t2_nrows, t1_ncols + t2_ncols])
+    arr = np.empty([nr1 * nr2, nc1 + nc2])
 
-    i = 0
-    for r1 in t1.rows:
-        for r2 in t2.rows:
-            arr[i][:t1_ncols] = r1
-            arr[i][t1_ncols:] = r2
-            i += 1
     # t1: 
     # a
     # b
@@ -310,7 +306,6 @@ def table_cross(t1, t2):
     # t2:
     # x
     # y
-
     # arr: 
     # a x
     # b x
@@ -318,16 +313,13 @@ def table_cross(t1, t2):
     # a y
     # b y 
     # c y
-    # >>> np.repeat([1, 2, 3], 3) := array([1, 1, 1, 2, 2, 2, 3, 3, 3])
-    # >>> np.tile([1, 2, 3], 3) := array([1, 2, 3, 1, 2, 3, 1, 2, 3])
-
-    # arr[:, :t2.ncols] = np.repeat(t1.rows, t1_nrows)
-    # arr[:, t2.cols:] = np.tile(t2.rows, t2_nrows)
-
-    # TODO: rename ambiguous columns!
-
-
-    return Table(t1.name + "*" + t2.name, "NOPATH", t1.cols + t2.cols, arr)
+    i = 0
+    for r1 in r1s:
+        for r2 in r2s:
+            arr[i][:nc1] = r1
+            arr[i][nc1:] = r2
+            i += 1
+    return arr
 
 # raw column string -> (column, table)
 def raw_col_access_to_col_table(raw_col_name, db):
@@ -357,6 +349,31 @@ def raw_col_access_to_col_table(raw_col_name, db):
             raise RuntimeError("unable to find column: %s" % (col_name))
         return (col_name, table_name)
 
+# build a new table that is the product of all input tables
+def tables_cartesian_product(ts):
+    # create a map between column to tables containing the column
+    col2table = defaultdict(list)
+    for t in ts:
+        for c in t.cols: 
+            col2table[c].append(t)
+
+
+    # map each table to new column names
+    cols = []
+    # rename all columns that have multiple tables
+    for t in ts:
+        for c in t.cols:
+            assert c in col2table 
+            # this column occurs in multiple tables; rename it
+            if len(col2table[c]) > 1: cols.append(t.name + "." + c)
+            else: cols.append(c)
+
+    rows =  ts[0].rows
+    for t in ts[1:]: 
+        assert(isinstance(t, Table))
+        rows = rows_cartesian_product(rows, t.rows)
+    return Table("PRODUCT_TABLE", "NOPATH", cols, rows)
+
 
 def execute_query(db, q):
     assert(isinstance(db, DB))
@@ -369,14 +386,8 @@ def execute_query(db, q):
     for traw in q.tables:
         if traw in db.tables: ts.append(db.tables[traw])
         else: raise RuntimeError("unknown table: |%s|" % (traw, ))
-
-    # for each table, build the full cartesian product
-    table_col_ix_map = {}
-    tfull = ts[0]
-    assert(isinstance(tfull, Table))
-    for t in ts[1:]: 
-        assert(isinstance(t, Table))
-        tfull = table_cross(t, tfull)
+    
+    tfull = tables_cartesian_product(ts)
 
     print("full table:\n")
     print(tfull)
@@ -387,8 +398,8 @@ def execute_query(db, q):
     # run the filters
 
     # now pull out columns
-    for colq in q.cols:
-        (col, table) = TODO
+    # for colq in q.cols:
+    #     (col, table) = TODO
 
 
 if __name__ == "__main__":
