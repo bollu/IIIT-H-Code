@@ -516,7 +516,7 @@ def execute_query_2(db, q):
         nrows = None
         for c in t.cols:
             # column is not selected, skip
-            ix = col2ix[c]
+            ix = col2ix[t.name + "." + c]
             if ix not in colixs_selected: continue;
             if not nrows: nrows = len(colix2data[ix])
             else: assert nrows == len(colix2data[ix])
@@ -534,34 +534,39 @@ def execute_query_2(db, q):
     colix2cartdata = {}
     nreps = total_rows
     for t in ts:
+        # ntablereps * nreps == total_rows
+        ntablereps = total_rows // nreps
         nreps //= t2rows[t.name]
+
         for c in t.cols: 
-            ix = col2ix[c]
+            ix = col2ix[t.name + "." + c]
             if ix not in colixs_selected: continue
 
             colix2cartdata[ix] = np.empty(total_rows, dtype=np.float)
 
             dix = 0
-            for d in colix2data[ix]:
-                for _ in range(nreps):
-                    colix2cartdata[ix][dix] = d
-                    dix += 1
+            for _ in range(ntablereps):
+                for d in colix2data[ix]:
+                    for _ in range(nreps):
+                        colix2cartdata[ix][dix] = d
+                        dix += 1
 
 
     ### FILTERING
     ### =========
+    rows_to_kill = []
     for rix in range(total_rows):
-        rows_to_kill = []
         r = {}
-        for cix in colix2data:
-            r[cix] = colix2data[cix][rix]
+        for cix in colix2cartdata:
+            # print("cix: %s | tix: %s | total_rows: %s" % (cix, rix,total_rows))
+            r[cix] = colix2cartdata[cix][rix]
 
         if q.filters and not q.filters.run(col2ix, r):
             rows_to_kill.append(rix)
 
-        for cix in colix2cartdata:
-            colix2cartdata[cix] = np.delete(colix2cartdata[cix], rows_to_kill)
-        total_rows -= len(rows_to_kill)
+    for cix in colix2cartdata:
+        colix2cartdata[cix] = np.delete(colix2cartdata[cix], rows_to_kill)
+    total_rows -= len(rows_to_kill)
 
 
     ###PRINTING
