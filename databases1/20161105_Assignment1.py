@@ -193,7 +193,7 @@ def parse_col_selectors(l):
     elif type(l) == sqlparse.sql.Token and l.value == "*":
         return [ColumnSelector(None, COLUMN_SELECT_STAR)]
     else: # attempt to parse it as a query selector!
-        return parse_col_selector(l)
+        return [parse_col_selector(l)]
 
 # sqlparse.sql.query -> list[str]: table names
 def parse_tables(l):
@@ -324,7 +324,39 @@ def table_cross(t1, t2):
     # arr[:, :t2.ncols] = np.repeat(t1.rows, t1_nrows)
     # arr[:, t2.cols:] = np.tile(t2.rows, t2_nrows)
 
+    # TODO: rename ambiguous columns!
+
+
     return Table(t1.name + "*" + t2.name, "NOPATH", t1.cols + t2.cols, arr)
+
+# raw column string -> (column, table)
+def raw_col_access_to_col_table(raw_col_name, db):
+    # column name does not have table name, so search across all tables
+    dotix = raw_col_name.find('.')
+    if dotix == -1:
+        # go through all tables
+        potential_tables = []
+        col_name = raw_col_name
+
+        for tname in db.tables:
+            for c in tname.cols: 
+                if  col_name == c: potential_tables.push_back(c)
+
+        if len(potential_tables) == 0:
+            raise RuntimeError("unable to find column: %s" % (col_name))
+        elif len(potential_tables) >= 1:
+            raise RuntimeError("column (%s) found in mulitple tables: %s" % 
+                    (col_name, potential_tables))
+        return (col_name, potential_tables[0])
+    else: 
+        (col_name, table_name) = raw_col_name[:dotix], raw_col_name[dotix+1:]
+        if table_name not in db.tables:
+            raise RuntimeError("unable to find table: %s" % (table_name))
+        t = db.tables[table_name]
+        if col_name not in t.cols:
+            raise RuntimeError("unable to find column: %s" % (col_name))
+        return (col_name, table_name)
+
 
 def execute_query(db, q):
     assert(isinstance(db, DB))
@@ -339,6 +371,7 @@ def execute_query(db, q):
         else: raise RuntimeError("unknown table: |%s|" % (traw, ))
 
     # for each table, build the full cartesian product
+    table_col_ix_map = {}
     tfull = ts[0]
     assert(isinstance(tfull, Table))
     for t in ts[1:]: 
@@ -351,6 +384,11 @@ def execute_query(db, q):
     print(tfull.rows)
 
 
+    # run the filters
+
+    # now pull out columns
+    for colq in q.cols:
+        (col, table) = TODO
 
 
 if __name__ == "__main__":
