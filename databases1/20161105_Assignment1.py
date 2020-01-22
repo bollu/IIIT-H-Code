@@ -73,6 +73,7 @@ COLUMN_SELECT_MAX = "column_select_max"
 COLUMN_SELECT_MIN = "column_select_min"
 COLUMN_SELECT_AVG = "column_select_avg"
 COLUMN_SELECT_STAR = "column_select_star"
+COLUMN_SELECT_SUM = "column_select_sum"
 COLUMN_SELECT_DISTINCT = "column_select_distinct"
 class ColumnSelector:
     def __init__(self, col, ty):
@@ -80,7 +81,8 @@ class ColumnSelector:
         self.ty = ty
         assert self.ty in [COLUMN_SELECT_ALL, COLUMN_SELECT_AVG,
                            COLUMN_SELECT_MAX, COLUMN_SELECT_MIN,
-                           COLUMN_SELECT_STAR, COLUMN_SELECT_DISTINCT]
+                           COLUMN_SELECT_STAR, COLUMN_SELECT_DISTINCT,
+                          COLUMN_SELECT_SUM]
         if self.ty != COLUMN_SELECT_STAR: assert self.col is not None
 
     def __repr__(self):
@@ -189,13 +191,15 @@ def parse_col_selector(s):
         name = s[0].value; parens=s[1]
         if type(parens) != sqlparse.sql.Parenthesis: 
             raise RuntimeError("expected parenthesis around column filter: %s" % (s))
-        col = parens[1].value.lower()
+        col = parens[1].value
         print("name: |%s| col: |%s|" % (name, col))
 
         if name == "max":
             return ColumnSelector(col, COLUMN_SELECT_MAX)
         elif name == "min":
             return ColumnSelector(col, COLUMN_SELECT_MIN)
+        elif name == "sum":
+            return ColumnSelector(col, COLUMN_SELECT_SUM)
         elif name == "avg":
             return ColumnSelector(col, COLUMN_SELECT_AVG)
         elif name == "distinct":
@@ -381,69 +385,47 @@ def raw_col_access_to_col_table(raw_col_name, db):
             raise RuntimeError("unable to find column: %s" % (col_name))
         return (col_name, table_name)
 
-# build a new table that is the product of all input tables
-# returns rows and col2ix of new table
-# [table] -> (rows, col2ix)
-def tables_cartesian_product(ts):
-    # create a map between column to tables containing the column
-    col2table = defaultdict(list)
-    for t in ts:
-        for c in t.cols: 
-            col2table[c].append(t)
 
-    # map each table to new column names
-    col2ix= {}
-    cols = []
-    # rename all columns that have multiple tables
-    for t in ts:
-        for c in t.cols:
-            assert c in col2table 
-            # this column occurs in multiple tables; rename it
-            if len(col2table[c]) > 1: 
-                cols.append(t.name + "." + c)
-                col2ix[t.name + "." + c] = len(cols)-1
-            else: 
-                cols.append(c)
-                col2ix[t.name + "." + c] = len(cols)-1
-                col2ix[c] = len(cols)-1
-
-
-    rows =  ts[0].rows
-    for t in ts[1:]: 
-        assert(isinstance(t, Table))
-        rows = rows_cartesian_product(rows, t.rows)
-    return (rows, col2ix)
-
+def col2ix_to_ix2cols(col2ix):
+    i2cols = defaultdict(list)
+    for c in col2ix: i2cols[col2ix[c]].append(c)
+    return i2cols
 
 # return a list of canonical column names, where 
 # canon[i] = c => c ∈ col2ix[i] . 
-def canonical_col_names(col2ix):
-    i2cols = defaultdict(list)
-    for c in col2ix: i2cols[col2ix[c]].append(c)
-    canon = [None for _ in range(len(i2cols))]
-    for i in i2cols:
+def canonical_col_names(colixs, col2ix, ix2cols):
+    canon = [None for _ in range(len(colixs))]
+    i = 0
+    for ix in colixs:
         # this column has a "small" name, which means 
         # it was safe.
-        small = [c for c in i2cols[i] if not '.' in c]
-        full = [c for c in i2cols[i] if '.' in c]
+        small = [c for c in ix2cols[ix] if not '.' in c]
+        full = [c for c in ix2cols[ix] if '.' in c]
         if small: canon[i] = small[0]
-        else: canon[i]= full[0]
-
+        else: canon[i] = full[0]
+        i += 1
 
     return canon
 
-def execute_query(db, q):
-    assert(isinstance(db, DB))
-    assert(isinstance(q, Query))
+
+# delete all associated rows, given the column and the index
+# in the column of a table
+def del_row_in_table(i, cix, colix2data, colix2table):
+    for ix in colix2table:
+        if colix2table[ix] == colix2table[cix]:
+            colix2data[ix] = np.delete(colix2data[ix], i)
 
 
-    print("executing query: |%s|" % (q, ))
 
+def execute_query_2(db, q):
+    # name each column uniquely, and store data per column
     ts = []
     for traw in q.tables:
         assert isinstance(traw, str)
         if traw in db.tables: ts.append(db.tables[traw])
         else: raise RuntimeError("unknown table: |%s|" % (traw, ))
+
+
     
     # build the cartesian product
     # create a map between column to tables containing the column
@@ -453,42 +435,107 @@ def execute_query(db, q):
             col2table[c].append(t)
 
     # map each table to new column names
-    col2ix= {}
-    cols = []
+    col2ix = {}
+    colix2data = {}
+    colix2table = {}
     # rename all columns that have multiple tables
     for t in ts:
-        for c in t.cols:
+        for (cix, c) in enumerate(t.cols):
             assert c in col2table 
+            ix = len(colix2data)
             # this column occurs in multiple tables; rename it
             if len(col2table[c]) > 1: 
-                cols.append(t.name + "." + c)
-                col2ix[t.name + "." + c] = len(cols)-1
+                col2ix[t.name + "." + c] = ix
             else: 
-                cols.append(c)
-                col2ix[t.name + "." + c] = len(cols)-1
-                col2ix[c] = len(cols)-1
+                col2ix[t.name + "." + c] = ix
+                col2ix[c] = ix
+            colix2data[ix] = t.rows[cix]
+            colix2table[ix] = t.name
+
+    ix2cols = col2ix_to_ix2cols(col2ix)
 
 
-    rows =  ts[0].rows
-    for t in ts[1:]: 
-        assert(isinstance(t, Table))
-        rows = rows_cartesian_product(rows, t.rows)
-    
-    # TODO: run column selectors
-    print("columns in full table: %s" % set(col2ix))
+    # now run the column selectors from each table
+    # ============================================
+    # no index is selected
+    colixs_selected = set()
 
-    # if we have to filter, run the filter
-    if q.filters:
-        rs = [] # filtered rows
-        for r in rows:
-            b =  bool(q.filters.run(col2ix, r))
-            # if the filter succeeded, filter it away
-            if b: rs.append(r)
-        rows = np.asarray(rs)
+    for cq in q.cols:
+        if cq.ty.lower() == COLUMN_SELECT_STAR.lower(): 
+            # add all tables in the query
+            for traw in q.tables:
+                for c in db.tables[traw].cols:
+                    colixs_selected.add(col2ix[t.name + "." + c])
+            break
+        assert isinstance(cq, ColumnSelector)
+        cix = col2ix[cq.col]
+        d = colix2data[cix]
+        colixs_selected.add(cix)
+        if cq.ty == COLUMN_SELECT_ALL: pass # nothing to filter
+        elif cq.ty == COLUMN_SELECT_MAX:
+            m = np.max(d)
+            # rows to kill
+            tokill = []
+            for i in len(d): 
+                if d[i] < m: tokill.append(i)
+            for i in tokill: del_row_in_table(i, cix, colix2data, colix2table)
+        else:
+            print("unhandled case")
 
+
+    # find dimensions of each table
+    total_rows = 1
+    t2rows = {}
+    for t in ts:
+        # data of all columns. We should check that they all have the same
+        # length
+        nrows = None
+        for c in t.cols:
+            # column is not selected, skip
+            ix = col2ix[c]
+            if ix not in colixs_selected: continue;
+            if not nrows: nrows = len(colix2data[ix])
+            else: assert nrows == len(colix2data[ix])
+
+        ncols = len(colixs_selected)
+        if total_rows == 0 or ncols == 0:
+            print(">>>>>>>>>>>NO DATA SELECTED!<<<<<<<<<<<"); return
+
+        total_rows *= nrows
+        t2rows[t.name] = nrows
+
+
+
+
+    # mapping from column indexes to data in the _product_ table
+    colix2cartdata = {}
+    nreps = total_rows
+    for t in ts:
+        nreps //= t2rows[t.name]
+        for c in t.cols: 
+            ix = col2ix[c]
+            if ix not in colixs_selected: continue
+
+            colix2cartdata[ix] = np.empty(total_rows, dtype=np.float)
+
+            dix = 0
+            for d in colix2data[ix]:
+                for _ in range(nreps):
+                    colix2cartdata[ix][dix] = d
+                    dix += 1
+
+
+    ###PRINTING
+    ###========
+
+    canonical_names = canonical_col_names(colix2cartdata.keys(), col2ix, ix2cols)
     print("table after query:")
-    print(canonical_col_names(col2ix))
-    print(rows)
+    for n in canonical_names: print("%10s" % n, end=" ")
+    print("\n" + ("-" * 50))
+    for r in range(total_rows):
+        for c in canonical_names:
+            print("%10s" % (colix2cartdata[col2ix[c]][r], ), end=" ")
+        print("\n", end="")
 
 
 if __name__ == "__main__":
@@ -502,7 +549,7 @@ if __name__ == "__main__":
                     print("---")
                     print("raw query: |%s|" % (q, ))
                     q = parse_query(q)
-                    execute_query(db, q)
+                    execute_query_2(db, q)
     else:
         raw = sys.argv[1]
         logging.debug("raw query string:|%s|" %(raw, ))
@@ -511,4 +558,4 @@ if __name__ == "__main__":
 
         for q in qs:
             q = parse_query(q)
-            execute_query(db, q)
+            execute_query_2(db, q)
