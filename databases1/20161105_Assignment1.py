@@ -470,6 +470,8 @@ def execute_query_2(db, q):
                     colixs_selected.add(col2ix[t.name + "." + c])
             break
         assert isinstance(cq, ColumnSelector)
+
+        if cq.col not in col2ix: raise RuntimeError("ambiguous use of column (%s) in where clause: (%s):" % (cq.col, cq))
         cix = col2ix[cq.col]
         d = colix2data[cix]
         colixs_selected.add(cix)
@@ -481,8 +483,29 @@ def execute_query_2(db, q):
             for i in range(len(d)):
                 if d[i] < m: tokill.append(i)
             del_rows_in_table(tokill, cix, colix2data, colix2table)
+        elif cq.ty == COLUMN_SELECT_MIN:
+            m = np.min(d)
+            # rows to kill
+            tokill = []
+            for i in range(len(d)):
+                if d[i] > m: tokill.append(i)
+            del_rows_in_table(tokill, cix, colix2data, colix2table)
+        elif cq.ty == COLUMN_SELECT_SUM:
+            s = np.sum(d)
+            for i in range(len(d)):
+                d[i] = s
+        elif cq.ty == COLUMN_SELECT_AVG:
+            avg = np.average(d)
+            for i in range(len(d)):
+                d[i] = avg
+        elif cq.ty == COLUMN_SELECT_DISTINCT:
+            tokill = []; seen = set({})
+            for i in range(len(d)): 
+                if d[i] in seen: tokill.append(i)
+                else: seen.add(d[i])
+            del_rows_in_table(tokill, cix, colix2data, colix2table)
         else:
-            print("unhandled case")
+            print("unhandled case of conditional")
 
     # find dimensions of each table
     total_rows = 1

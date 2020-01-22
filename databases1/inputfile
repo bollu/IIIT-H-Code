@@ -1,3 +1,5 @@
+select distinct(A) from table1
+select min(A) from table1
 select * from table1 
 Select A from table1
 Select table1.A from table1
@@ -6,5 +8,6 @@ Select A, B from table1
 select distinct(A) from table1
 select A from table1 where A >= 10
 select A from table1 where table1.A >= 10
-select A, B from table1, table2 where table1.A  = table2.B
+select table1.A, table2.B from table1, table2 where table1.A = table2.B
+select A, B from table1, table2 where table1.A = table2.B
 select A, B from table1, table2 where table1.A  = table2.B and table1.A >= 10
