@@ -156,7 +156,7 @@ def parse_col_selector(s):
         name = s[0].value; parens=s[1]
         if type(parens) != sqlparse.sql.Parenthesis: 
             raise RuntimeError("expected parenthesis around column filter: %s" % (s))
-        col = parens[1].value
+        col = parens[1].value.lower()
         print("name: |%s| col: |%s|" % (name, col))
 
         if name == "max":
@@ -249,9 +249,9 @@ def parse_where_clause(l):
         # there's no more
         if not l: return f
         else: # there's more, parse it
-            if (l[0].value == 'and'):
+            if (l[0].value.lower() == 'and'):
                 return FilterAnd(f, parse_where_clause(l[1:]))
-            elif (l[0].value == 'or'):
+            elif (l[0].value.lower() == 'or'):
                 return FilterOr(f, parse_where_clause(l[1:]))
             else:
                 raise RuntimeError("unknown comparison joiner: |%s|, where clause: |%s|" % (l[1], w))
@@ -277,7 +277,7 @@ def parse_query(q):
     COLSIX=1
     TABLESIX=3
     WHEREIX=4
-    if q[0].value != 'select':
+    if q[0].value.lower() != 'select':
         raise RuntimeError("expected SELECT queries. Received: |%s|" % (q, ))
 
     cols = parse_col_selectors(q[COLSIX])
@@ -291,7 +291,18 @@ def parse_query(q):
 
 # return a cross product of the rows
 def table_cross(t1, t2):
-    arr = np.empty((len(t1.rows) * len(t2.rows), t1.cols + t2.cols))
+    import pudb; pudb.set_trace()
+    t1_nrows = t1.rows.shape[0]; t1_ncols = t1.rows.shape[1];
+    t2_nrows = t2.rows.shape[0]; t2_ncols = t2.rows.shape[1];
+    
+    arr = np.empty([t1_nrows * t2_nrows, t1_ncols + t2_ncols])
+
+    i = 0
+    for r1 in t1.rows:
+        for r2 in t2.rows:
+            arr[i][:t1_ncols] = r1
+            arr[i][t1_ncols:] = r2
+            i += 1
     # t1: 
     # a
     # b
@@ -310,10 +321,10 @@ def table_cross(t1, t2):
     # >>> np.repeat([1, 2, 3], 3) := array([1, 1, 1, 2, 2, 2, 3, 3, 3])
     # >>> np.tile([1, 2, 3], 3) := array([1, 2, 3, 1, 2, 3, 1, 2, 3])
 
-    arr[:, 0:t2.cols] = np.repeat(t1.rows, len(t2.rows))
-    arr[:, t2.cols:] = np.tile(t2.rows, len(t1.rows))
+    # arr[:, :t2.ncols] = np.repeat(t1.rows, t1_nrows)
+    # arr[:, t2.cols:] = np.tile(t2.rows, t2_nrows)
 
-    return Table(t1.name + "*" + t2.name, "NOPATH", t1.cols + t2.cols, rows)
+    return Table(t1.name + "*" + t2.name, "NOPATH", t1.cols + t2.cols, arr)
 
 def execute_query(db, q):
     assert(isinstance(db, DB))
