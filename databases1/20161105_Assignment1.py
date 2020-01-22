@@ -95,7 +95,12 @@ class Query:
     def __repr__(self):
         return "tables: %s | cols: %s | filters: %s" % (self.tables, self.cols, self.filters)
 
-class Filter: pass
+class Filter:
+    #  check if this filter allows this row
+    # (col2ix, row) -> bool
+    # table for column info
+    def run(self, col2ix, r): 
+        raise RuntimeError("unimplemented function")
 
 
 class FilterAnd(Filter):
@@ -106,7 +111,11 @@ class FilterAnd(Filter):
         assert(isinstance(self.rhs, (Identifier, Int, Filter)))
 
     def __repr__(self):
-        return "(OR %s %s)" % (self.lhs.__repr__(), self.rhs.__repr__())
+        return "(AND %s %s)" % (self.lhs.__repr__(), self.rhs.__repr__())
+
+    def run(self, col2ix, r): 
+        return self.lhs.run(col2ix, r) and self.rhs.run(col2ix, r)
+
 
 class FilterOr(Filter):
     def __init__(self, lhs, rhs):
@@ -118,6 +127,8 @@ class FilterOr(Filter):
     def __repr__(self):
         return "(OR %s %s)" % (self.lhs.__repr__(), self.rhs.__repr__())
 
+    def run(self, col2ix, r): 
+        return self.lhs.run(col2ix, r) or self.rhs.run(col2ix, r)
 
 FILTER_RELATIONAL_EQ = "filter_relational_eq"
 FILTER_RELATIONAL_GEQ = "filter_relational_geq"
@@ -138,13 +149,34 @@ class FilterRelational(Filter):
     def __repr__(self):
         return "(%s %s %s)" % (self.ty, self.lhs.__repr__(), self.rhs.__repr__())
 
+    def run(self, col2ix, r): 
+        if self.ty == FILTER_RELATIONAL_LT:
+            return int(self.lhs.run(col2ix,  r)) < int(self.rhs.run(col2ix, r))
+        elif self.ty == FILTER_RELATIONAL_EQ:
+            return self.lhs.run(col2ix,  r) == self.rhs.run(col2ix, r)
+        elif self.ty == FILTER_RELATIONAL_GT:
+            return int(self.lhs.run(cs,  r)) > int(self.rhs.run(col2ix, r))
+        elif self.ty == FILTER_RELATIONAL_GEQ:
+            return int(self.lhs.run(col2ix,  r)) >= int(self.rhs.run(col2ix, r))
+        elif self.ty == FILTER_RELATIONAL_LEQ:
+            return int(self.lhs.run(cs,  r)) <= int(self.rhs.run(col2ix, r))
+        else: raise RuntimeError("unknown filter type when running filter: (%s)" % (self.ty))
+
+
 class Identifier:
     def __init__(self, s): self.s = s; assert(isinstance(s, str))
     def __repr__(self): return "Identifier(%s)" % (self.s, )
+    def run(self, col2ix, r): 
+        # look for current index
+        try:
+            i = col2ix[self.s];  return r[i]
+        except ValueError as v:
+            raise RuntimeError("unable to find column(%s) in columns(%s)" % (self.s, cs))
 
 class Int:
     def __init__(self, i): self.i = i; assert(isinstance(i, int))
     def __repr__(self): return "Int(%s)" % (self.i, )
+    def run(self, col2ix, r): return self.i
 
 
 
@@ -284,7 +316,7 @@ def parse_query(q):
     cols = parse_col_selectors(q[COLSIX])
     tables = parse_tables(q[TABLESIX])
 
-    if len(q) != 5: filters = []
+    if len(q) != 5: filters = None
     else: 
         print("parsing filters...")
         filters = parse_where(q[WHEREIX])
@@ -350,6 +382,8 @@ def raw_col_access_to_col_table(raw_col_name, db):
         return (col_name, table_name)
 
 # build a new table that is the product of all input tables
+# returns rows and col2ix of new table
+# [table] -> (rows, col2ix)
 def tables_cartesian_product(ts):
     # create a map between column to tables containing the column
     col2table = defaultdict(list)
@@ -357,22 +391,46 @@ def tables_cartesian_product(ts):
         for c in t.cols: 
             col2table[c].append(t)
 
-
     # map each table to new column names
+    col2ix= {}
     cols = []
     # rename all columns that have multiple tables
     for t in ts:
         for c in t.cols:
             assert c in col2table 
             # this column occurs in multiple tables; rename it
-            if len(col2table[c]) > 1: cols.append(t.name + "." + c)
-            else: cols.append(c)
+            if len(col2table[c]) > 1: 
+                cols.append(t.name + "." + c)
+                col2ix[t.name + "." + c] = len(cols)-1
+            else: 
+                cols.append(c)
+                col2ix[t.name + "." + c] = len(cols)-1
+                col2ix[c] = len(cols)-1
+
 
     rows =  ts[0].rows
     for t in ts[1:]: 
         assert(isinstance(t, Table))
         rows = rows_cartesian_product(rows, t.rows)
-    return Table("PRODUCT_TABLE", "NOPATH", cols, rows)
+    return (rows, col2ix)
+
+
+# return a list of canonical column names, where 
+# canon[i] = c => c ∈ col2ix[i] . 
+def canonical_col_names(col2ix):
+    i2cols = defaultdict(list)
+    for c in col2ix: i2cols[col2ix[c]].append(c)
+    canon = [None for _ in range(len(i2cols))]
+    for i in i2cols:
+        # this column has a "small" name, which means 
+        # it was safe.
+        small = [c for c in i2cols[i] if not '.' in c]
+        full = [c for c in i2cols[i] if '.' in c]
+        if small: canon[i] = small[0]
+        else: canon[i]= full[0]
+
+
+    return canon
 
 
 def execute_query(db, q):
@@ -384,22 +442,28 @@ def execute_query(db, q):
 
     ts = []
     for traw in q.tables:
+        assert isinstance(traw, str)
         if traw in db.tables: ts.append(db.tables[traw])
         else: raise RuntimeError("unknown table: |%s|" % (traw, ))
     
-    tfull = tables_cartesian_product(ts)
+    # build the cartesian product
+    (rows, col2ix) = tables_cartesian_product(ts)
+    
+    # TODO: run column selectors
+    print("columns in full table: %s" % set(col2ix))
 
-    print("full table:\n")
-    print(tfull)
-    print(tfull.cols)
-    print(tfull.rows)
+    # if we have to filter, run the filter
+    if q.filters:
+        rs = [] # filtered rows
+        for r in rows:
+            b =  bool(q.filters.run(col2ix, r))
+            # if the filter succeeded, filter it away
+            if b: rs.append(r)
+        rows = np.asarray(rs)
 
-
-    # run the filters
-
-    # now pull out columns
-    # for colq in q.cols:
-    #     (col, table) = TODO
+    print("table after query:")
+    print(canonical_col_names(col2ix))
+    print(rows)
 
 
 if __name__ == "__main__":
