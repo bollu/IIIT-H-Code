@@ -17,7 +17,9 @@ class Table:
         self.name = name
         self.path = path
         self.cols = cols
-        self.rows = np.asarray(rows)
+        self.rows = np.asarray(rows).astype(float)
+
+        print(self.rows)
 
         for (i, row) in enumerate(self.rows):
             if len(row) != len(cols):
@@ -410,10 +412,10 @@ def canonical_col_names(colixs, col2ix, ix2cols):
 
 # delete all associated rows, given the column and the index
 # in the column of a table
-def del_row_in_table(i, cix, colix2data, colix2table):
+def del_rows_in_table(delixs, cix, colix2data, colix2table):
     for ix in colix2table:
         if colix2table[ix] == colix2table[cix]:
-            colix2data[ix] = np.delete(colix2data[ix], i)
+            colix2data[ix] = np.delete(colix2data[ix], delixs)
 
 
 
@@ -449,7 +451,7 @@ def execute_query_2(db, q):
             else: 
                 col2ix[t.name + "." + c] = ix
                 col2ix[c] = ix
-            colix2data[ix] = t.rows[cix]
+            colix2data[ix] = t.rows[:, cix]
             colix2table[ix] = t.name
 
     ix2cols = col2ix_to_ix2cols(col2ix)
@@ -476,12 +478,11 @@ def execute_query_2(db, q):
             m = np.max(d)
             # rows to kill
             tokill = []
-            for i in len(d): 
+            for i in range(len(d)):
                 if d[i] < m: tokill.append(i)
-            for i in tokill: del_row_in_table(i, cix, colix2data, colix2table)
+            del_rows_in_table(tokill, cix, colix2data, colix2table)
         else:
             print("unhandled case")
-
 
     # find dimensions of each table
     total_rows = 1
@@ -506,7 +507,6 @@ def execute_query_2(db, q):
 
 
 
-
     # mapping from column indexes to data in the _product_ table
     colix2cartdata = {}
     nreps = total_rows
@@ -525,6 +525,22 @@ def execute_query_2(db, q):
                     dix += 1
 
 
+    ### FILTERING
+    ### =========
+    for rix in range(total_rows):
+        rows_to_kill = []
+        r = {}
+        for cix in colix2data:
+            r[cix] = colix2data[cix][rix]
+
+        if q.filters and not q.filters.run(col2ix, r):
+            rows_to_kill.append(rix)
+
+        for cix in colix2cartdata:
+            colix2cartdata[cix] = np.delete(colix2cartdata[cix], rows_to_kill)
+        total_rows -= len(rows_to_kill)
+
+
     ###PRINTING
     ###========
 
@@ -539,6 +555,7 @@ def execute_query_2(db, q):
 
 
 if __name__ == "__main__":
+    np.set_printoptions(suppress=True)
     db = load_db(os.path.join(BASEPATH, "metadata.txt"))
 
     if sys.argv[1] == "--inputfile":
