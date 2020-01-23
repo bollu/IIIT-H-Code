@@ -139,15 +139,26 @@ int main( int argc, char **argv ) {
       if (szLC > 0) qs_serial(a, lrLC[0], lrLC[1], asize); 
     } else {
       MPI_Send(lrLC, 2, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
-      if (szLC > 0) { MPI_Send(a, szLC, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD); }
+      if (szLC > 0) { 
+        MPI_Send(a, szLC, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
+        MPI_Recv(a, szLC, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
     } 
 
     if (rnkr == -1) {
       if (szRC > 0) qs_serial(a, lrRC[0], lrRC[1], asize); 
     } else {
       MPI_Send(lrRC, 2, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD) ;
-      if (szRC > 0) { MPI_Send(a+mid+1, szRC, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD); }
+      if (szRC > 0) { 
+        MPI_Send(a+mid+1, szRC, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD);
+        MPI_Recv(a+mid+1, szRC, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
     };
+
+    if (rnk != 0) {
+      // send full array pack to parent
+      MPI_Send(a, lr[1] - lr[0] + 1, MPI_LONG_LONG_INT, rnkp, 0, MPI_COMM_WORLD);
+    }
   } // end nodata check
 
 done_par:
