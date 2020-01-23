@@ -42,7 +42,9 @@ int main( int argc, char **argv ) {
 
   if (rnk == 0) {
     // 1. recieve input if leader
-    { FILE *f=fopen(argv[1], "r"); int i; while (fscanf(f, "%d", &i) == 1) { a.push_back(i); }; fclose(f); }
+    FILE *f=fopen(argv[1], "r");
+    int i; while (fscanf(f, "%d", &i) == 1) { a.push_back(i); };
+    fclose(f);
     pr();
     printf("data pointer: %p\n", a.data());
 
@@ -74,7 +76,11 @@ int main( int argc, char **argv ) {
   RNK << "GATHERED...\n" << flush;
 
   if (rnk == 0) {
-    { FILE *f=fopen(argv[2], "w"); for(auto v : a) fprintf(f, "%lli ", v); fclose(f); }
+    FILE *f = fopen(argv[2], "w");
+    for(int i = 0; i < a.size(); ++i) { fprintf(f, "%d ", a[i]); }
+    fprintf(f, "\n");
+    fflush(f);
+    fclose(f);
     pr();
   }
 
