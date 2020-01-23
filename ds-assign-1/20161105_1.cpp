@@ -28,22 +28,30 @@ I partition(I *a, I l, I r, I asize) {
   while(ltix+1 < geix && geix-1 > ltix) {
     // invariant
     assert(a[geix] >= part);
-    if(ltix>=0) { assert(a[ltix] < part); }
-
+    if(ltix>=l) { assert(a[ltix] < part); }
     if (a[ltix+1] >= part) {
       I t=a[ltix+1]; a[ltix+1] = a[geix-1]; a[geix-1]=t;
       geix--;
     } else {
+      // a[ltix+1] < part
       ltix++;
     }
   }
   assert(geix-1==ltix);
-  a[r-1] = a[geix]; a[geix] = part;
+  a[r] = a[geix]; a[geix] = part;
   return geix;
 }
 
 void qs_serial(I *a, I l, I r, I asize) {
+  assert(l >= 0);
+  assert(l <= r);
+  assert(r <= asize);
   I mid = partition(a, l, r, asize);
+  assert(l <= mid);
+  assert(mid <= r);
+
+  if (l <= mid - 1) qs_serial(a, l, mid-1, asize);
+  if (mid+1 <= r) qs_serial(a, mid+1, r, asize);
 }
 
 int main( int argc, char **argv ) {
@@ -127,12 +135,16 @@ int main( int argc, char **argv ) {
     if (szRC <= 0) { lrRC[0] = lrRC[1] = NODATA; }
 
     // start sending sizes to children
-    if (rnkl != -1) { 
+    if (rnkl == -1) { 
+      if (szLC > 0) qs_serial(a, lrLC[0], lrLC[1], asize); 
+    } else {
       MPI_Send(lrLC, 2, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
       if (szLC > 0) { MPI_Send(a, szLC, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD); }
     } 
 
-    if (rnkr != -1) {
+    if (rnkr == -1) {
+      if (szRC > 0) qs_serial(a, lrRC[0], lrRC[1], asize); 
+    } else {
       MPI_Send(lrRC, 2, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD) ;
       if (szRC > 0) { MPI_Send(a+mid+1, szRC, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD); }
     };
