@@ -18,28 +18,32 @@ void pr(I *a, I l, I r) { RNK;
 
 int log2floor(int n) { if (n <= 1) return 0; return 1 + log2floor(n/2); }
 
-I partition(I *a, I l, I r) {
-  assert((l <= r && l >= 0));
-  const I part = a[r-1];
+I partition(I *a, I l, I r, I asize) {
+  assert(l <= r);
+  assert(l >= 0);
+  assert(r <= asize);
+  const I part = a[r];
   I ltix = l-1; I geix = r;
 
   while(ltix+1 < geix && geix-1 > ltix) {
+    // invariant
+    assert(a[geix] >= part);
+    if(ltix>=0) { assert(a[ltix] < part); }
+
     if (a[ltix+1] >= part) {
       I t=a[ltix+1]; a[ltix+1] = a[geix-1]; a[geix-1]=t;
       geix--;
     } else {
       ltix++;
     }
-    assert(a[geix] >= part);
-    if(ltix>=0) { assert(a[ltix] < part); }
   }
   assert(geix-1==ltix);
   a[r-1] = a[geix]; a[geix] = part;
   return geix;
 }
 
-void qs_serial(I *a, I l, I r) {
-  I mid = partition(a, l, r);
+void qs_serial(I *a, I l, I r, I asize) {
+  I mid = partition(a, l, r, asize);
 }
 
 int main( int argc, char **argv ) {
@@ -63,6 +67,7 @@ int main( int argc, char **argv ) {
 
   // left and right sizes
   static const int LIX=0; static const int RIX=1;
+  I asize;
   I lr[2];
   I *a = nullptr;
  
@@ -76,9 +81,12 @@ int main( int argc, char **argv ) {
     a = new I[avec.size()];
     for(int i = 0; i < avec.size(); ++i) { a[i] = avec[i]; }
     // compute nelem per proc on rank 0
-    lr[0] = 0; lr[1] = avec.size() - 1;
+    lr[0] = 0; lr[1] = asize = avec.size() - 1;
     pr(a, lr[0], lr[1]);
-  } 
+  }
+
+  // tell everyone about the size of the array.
+  MPI_Bcast(&asize, 1, MPI_LONG_LONG_INT, 0, MPI_COMM_WORLD);
 
 
   // use [1..] numbering for binary tree.
@@ -107,7 +115,7 @@ int main( int argc, char **argv ) {
     }
 
 
-    I mid = partition(a, lr[0], lr[1]);
+    I mid = partition(a, lr[0], lr[1], asize);
     RNK << "[" <<  lr[0] <<"," <<lr[1] <<"] |split: " << "[" << lr[0] << ","<<mid-1<<"]" << mid << "[" << mid+1 << "," << lr[1] << "]\n";
 
     I lrLC[2] = { lr[0], mid-1 }; 
