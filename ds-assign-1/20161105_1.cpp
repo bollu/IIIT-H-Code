@@ -52,11 +52,35 @@ int main( int argc, char **argv ) {
     elements_per_proc = a.size() / nrnk;
     // share this with everyone else
 
-    assert (a.size() % nrnk == 0 && "number of processors is not divisible by size");
+    // assert (a.size() % nrnk == 0 && "number of processors is not divisible by size");
   } 
 
+  // get elements_per_proc for everyone
   MPI_Bcast(&elements_per_proc, 1, MPI_LONG_LONG_INT, 
       /*root=*/0, MPI_COMM_WORLD);
+
+  // use [1..] numbering for binary tree.
+  const int rnkbin = rnk+1;
+  const int rnkbinl = rnkbin*2, rnkbinr = rnkbin*2+1;
+  const int rnkbinp = rnkbin == 1 ? 1 : rnkbin/2;
+
+  const int rnkl=rnkbinl>nrnk? -1 : rnkbinl-1;
+  const int rnkr=rnkbinr>nrnk ? -1 : rnkbinr-1;
+  const int rnkp = rnkbin == 1 ? -1 : rnkbinp-1;
+
+  RNK << rnk << "->" << "P:"<<(rnk == 0 ? -1:rnkp) << " |L:" << rnkl << " |R: " << rnkr << "\n";
+
+  if (rnk != 0) {
+    // receive data from parent
+
+  }
+
+  // send data forward & compute
+
+  // send data back
+  
+
+
 
   // share data amongst everyone with scatter
   I *buf = new I[elements_per_proc];
