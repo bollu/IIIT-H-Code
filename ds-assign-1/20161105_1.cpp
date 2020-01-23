@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "mpi.h"
-#define RNK cout<<"\033[31m["<<rnk<<"/" << nrnk << "]\033[0m"
+#define RNK cout<<"\033[31m["<<rnk<<"/" << nrnk << "]\033[0m" << "{" << __LINE__ << "} "
 using namespace std;
 using I=long long int;
 int rnk, nrnk;
@@ -39,6 +39,7 @@ I partition(I *a, I l, I r) {
 }
 
 void qs_serial(I *a, I l, I r) {
+  RNK << "[" << l << "," << r << "]\n";
   assert(l >= 0);
   assert(l <= r);
   I mid = partition(a, l, r);
@@ -70,8 +71,8 @@ int main( int argc, char **argv ) {
 
   // left and right sizes
   static const int LIX=0; static const int RIX=1;
-  I lr[2];
   I *a = nullptr;
+  int r = 0;
  
   if (rnk == 0) {
     // 1. recieve input if leader
@@ -82,9 +83,7 @@ int main( int argc, char **argv ) {
 
     a = new I[avec.size()];
     for(int i = 0; i < avec.size(); ++i) { a[i] = avec[i]; }
-    // compute nelem per proc on rank 0
-    lr[0] = 0; lr[1] = avec.size() - 1; 
-    pr(a, lr[0], lr[1]);
+    r = avec.size() - 1;
   }
 
 
@@ -98,7 +97,83 @@ int main( int argc, char **argv ) {
   const int rnkr=rnkbinr>nrnk ? -1 : rnkbinr-1;
   const int rnkp = rnkbin == 1 ? -1 : rnkbinp-1;
 
-  RNK << rnk << "->" << "P:"<<(rnk == 0 ? -1:rnkp) << " |LC:" << rnkl << " |RC: " << rnkr << "\n";
+
+  // recieve length of data.
+  if (rnk != 0) {
+    MPI_Recv(&r, 1, MPI_LONG_LONG_INT, rnkp, 0, 
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+
+  RNK << rnk << "->" << "P:"<<(rnk == 0 ? -1:rnkp) 
+    << " |LC:" << rnkl << " |RC: " << rnkr << "|r: " << r << "\n";
+
+  // if there's some data to recieve
+  if (r >=  0) {
+    RNK << "r(" << r << ") >= 0\n";
+
+    // if we are not the parent node, recieve
+    if (rnk != 0) {
+      a = new I[r+1];
+      RNK << "waiting for r\n";
+      MPI_Recv(a, r+1, MPI_LONG_LONG_INT, rnkp, 0, 
+          MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      pr(a, 0, r);
+    }
+
+    const I mid = partition(a, 0, r);
+    const I Rr = r - (mid+1);
+    const I Rl = (mid-1) - 0;
+
+    if (rnkl != -1) {
+      RNK << "sending rnkl\n";
+      MPI_Send(&Rl, 1, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
+      if (Rl >= 0) { 
+        MPI_Send(a, Rl+1, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
+        MPI_Recv(a, Rl+1, MPI_LONG_LONG_INT, rnkl, 0, 
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
+    } else if (Rl >= 0) { qs_serial(a, 0, Rl); }
+
+    if (rnkr != -1) {
+      RNK << "sending rnkr\n";
+      MPI_Send(&Rr, 1, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD);
+      if (Rr >= 0) { 
+        MPI_Send(a+mid+1, Rr+1, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD);
+        MPI_Recv(a+mid+1, Rr+1, MPI_LONG_LONG_INT, rnkr, 0, 
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
+    } else if (Rr >= 0) { qs_serial(a+mid+1, 0, Rr); }
+
+    // send data back to parent
+    if (rnk != 0) {
+      pr(a, 0, r);
+      MPI_Send(a, r+1, MPI_LONG_LONG_INT, rnkp, 0, MPI_COMM_WORLD);
+    }
+
+  } 
+
+
+  if (rnk == 0) {
+    FILE *f = fopen(argv[2], "w");
+    for(int i = 0; i < r; ++i) { fprintf(f, "%lld ", a[i]); }
+    fprintf(f, "\n");
+    fflush(f);
+    fclose(f);
+    pr(a, 0, r);
+  }
+
+  MPI_Barrier( MPI_COMM_WORLD );
+  double elapsedTime = MPI_Wtime() - tbeg;
+  double maxTime;
+  MPI_Reduce(&elapsedTime, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  if (rnk == 0) {
+    printf( "Total time (s): %f\n", maxTime );
+  }
+
+  MPI_Finalize();
+  return 0;
+
+  /*
 
   // if rank is non-zero, wait for your parent to have been done with
   // the partitioning.
@@ -155,25 +230,5 @@ int main( int argc, char **argv ) {
   } // end nodata check
 
 done_par:
-
-  if (rnk == 0) {
-    FILE *f = fopen(argv[2], "w");
-    for(int i = 0; i < lr[1]; ++i) { fprintf(f, "%lld ", a[i]); }
-    fprintf(f, "\n");
-    fflush(f);
-    fclose(f);
-    pr(a, lr[0], lr[1]);
-  }
-
-  MPI_Barrier( MPI_COMM_WORLD );
-  double elapsedTime = MPI_Wtime() - tbeg;
-  double maxTime;
-  MPI_Reduce( &elapsedTime, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-  if ( rnk == 0 ) {
-    printf( "Total time (s): %f\n", maxTime );
-  }
-
-  /* shut down MPI */
-  MPI_Finalize();
-  return 0;
+*/
 }
