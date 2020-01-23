@@ -12,46 +12,41 @@ static const I NODATA = -42;
 
 void pr(I *a, I l, I r) { RNK; 
   cout<<"(size:"<<r-l+1<<")";
-  for(int i = l; i < r; ++i) cout <<a[i] <<" ";
+  for(int i = l; i <= r; ++i) cout <<a[i] <<" ";
   cout<<"\n";
 }
 
 int log2floor(int n) { if (n <= 1) return 0; return 1 + log2floor(n/2); }
 
-I partition(I *a, I l, I r, I asize) {
+I partition(I *a, I l, I r) {
   assert(l <= r);
   assert(l >= 0);
-  assert(r <= asize);
   const I part = a[r];
   I ltix = l-1; I geix = r;
 
   while(ltix+1 < geix && geix-1 > ltix) {
     // invariant
-    assert(a[geix] >= part);
-    if(ltix>=l) { assert(a[ltix] < part); }
+    assert(a[geix] >= part); if(ltix>=l) { assert(a[ltix] < part); }
+
     if (a[ltix+1] >= part) {
       I t=a[ltix+1]; a[ltix+1] = a[geix-1]; a[geix-1]=t;
       geix--;
-    } else {
-      // a[ltix+1] < part
-      ltix++;
-    }
+    } else { ltix++; }
   }
-  assert(geix-1==ltix);
+  assert(geix-1 == ltix);
   a[r] = a[geix]; a[geix] = part;
   return geix;
 }
 
-void qs_serial(I *a, I l, I r, I asize) {
+void qs_serial(I *a, I l, I r) {
   assert(l >= 0);
   assert(l <= r);
-  assert(r <= asize);
-  I mid = partition(a, l, r, asize);
+  I mid = partition(a, l, r);
   assert(l <= mid);
   assert(mid <= r);
 
-  if (l <= mid - 1) qs_serial(a, l, mid-1, asize);
-  if (mid+1 <= r) qs_serial(a, mid+1, r, asize);
+  if (l <= mid - 1) qs_serial(a, l, mid-1);
+  if (mid+1 <= r) qs_serial(a, mid+1, r);
 }
 
 int main( int argc, char **argv ) {
@@ -75,7 +70,6 @@ int main( int argc, char **argv ) {
 
   // left and right sizes
   static const int LIX=0; static const int RIX=1;
-  I asize;
   I lr[2];
   I *a = nullptr;
  
@@ -89,12 +83,10 @@ int main( int argc, char **argv ) {
     a = new I[avec.size()];
     for(int i = 0; i < avec.size(); ++i) { a[i] = avec[i]; }
     // compute nelem per proc on rank 0
-    lr[0] = 0; lr[1] = asize = avec.size() - 1;
+    lr[0] = 0; lr[1] = avec.size() - 1; 
     pr(a, lr[0], lr[1]);
   }
 
-  // tell everyone about the size of the array.
-  MPI_Bcast(&asize, 1, MPI_LONG_LONG_INT, 0, MPI_COMM_WORLD);
 
 
   // use [1..] numbering for binary tree.
@@ -123,7 +115,8 @@ int main( int argc, char **argv ) {
     }
 
 
-    I mid = partition(a, lr[0], lr[1], asize);
+    RNK << "[" <<  lr[0] <<"," <<lr[1] <<"]  |splitting...\n";
+    I mid = partition(a, 0, lr[1] - lr[0]);
     RNK << "[" <<  lr[0] <<"," <<lr[1] <<"] |split: " << "[" << lr[0] << ","<<mid-1<<"]" << mid << "[" << mid+1 << "," << lr[1] << "]\n";
 
     I lrLC[2] = { lr[0], mid-1 }; 
@@ -136,7 +129,7 @@ int main( int argc, char **argv ) {
 
     // start sending sizes to children
     if (rnkl == -1) { 
-      if (szLC > 0) qs_serial(a, lrLC[0], lrLC[1], asize); 
+      if (szLC > 0) qs_serial(a, 0, lrLC[1] - lrLC[0]);
     } else {
       MPI_Send(lrLC, 2, MPI_LONG_LONG_INT, rnkl, 0, MPI_COMM_WORLD);
       if (szLC > 0) { 
@@ -146,7 +139,7 @@ int main( int argc, char **argv ) {
     } 
 
     if (rnkr == -1) {
-      if (szRC > 0) qs_serial(a, lrRC[0], lrRC[1], asize); 
+      if (szRC > 0) qs_serial(a, 0, lrRC[1] - lrRC[0]);
     } else {
       MPI_Send(lrRC, 2, MPI_LONG_LONG_INT, rnkr, 0, MPI_COMM_WORLD) ;
       if (szRC > 0) { 
