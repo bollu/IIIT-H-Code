@@ -10,12 +10,11 @@
 using namespace std;
 using I = long long int;
 static const I INF = 1e10L;
-I V, E, ESize;
+I V, E;
 I src;
 I *dist[2];
 I *adj;
 
-I* Ecur;
 
 // I *pred;
 // I *next;
@@ -138,28 +137,38 @@ int main( int argc, char **argv ) {
 
   const I e_cur_size = ceill((float)E / nrnk);
   if (rnk != 0) {
-      Ecur = (I*)calloc((E), sizeof(I));
       edgesrc = (I*)calloc((E+1), sizeof(I));
       edgedest = (I*)calloc((E+1), sizeof(I));
       edgewt = (I*)calloc((E+1), sizeof(I));
       dist[0] = new I[(V +1)]; dist[1] = new I[(V +1)];
   }
 
-  MPI_Bcast(&edgewt, ESize+1,
+  RNK << "E:" << E << "|" << __LINE__ << "\n";
+  MPI_Bcast(edgewt, E+1,
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
-  MPI_Bcast(&edgesrc, ESize+1,
+  MPI_Barrier( MPI_COMM_WORLD );
+  RNK << __LINE__ << "\n";
+  MPI_Bcast(edgesrc, E+1,
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
-  MPI_Bcast(&edgedest, ESize+1,
+  MPI_Barrier( MPI_COMM_WORLD );
+  RNK << __LINE__ << "\n";
+  MPI_Bcast(edgedest, E+1,
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
-  MPI_Bcast(&dist[0], V+1,
+  MPI_Barrier( MPI_COMM_WORLD );
+  RNK << __LINE__ << "\n";
+  MPI_Bcast(dist[0], V+1,
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
-  MPI_Bcast(&dist[1], V+1,
+  MPI_Barrier( MPI_COMM_WORLD );
+  RNK << __LINE__ << "\n";
+  MPI_Bcast(dist[1], V+1,
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
+  MPI_Barrier( MPI_COMM_WORLD );
+  RNK << __LINE__ << "\n";
 
   // distribute work
   int l = 0; int r = 0; 
