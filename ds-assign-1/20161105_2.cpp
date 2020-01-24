@@ -7,9 +7,10 @@
 #include <fstream>
 #include <algorithm>
 #include "mpi.h"
+static const int ROOT = 0;
 using namespace std;
 using I = long long int;
-static const I INF = 1e10L;
+static const I INF = 1e5L;
 I V, E;
 I src;
 I *dist[2];
@@ -109,6 +110,7 @@ int main( int argc, char **argv ) {
     dist[1] = new I[(V +1)];
     for(int i = 0; i <= V; i++) {
         dist[0][i] = INF;
+        dist[1][i] = INF;
         adj[i] = -42;
     }
     dist[0][src] = 0;
@@ -124,7 +126,6 @@ int main( int argc, char **argv ) {
       cout << "\n";
     }
     cout << "\n";
-
   }
 
   // distribute information
@@ -135,7 +136,6 @@ int main( int argc, char **argv ) {
           MPI_Datatype MPI_LONG_LONG_INT,
           /*root=*/0, MPI_COMM_WORLD);
 
-  const I e_cur_size = ceill((float)E / nrnk);
   if (rnk != 0) {
       edgesrc = (I*)calloc((E+1), sizeof(I));
       edgedest = (I*)calloc((E+1), sizeof(I));
@@ -143,65 +143,51 @@ int main( int argc, char **argv ) {
       dist[0] = new I[(V +1)]; dist[1] = new I[(V +1)];
   }
 
-  RNK << "E:" << E << "|" << __LINE__ << "\n";
-  MPI_Bcast(edgewt, E+1,
-          MPI_Datatype MPI_LONG_LONG_INT,
-          /*root=*/0, MPI_COMM_WORLD);
-  MPI_Barrier( MPI_COMM_WORLD );
-  RNK << __LINE__ << "\n";
-  MPI_Bcast(edgesrc, E+1,
-          MPI_Datatype MPI_LONG_LONG_INT,
-          /*root=*/0, MPI_COMM_WORLD);
-  MPI_Barrier( MPI_COMM_WORLD );
-  RNK << __LINE__ << "\n";
-  MPI_Bcast(edgedest, E+1,
-          MPI_Datatype MPI_LONG_LONG_INT,
-          /*root=*/0, MPI_COMM_WORLD);
-  MPI_Barrier( MPI_COMM_WORLD );
-  RNK << __LINE__ << "\n";
-  MPI_Bcast(dist[0], V+1,
-          MPI_Datatype MPI_LONG_LONG_INT,
-          /*root=*/0, MPI_COMM_WORLD);
-  MPI_Barrier( MPI_COMM_WORLD );
-  RNK << __LINE__ << "\n";
-  MPI_Bcast(dist[1], V+1,
-          MPI_Datatype MPI_LONG_LONG_INT,
-          /*root=*/0, MPI_COMM_WORLD);
-  MPI_Barrier( MPI_COMM_WORLD );
-  RNK << __LINE__ << "\n";
+  MPI_Bcast(edgewt, E+1, MPI_Datatype MPI_LONG_LONG_INT, ROOT, MPI_COMM_WORLD);
+  MPI_Bcast(edgesrc, E+1, MPI_Datatype MPI_LONG_LONG_INT, ROOT, MPI_COMM_WORLD);
+  MPI_Bcast(edgedest, E+1, MPI_Datatype MPI_LONG_LONG_INT, ROOT, MPI_COMM_WORLD);
+  MPI_Bcast(dist[0], V+1, MPI_Datatype MPI_LONG_LONG_INT, ROOT, MPI_COMM_WORLD);
+  MPI_Bcast(dist[1], V+1, MPI_Datatype MPI_LONG_LONG_INT, ROOT, MPI_COMM_WORLD);
+
 
   // distribute work
-  int l = 0; int r = 0; 
+  int *disps = new int [nrnk];
+  int *counts = new int[nrnk];
+
+  for(int i = 0; i < nrnk; ++i) disps[i] = counts[i] = 0;
+
+
+  bool active = true;
   if (rnk == 0) {
-      const int num_per_rank = E / nrnk;
-
-      
-      int curr = E;
-      for(int i = nrnk-1; i >= 1; --i) {
-          const int curl = curr - num_per_rank+1;
-          MPI_Send(&curl, 1, MPI_LONG_LONG_INT, /*dest=*/i, 
-                  0, MPI_COMM_WORLD);
-          MPI_Send(&curr, 1, MPI_LONG_LONG_INT, /*dest=*/i, 
-                  0, MPI_COMM_WORLD);
-          curr = curl - 1;
+      const int es_per_rank = ceil((float) E / nrnk);
+      // 1.. n
+      disps[0] = 1;
+      counts[0] = es_per_rank;
+      int es_left = E - es_per_rank;
+      for(int i = 1; es_left != 0; ++i) {
+          disps[i] = disps[i-1] + counts[i-1];
+          counts[i] = min(es_left, es_per_rank);
+          es_left -= counts[i];
       }
-      r = curr;
-      l = 1;
-  } else {
-    MPI_Recv(&l, 1, MPI_LONG_LONG_INT, /*parent=*/0, 0, 
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  };
 
-    MPI_Recv(&r, 1, MPI_LONG_LONG_INT, /*parent=*/0, 0, 
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    assert(l >= 1);
-    assert(l <= r);
-    assert(r <= E);
+
+  MPI_Bcast(disps, nrnk, MPI_Datatype MPI_INT, ROOT, MPI_COMM_WORLD);
+  MPI_Bcast(counts, nrnk, MPI_Datatype MPI_INT, ROOT, MPI_COMM_WORLD);
+
+  for(int i = 0; i < nrnk; ++i) {
+      RNK << "disp: " << disps[i] << "\n";
   }
+
+  for(int i = 0; i < nrnk; ++i) {
+      RNK << "count: " << counts[i] << "\n";
+  }
+
 
   int distix = 0; // IMPORTANT: starts from 0!
   for (int i = 1; i <= V;  ++i) {
-      for(int j = l; j <= r; ++j) {
+      for(int j = disps[rnk]; j <= disps[rnk] + counts[rnk] - 1; ++j) {
           if (dist[distix][edgesrc[j]] + edgewt[j] < dist[distix][edgedest[j]]) {
               dist[distix][edgedest[j]] = dist[distix][edgesrc[j]] + edgewt[j];
           }
@@ -212,14 +198,14 @@ int main( int argc, char **argv ) {
       distix ^= 1;
   }
 
-
   if (rnk == 0) {
     ofstream f(argv[2]);
     vector<int> sortixs(V);
     std::iota(sortixs.begin(), sortixs.end(),1);
     sort(sortixs.begin(), sortixs.end(), [&](int i,int j){return dist[distix][i]<dist[distix][j];});
     for(int i = 0; i < V; ++i) {
-        f << sortixs[i] << " " << dist[distix][sortixs[i]] << "\n";
+        const int d = dist[distix][sortixs[i]];
+        f << sortixs[i] << " " << (d == INF ? -1 : d) << "\n";
     }
   }
 
