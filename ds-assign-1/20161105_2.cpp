@@ -5,12 +5,22 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include "mpi.h"
 using namespace std;
-using I = int;
+using I = long long int;
+static const I INF = 1e10L;
 I V, E;
+I src;
 I *dist;
 I *adj;
+
+// I *pred;
+// I *next;
+
+
+// source and dest for an edge at index i
+I *edgesrc; I *edgedest; I*edgewt;
 int rnk, nrnk;
 
 #define RNK cout<<"\033[31m["<<rnk<<"/" << nrnk << "]\033[0m" << "{" << __LINE__ << "}"
@@ -80,12 +90,27 @@ int main( int argc, char **argv ) {
     // 1. recieve input if leader
     ifstream f(argv[1]);
     f >> V >> E;
+
     adj = (I*)calloc((V +1) * (V + 1), sizeof(I));
-    dist = new I[(V +1)];
-    for (int i = 0; i < E; i ++) {
+    edgesrc = (I*)calloc((E+1), sizeof(I));
+    edgedest = (I*)calloc((E+1), sizeof(I));
+    edgewt = (I*)calloc((E+1), sizeof(I));
+    for (int i = 1; i <= E; i ++) {
       int u, v, w; f >> u >> v >> w;
       adj[u*V + v] = w;
+      edgesrc[i] = u; edgedest[i] = v; edgewt[i] = w;
     }
+    f >> src;
+
+
+    dist = new I[(V +1)];
+    for(int i = 0; i <= V; i++) {
+        dist[i] = INF;
+        adj[i] = -42;
+    }
+    dist[src] = 0;
+    // pred = new I[(V +1)];
+    // next = new I[(V +1)];
 
     RNK << "V:"  << V << "|E: " << E;
     cout << "\n";
@@ -98,10 +123,25 @@ int main( int argc, char **argv ) {
     cout << "\n";
   }
 
+  for (int i = 1; i <= V;  ++i) {
+      for(int j = 1; j <= E; ++j) {
+          if (dist[edgesrc[j]] + edgewt[j] < dist[edgedest[j]]) {
+              dist[edgedest[j]] = dist[edgesrc[j]] + edgewt[j];
+              // pred[j] = i;
+              // next[i] = j;
+          }
+      }
+  }
+
 
   if (rnk == 0) {
     ofstream f(argv[2]);
-    f << "XXX\n";
+    vector<int> sortixs(V);
+    std::iota(sortixs.begin(), sortixs.end(),1);
+    sort(sortixs.begin(), sortixs.end(), [&](int i,int j){return dist[i]<dist[j];});
+    for(int i = 0; i < V; ++i) {
+        f << sortixs[i] << " " << dist[sortixs[i]] << "\n";
+    }
   }
 
   MPI_Barrier( MPI_COMM_WORLD );
