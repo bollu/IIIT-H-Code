@@ -56,7 +56,7 @@ I partition(I *a, I l, I r) {
 }
 
 void qs_serial(I *a, I l, I r) {
-  RNK << "[" << l << "," << r << "]\n";
+  //RNK << "[" << l << "," << r << "]\n";
   assert(l >= 0);
   assert(l <= r);
   I mid = partition(a, l, r);
@@ -86,7 +86,7 @@ int main( int argc, char **argv ) {
   // our code starts here
   // ====================
 
-  RNK << "XX\n";
+  //RNK << "XX\n";
 
   if (rnk == 0) {
     // 1. recieve input if leader
@@ -117,7 +117,7 @@ int main( int argc, char **argv ) {
     // pred = new I[(V +1)];
     // next = new I[(V +1)];
 
-    RNK << "V:"  << V << "|E: " << E;
+    //RNK << "V:"  << V << "|E: " << E;
     cout << "\n";
     for (int i = 1; i <= V; ++i) {
       for (int j = 1; j <= V; ++j) { 
@@ -176,6 +176,7 @@ int main( int argc, char **argv ) {
   MPI_Bcast(disps, nrnk, MPI_Datatype MPI_INT, ROOT, MPI_COMM_WORLD);
   MPI_Bcast(counts, nrnk, MPI_Datatype MPI_INT, ROOT, MPI_COMM_WORLD);
 
+  /*
   for(int i = 0; i < nrnk; ++i) {
       RNK << "disp: " << disps[i] << "\n";
   }
@@ -183,6 +184,7 @@ int main( int argc, char **argv ) {
   for(int i = 0; i < nrnk; ++i) {
       RNK << "count: " << counts[i] << "\n";
   }
+  */
 
 
   int distix = 0; // IMPORTANT: starts from 0!
