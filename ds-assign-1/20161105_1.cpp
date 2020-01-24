@@ -39,6 +39,7 @@ I partition(I *a, I l, I r) {
 }
 
 void qs_serial(I *a, I l, I r) {
+    return;
   RNK << "[" << l << "," << r << "]\n";
   assert(l >= 0);
   assert(l <= r);
@@ -72,7 +73,8 @@ int main( int argc, char **argv ) {
   // left and right sizes
   static const int LIX=0; static const int RIX=1;
   I *a = nullptr;
-  int r = 0;
+  I N;
+  I r = 0;
  
   if (rnk == 0) {
     // 1. recieve input if leader
@@ -84,7 +86,14 @@ int main( int argc, char **argv ) {
     a = new I[avec.size()];
     for(int i = 0; i < avec.size(); ++i) { a[i] = avec[i]; }
     r = avec.size() - 1;
+    N = avec.size() - 1;
   }
+
+  MPI_Bcast(&N, 1,
+          MPI_Datatype MPI_LONG_LONG_INT,
+          /*root=*/0, MPI_COMM_WORLD);
+
+  if (rnk >= N) { return 1; }
 
 
 
@@ -104,8 +113,11 @@ int main( int argc, char **argv ) {
         MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 
+  
+
   RNK << rnk << "->" << "P:"<<(rnk == 0 ? -1:rnkp) 
     << " |LC:" << rnkl << " |RC: " << rnkr << "|r: " << r << "\n";
+
 
   // if there's some data to recieve
   if (r >=  0) {
@@ -120,6 +132,7 @@ int main( int argc, char **argv ) {
       pr(a, 0, r);
     }
 
+
     const I mid = partition(a, 0, r);
     const I Rr = r - (mid+1);
     const I Rl = (mid-1) - 0;
@@ -133,6 +146,7 @@ int main( int argc, char **argv ) {
             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
     } else if (Rl >= 0) { qs_serial(a, 0, Rl); }
+
 
     if (rnkr != -1) {
       RNK << "sending rnkr\n";
