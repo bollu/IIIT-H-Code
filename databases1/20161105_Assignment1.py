@@ -212,9 +212,9 @@ def parse_query(q):
     print("filters: %s" % (filters, ))
     return Query(cols, tables, filters)
 
-
 def execute_query(db, q):
     assert(isinstance(db, DB))
+    assert(isinstance(q, Query))
 
 
 if __name__ == "__main__":
