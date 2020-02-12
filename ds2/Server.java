@@ -1,7 +1,7 @@
 //program for server application 
 import java.rmi.*; 
 import java.rmi.registry.*; 
-public class SearchServer 
+public class Server 
 { 
     public static void main(String args[]) 
     { 
@@ -9,7 +9,7 @@ public class SearchServer
         { 
             // Create an object of the interface 
             // implementation class 
-            Search obj = new SearchQuery(); 
+            Graph g = new Graph(); 
   
             // rmiregistry within the server JVM with 
             // port number 1900 
@@ -18,7 +18,7 @@ public class SearchServer
             // Binds the remote object by the name 
             // geeksforgeeks 
             Naming.rebind("rmi://localhost:1900"+ 
-                          "/geeksforgeeks",obj); 
+                          "/geeksforgeeks",g); 
         } 
         catch(Exception ae) 
         { 

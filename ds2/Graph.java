@@ -1,12 +1,12 @@
 // Java program to implement the Search interface 
 import java.rmi.*; 
 import java.rmi.server.*; 
-public class SearchQuery extends UnicastRemoteObject 
-                         implements Search 
+public class Graph extends UnicastRemoteObject 
+                         implements IGraph 
 { 
     // Default constructor to throw RemoteException 
     // from its parent constructor 
-    SearchQuery() throws RemoteException 
+    Graph() throws RemoteException 
     { 
         super(); 
     } 
