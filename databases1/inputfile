@@ -1,3 +1,16 @@
-select col1,   col3,   max(col2) from table1,table2 where cl1=10 and col2=20 or col3=40
-select col1 from table where col=10
-select col1 from table
+select * from table1
+select table1.A, table2.B from table1, table2
+select table1.A, table2.B from table1, table2 where table1.A = table2.B
+select distinct(A) from table1
+select min(A) from table1
+select * from table1 
+Select A from table1
+Select table1.A from table1
+select max(A) from table1
+Select A, B from table1
+select distinct(A) from table1
+select A from table1 where A >= 10
+select A from table1 where table1.A >= 10
+select table1.A, table2.B from table1, table2 where table1.A = table2.B
+select table1.A, table2.B from table1, table2 where table1.A >= table2.B
+select table1.A, table2.B from table1, table2
