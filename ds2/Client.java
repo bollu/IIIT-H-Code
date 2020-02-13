@@ -5,15 +5,16 @@ import java.util.*;
 
 public class Client
 { 
-    static boolean debug  = false;
+    static boolean debug  = true;
     public static void main(String args[]) 
     { 
         try
         { 
-
+            String connectpath = "rmi://" + args[0] + ":" + args[1] + "/geeksforgeeks";
+            if (debug) { System.out.println("connecting to: " 
+                    + "|" + connectpath + "|"); }
             IGraph g = 
-                (IGraph)Naming.lookup("rmi://localhost:1900"+ 
-                                      "/geeksforgeeks"); 
+                (IGraph)Naming.lookup(connectpath);
             BufferedReader br = 
                 new BufferedReader(new InputStreamReader(System.in));
 

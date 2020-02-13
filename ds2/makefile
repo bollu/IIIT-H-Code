@@ -2,15 +2,11 @@
 compile: cln
 	javac *.java
 
-test:
-	java Server 8000
-	java Client 127.0.0.1 8000
-
 cln:
 	-rm *.class
 
 server: compile
-	java Server
+	java Server 1900
 
 client: compile
-	java Client < input
+	java Client 127.0.0.1 1900 < input

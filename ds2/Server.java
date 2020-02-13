@@ -13,12 +13,12 @@ public class Server
   
             // rmiregistry within the server JVM with 
             // port number 1900 
-            LocateRegistry.createRegistry(1900); 
+            System.out.println("connecting to port: |" + args[0] + "|");
+            LocateRegistry.createRegistry(Integer.parseInt(args[0])); 
   
             // Binds the remote object by the name 
             // geeksforgeeks 
-            Naming.rebind("rmi://localhost:1900"+ 
-                          "/geeksforgeeks",g); 
+            Naming.rebind("rmi://0.0.0.0:" + args[0] +  "/geeksforgeeks", g); 
         } 
         catch(Exception ae) 
         { 
