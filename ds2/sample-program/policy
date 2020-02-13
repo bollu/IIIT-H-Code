@@ -1,0 +1,4 @@
+grant codeBase "file:/home/bollu/work/IIIT-H-Code/ds2/example" {
+    permission java.security.AllPermission;
+};
+
