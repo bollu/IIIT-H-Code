@@ -5,9 +5,9 @@ import java.util.*;
 
 public class Client
 { 
+    static boolean debug  = false;
     public static void main(String args[]) 
     { 
-        boolean debug  = true;
         try
         { 
 
@@ -21,38 +21,27 @@ public class Client
             while((str=br.readLine())!=null && str.length()!=0) {
                 String []words = str.split(" ");
                 if (words[0].equals("add_graph")) {
-                    System.out.println("ADDING graph");
+                    if (debug) { System.out.println("ADDING graph"); }
                     g.addGraph(words[1], 
                             Integer.parseInt(words[2]));
                 }
                 else if (words[0].equals("add_edge")) {
-                    System.out.println("ADDING edge");
+                    if (debug) { System.out.println("ADDING edge"); }
                     g.addEdge(words[1], 
                             Integer.parseInt(words[2]),
                             Integer.parseInt(words[3]),
                             Integer.parseInt(words[4]));
+                    g.addEdge(words[1], 
+                            Integer.parseInt(words[3]),
+                            Integer.parseInt(words[2]),
+                            Integer.parseInt(words[4]));
                 }
                 else if (words[0].equals("get_mst")) {
-                    List<VertexPair> vs = g.getMST(words[1]);
-                    System.out.println("GET mst");
-
-                    if (debug) {
-                        for(int i = 0; i < vs.size(); ++i) {
-                            System.out.println(vs.get(i).u + 
-                                    " --(" + vs.get(i).w + 
-                                    ")-->" + vs.get(i).v);
-                        }
-                    }
+                    int totalw = g.getMST(words[1]);
+                    System.out.println(totalw);
                 }
 
             }
-
-            // lookup method to find reference of remote object 
-            // IGraph g = 
-            //     (IGraph)Naming.lookup("rmi://localhost:1900"+ 
-            //                           "/geeksforgeeks"); 
-            // answer = g.query(q); 
-            // System.out.println("Q: " + q + "|A: " + answer);
         } 
         catch(Exception ae) 
         { 

@@ -9,7 +9,7 @@ public interface IGraph extends Remote
             throws RemoteException;
     public void addEdge(String n, int u, int v, int w) 
             throws RemoteException;
-    public List<VertexPair> getMST(String n) 
+    public int getMST(String n) 
             throws RemoteException;
 } 
 

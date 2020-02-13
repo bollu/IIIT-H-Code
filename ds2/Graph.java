@@ -10,6 +10,8 @@ public class Graph
     Map<String, Map<Integer, List<VertexPair>>> graph2adj;
     Map<String, Integer> graph2nvertex;
 
+    static boolean debug  = true;
+
     // Default constructor to throw RemoteException 
     // from its parent constructor 
     Graph() throws RemoteException 
@@ -25,8 +27,6 @@ public class Graph
             for(int i = 1; i <= n; ++i) {
                 adj.put(i, new ArrayList<VertexPair>());
             }
-
-
             graph2adj.put(name, adj);
             graph2nvertex.put(name, n);
     }
@@ -40,7 +40,7 @@ public class Graph
             graph2adj.put(n, adj);
     }
 
-    public List<VertexPair> getMST(String n) 
+    public int getMST(String n) 
             throws RemoteException { 
             Map<Integer, List<VertexPair>> adj = graph2adj.get(n);
 
@@ -79,11 +79,25 @@ public class Graph
                 totalw = -1;
             } 
 
-            System.out.println("totalw: " + Integer.toString(totalw) + "|nvseen: " + 
-                    Integer.toString(nvseen));
+            if (debug) {
+                System.out.println("g: " + n
+                        + "| totalw: " 
+                        + Integer.toString(totalw) 
+                        + "|nvseen: "
+                        + Integer.toString(nvseen)
+                        + "|nvers: " + graph2nvertex.get(n)
+                        + "|seen: " + vseen);
 
-            // return totalw;
-            return mst;
+
+                System.out.println("GET mst");
+                for(int i = 0; i < mst.size(); ++i) {
+                    System.out.println(mst.get(i).u + 
+                            " --(" + mst.get(i).w + 
+                            ")-->" + mst.get(i).v);
+                }
+            }
+
+            return totalw;
             
     }
 } 

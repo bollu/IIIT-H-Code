@@ -1,12 +1,12 @@
-.PHONY: compile test clean client server
-compile: clean
+.PHONY: compile test cln client server
+compile: cln
 	javac *.java
 
 test:
 	java Server 8000
 	java Client 127.0.0.1 8000
 
-clean:
+cln:
 	-rm *.class
 
 server: compile
