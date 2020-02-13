@@ -7,7 +7,7 @@ public class Client
 { 
     public static void main(String args[]) 
     { 
-        String answer,q="Reflection in JavaXX"; 
+        boolean debug  = true;
         try
         { 
 
@@ -35,10 +35,17 @@ public class Client
                 else if (words[0].equals("get_mst")) {
                     List<VertexPair> vs = g.getMST(words[1]);
                     System.out.println("GET mst");
+
+                    if (debug) {
+                        for(int i = 0; i < vs.size(); ++i) {
+                            System.out.println(vs.get(i).u + 
+                                    " --(" + vs.get(i).w + 
+                                    ")-->" + vs.get(i).v);
+                        }
+                    }
                 }
 
             }
-
 
             // lookup method to find reference of remote object 
             // IGraph g = 
@@ -50,6 +57,8 @@ public class Client
         catch(Exception ae) 
         { 
             System.out.println(ae); 
+            ae.printStackTrace(System.out);
+
         } 
     } 
 } 

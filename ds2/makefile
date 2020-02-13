@@ -1,4 +1,4 @@
-.PHONY: compile test clean
+.PHONY: compile test clean client server
 compile: clean
 	javac *.java
 
@@ -8,3 +8,9 @@ test:
 
 clean:
 	-rm *.class
+
+server: compile
+	java Server
+
+client: compile
+	java Client < input
