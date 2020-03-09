@@ -6,7 +6,7 @@
 new_process (Total, N) -> 
     % io:format("Process ~p spawned.\n", [N]),
     receive {OF, sendtok, P0, PIDs, Token, Sender} ->
-        io:format("Process ~p received token ~p from process ~p.\n", [N, Token, Sender]),
+        io:format(OF, "Process ~p received token ~p from process ~p.\n", [N, Token, Sender]),
         if N == Total-1 -> P0 ! {OF, sendtok, P0, PIDs, Token, N}; % final process send back to process 0
            true -> nth(N+1, PIDs) ! {OF,sendtok, P0, PIDs, Token, N} % non final process sends to 
         end
@@ -38,7 +38,7 @@ main(Args) -> [IP, OP] = Args,
                [P1|_] = PIDs,
                P1 ! {OF, sendtok, self(), PIDs, Tok, 0},
                receive {OF, sendtok, _, PIDs, Token, Sender} ->
-                io:format("Process 0 received token ~p from process ~p.\n", [Token, Sender])
+                io:format(OF, "Process 0 received token ~p from process ~p.\n", [Token, Sender])
                end,
                timer:sleep (10),
                ok.
