@@ -4,11 +4,11 @@
 
 % new_process (Total, N) -> io:format("Process ~p\n", [N]).
 new_process (Total, N) -> 
-    io:format("Process ~p spawned.\n", [N]),
-    receive {sendtok, P0, PIDs, Token, Sender} ->
+    % io:format("Process ~p spawned.\n", [N]),
+    receive {OF, sendtok, P0, PIDs, Token, Sender} ->
         io:format("Process ~p received token ~p from process ~p.\n", [N, Token, Sender]),
-        if N == Total-1 -> P0 ! {sendtok, P0, PIDs, Token, N}; % final process send back to process 0
-           true -> nth(N+1, PIDs) ! {sendtok, P0, PIDs, Token, N} % non final process sends to 
+        if N == Total-1 -> P0 ! {OF, sendtok, P0, PIDs, Token, N}; % final process send back to process 0
+           true -> nth(N+1, PIDs) ! {OF,sendtok, P0, PIDs, Token, N} % non final process sends to 
         end
     end.
 
@@ -32,13 +32,12 @@ main(Args) -> [IP, OP] = Args,
                {ok, RawInput} = file:read(IF, 1024),
                [Nproc, Tok] = [list_to_integer(T) || 
                                T <- string:tokens(string:trim(RawInput), " ")],
-               io:format("IP: ~p | OP: ~p | INPUT: ~p | Nproc: ~p | Tok: ~p\n", 
-                         [IP, OP, RawInput, Nproc, Tok]),
+               % io:format("IP: ~p | OP: ~p | INPUT: ~p | Nproc: ~p | Tok: ~p\n", [IP, OP, RawInput, Nproc, Tok]),
                % spawn(fun() -> new_process() end),
                PIDs = spawnN(Nproc, 1),
                [P1|_] = PIDs,
-               P1 ! {sendtok, self(), PIDs, Tok, 0},
-               receive {sendtok, P0, PIDs, Token, Sender} ->
+               P1 ! {OF, sendtok, self(), PIDs, Tok, 0},
+               receive {OF, sendtok, _, PIDs, Token, Sender} ->
                 io:format("Process 0 received token ~p from process ~p.\n", [Token, Sender])
                end,
                timer:sleep (10),
