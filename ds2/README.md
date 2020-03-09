@@ -17,3 +17,5 @@ Sample Output:
 
 2) Client can send multiple requests. It should end when EOF is received.
 
+
+- use prims.
