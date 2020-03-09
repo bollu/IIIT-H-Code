@@ -1,0 +1,10 @@
+Process 1 received token 42 from process 0.
+Process 2 received token 42 from process 1.
+Process 3 received token 42 from process 2.
+Process 4 received token 42 from process 3.
+Process 5 received token 42 from process 4.
+Process 6 received token 42 from process 5.
+Process 7 received token 42 from process 6.
+Process 8 received token 42 from process 7.
+Process 9 received token 42 from process 8.
+Process 0 received token 42 from process 9.
