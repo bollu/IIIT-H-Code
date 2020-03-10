@@ -11,8 +11,6 @@ using namespace std;
 const int TREE_N = 3;
 
 
-
-
 // child[i] < router[i] (STRICTLY LESS THAN)
 // router[i] <= child[i+1]
 // child[i] < router[i] <= child[i+1]
@@ -55,7 +53,7 @@ void printnode(node *n, int depth=0) {
     if (n == nullptr) return;
     n->check();
 
-    for(int i = 0; i < depth; ++i) { cerr << " "; }
+    for(int i = 0; i < depth; ++i) { cerr << "  " << "|"; }
 
     if (n->isleaf) {
         cerr << n << "|LEAF: [";
@@ -174,11 +172,20 @@ void insert_recur(int x, btree &b, node *n)  {
             n2->check();
         }
 
-    } else {
+    } else { // for if (n->isleaf)
         assert(!n->isleaf);
+        // split case
         if (n->children.size() == TREE_N) {
             node *left = new node;
             node *right = new node;
+
+            left->isleaf = false;
+            left->parent = n;
+            left->sibling = right;
+
+            right->isleaf = false;
+            right->parent = n;
+
             // [0..split] is with n
             // [split+1..total] is with right_child
             const int split = n->children.size() / 2;
@@ -186,36 +193,40 @@ void insert_recur(int x, btree &b, node *n)  {
 
             // x[split] <= router[split] <= x[split+1]
             // copy elements into right_child
-            for (int ix = 0; ix <= split; ++ix) {
-                node *child = n->children[ix];
+            for (int i = 0; i <= split; ++i) {
+                node *child = n->children[i];
                 child->parent = left;
                 left->children.push_back(child);
             }
-            for (int i = split+1, ix=0; i <= n->children.size(); ++i, ++ix) {
-                node *child = n->children[ix];
+            for (int i = split+1; i < n->children.size(); ++i) {
+                node *child = n->children[i];
                 child->parent = right;
                 right->children.push_back(child);
             }
 
             // copy routers
-
-            for (int ix = 0; ix <= split-1; ++ix) {
-                left->routers.push_back(n->routers[ix]);
+            for (int i = 0; i <= split-1; ++i) {
+                left->routers.push_back(n->routers[i]);
             }
 
-            for(int i = split+1,ix=0; i < n->routers.size(); ++i,++ix) {
-                right->routers.push_back(n->routers[ix]);
+            for(int i = split+1; i < n->routers.size(); ++i) {
+                right->routers.push_back(n->routers[i]);
             }
 
             n->routers.clear();
             n->children.clear();
-            n->children[0] = left;
-            n->routers[0] = splitrouter;
-            n->children[1] = right;
+
+            n->children.push_back(left);
+            n->routers.push_back(splitrouter);
+            n->children.push_back(right);
+
             n->check();
-            right->check();
             left->check();
-        }
+            right->check();
+        } 
+
+        // now proceed with the computation
+        // since now n has space creatred properly
 
         assert (n->children.size() < TREE_N);
 
@@ -230,7 +241,7 @@ void insert_recur(int x, btree &b, node *n)  {
         leaf->isleaf = true;
         leaf->parent = n;
         leaf->vals.push_back(x);
-        
+
         assert(n->children.size() < TREE_N);
 
         // C0:10 || ---
@@ -239,7 +250,7 @@ void insert_recur(int x, btree &b, node *n)  {
         n->children.push_back(leaf);
         n->check();
         leaf->check();
-    }
+    } // end if(n->isleaf)
 }
 
 
