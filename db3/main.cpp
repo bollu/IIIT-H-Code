@@ -115,10 +115,10 @@ void insert_recur(int x, btree &b, node *n)  {
             int kloc = 0;
             while (kloc < n->vals.size() && n->vals[kloc] > x) { kloc++; }
             assert(kloc < TREE_N);
-            if (kloc < n->vals.size()) { assert(n->vals[kloc] <= x); }
 
             // shift to make space for x.
-            for(int i = n->vals.size() + 1; i >= kloc; i--) { n->vals[i] = n->vals[i-1]; }
+            n->vals.push_back(-42);
+            for(int i = n->vals.size()-1; i > kloc; i--) { n->vals[i] = n->vals[i-1]; }
             // write x into the correct location
             n->vals[kloc] = x;
             n->check();
