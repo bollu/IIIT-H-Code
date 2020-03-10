@@ -6,6 +6,11 @@
 #include <fstream>
 #include <vector>
 #include <assert.h>
+#ifdef DEBUG
+#define DEBUGPRINT(x) { x };
+#else
+#define DEBUGPRINT ;
+#endif
 using namespace std;
 
 const int TREE_N = 3;
@@ -77,7 +82,9 @@ void printnode(node *n, int depth=0) {
 
 
 node *gotoleaf(int k, node *cur) {
+#ifdef DEBUG
     cerr << "gotoleaf(" << k << "," << cur << ")\n";
+#endif
     assert(cur);
     if (cur->isleaf) { return cur; }
     assert(cur->children.size() > 0);
@@ -96,7 +103,9 @@ bool find(int k, btree &b) {
     assert(b.root);
     node *leaf = gotoleaf(k, b.root);
     assert(leaf->isleaf);
+#ifdef DEBUG
     cerr << "find(" << k << ") in leaf: " << leaf << "\n";
+#endif
     
     for(int i = 0; i < leaf->vals.size(); ++i) {
         if (leaf->vals[i] == k) { return true; }
@@ -256,7 +265,9 @@ void insert_recur(int x, btree &b, node *n)  {
 
 void insert(int x, btree &b) {
     if (b.root == nullptr) {
+#ifdef DEBUG
         cerr << "b.root == nullptr\n";
+#endif
         b.root = new node();
         b.root->isleaf = false;
         
@@ -311,7 +322,9 @@ int range(int x, int y, btree &b) {
 
 int main(int argc, char *argv[]) {
     assert(argc == 2);
+#ifdef DEBUG
     cerr << "reading: " << argv[1] << "\n";
+#endif
     ifstream f; f.open(argv[1], std::ifstream::in);
 
     btree b;
@@ -331,9 +344,11 @@ int main(int argc, char *argv[]) {
         } else if (c  == "RANGE") {
             int x, y; ss >> x >> y; cout << range(x, y, b) << "\n";
         }
+#ifdef DEBUG
         cerr << "---after request: " << l << ":---\n";
         printnode(b.root, 2);
         cerr << "---\n";
+#endif
     }
     return 0;
 }
