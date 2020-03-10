@@ -219,6 +219,7 @@ void insert_recur(int x, btree &b, node *n)  {
             n->children.push_back(left);
             n->routers.push_back(splitrouter);
             n->children.push_back(right);
+            assert(n->children.size() == 2);
 
             n->check();
             left->check();
@@ -227,12 +228,11 @@ void insert_recur(int x, btree &b, node *n)  {
 
         // now proceed with the computation
         // since now n has space creatred properly
-
         assert (n->children.size() < TREE_N);
 
         for(int i = 0; i < n->routers.size(); ++i) {
             if (x <= n->routers[i]) {
-                insert_recur(x, b, n->children[i]);
+                return insert_recur(x, b, n->children[i]);
             }
         }
 
@@ -283,16 +283,9 @@ int count_node(int x, node *n) {
         assert(n->children.size() > 0);
         assert(n->children.size() > n->routers.size());
         int count = 0;
-        for(int i = 0; i < n->routers.size(); ++i) {
-            if (x <= n->routers[i]) {
-                count += count_node(x, n->children[i]);
-            }
-        }
-        // count the final child if necessary;
-        if (n->routers.size() > 0) {
-            if (x >= n->routers[n->routers.size() - 1]) {
-                count += count_node(x, n->children[n->children.size() -1]);
-            }
+
+        for(int i = 0; i < n->children.size(); ++i) {
+            count += count_node(x, n->children[i]);
         }
         return count;
 
