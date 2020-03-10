@@ -269,8 +269,51 @@ void insert(int x, btree &b) {
     }
 };
 
-int count(int x, btree &b) {};
-int range(int x, int y, btree &b) {};
+int count_node(int x, node *n) {
+    if (n->isleaf) {
+        int count = 0;
+        for(int i = 0; i < n->vals.size(); ++i) {
+            if (n->vals[i] == x) { count++; }
+            // once n->vals becomes greater, switch.
+            if (n->vals[i] > x) { break; }
+        }
+        return count;
+    } else {
+        assert(!n->isleaf);
+        assert(n->children.size() > 0);
+        assert(n->children.size() > n->routers.size());
+        int count = 0;
+        for(int i = 0; i < n->routers.size(); ++i) {
+            if (x <= n->routers[i]) {
+                count += count_node(x, n->children[i]);
+            }
+        }
+        // count the final child if necessary;
+        if (n->routers.size() > 0) {
+            if (x >= n->routers[n->routers.size() - 1]) {
+                count += count_node(x, n->children[n->children.size() -1]);
+            }
+        }
+        return count;
+
+    }
+
+    assert(false && "unreachable");
+
+}
+
+int count(int x, btree &b) {
+    if (!b.root) { return 0; }
+    return count_node(x, b.root);
+}
+
+int range_node(int x, int y, node *n) {
+}
+
+int range(int x, int y, btree &b) {
+    if (!b.root) { return 0; }
+    return range_node(x, y, b.root);
+};
 
 
 int main(int argc, char *argv[]) {
