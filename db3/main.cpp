@@ -1,4 +1,3 @@
-// https://iq.opengenus.org/b-tree-search-insert-delete-operations/
 // https://www.cs.helsinki.fi/u/mluukkai/tirak2010/B-tree.pdf
 // https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html
 #include <sstream>
