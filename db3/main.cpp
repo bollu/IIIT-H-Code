@@ -280,7 +280,7 @@ void insert(int x, btree &b) {
     }
 };
 
-int count_node(int x, node *n) {
+int count_recur(int x, node *n) {
     if (n->isleaf) {
         int count = 0;
         for(int i = 0; i < n->vals.size(); ++i) {
@@ -296,7 +296,10 @@ int count_node(int x, node *n) {
         int count = 0;
 
         for(int i = 0; i < n->children.size(); ++i) {
-            count += count_node(x, n->children[i]);
+            // note: we can only block ourselves from visitng node n
+            // if the router of n-1 exceeds us.
+            if (i-1 >= 0 && i-1< n->routers.size() && n->routers[i-1] > x) { break; }
+            count += count_recur(x, n->children[i]);
         }
         return count;
 
@@ -308,15 +311,40 @@ int count_node(int x, node *n) {
 
 int count(int x, btree &b) {
     if (!b.root) { return 0; }
-    return count_node(x, b.root);
+    return count_recur(x, b.root);
 }
 
-int range_node(int x, int y, node *n) {
+int range_recur(int x, int y, node *n) {
+    if (n->isleaf) {
+        int count = 0;
+        for(int i = 0; i < n->vals.size(); ++i) {
+            if (n->vals[i] >= x && n->vals[i] <= y) { count++; }
+            // once n->vals becomes greater, switch.
+            if (n->vals[i] > y) { break; }
+        }
+        return count;
+    } else {
+        assert(!n->isleaf);
+        assert(n->children.size() > 0);
+        assert(n->children.size() > n->routers.size());
+        int count = 0;
+
+        for(int i = 0; i < n->children.size(); ++i) {
+            // note: we can only block ourselves from visitng node n
+            // if the router of n-1 exceeds us.
+            if (i-1 >= 0 && i-1< n->routers.size() && n->routers[i-1] > y) { break; }
+            count += range_recur(x, y, n->children[i]);
+        }
+        return count;
+
+    }
+
+    assert(false && "unreachable");
 }
 
 int range(int x, int y, btree &b) {
     if (!b.root) { return 0; }
-    return range_node(x, y, b.root);
+    return range_recur(x, y, b.root);
 };
 
 
