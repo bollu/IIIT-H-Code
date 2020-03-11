@@ -86,12 +86,13 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{RAID 2: Hamming code for Error correction}
+    \frametitle{RAID 2: Bit level striping + Hamming ECC}
     \begin{figure}
     \includegraphics[height=0.3\paperwidth]{RAID2.pdf}
     \includegraphics[height=0.3\paperwidth]{hamming.pdf}
     \end{figure}
     \begin{itemize}
+        \item Use \textbf{bit-level} striping (consecutive bits $\rightarrow$ different disks).
         \item Use Hamming code \textbf{per bit}. \pause
         \item All disks need to read same bit simultaneously: bitwise error checking. \pause
         \item So, \textbf{Cannot service multiple requests at once}. \pause
@@ -101,25 +102,41 @@
 
 
 \begin{frame}
-    \frametitle{RAID 3: Hamming code for ECC}
+    \frametitle{RAID 3: Byte level striping + parity ECC}
     \begin{figure}
     \includegraphics[height=0.3\paperwidth]{RAID3.pdf}
     \end{figure}
+    \begin{itemize}
+        \item Use \textbf{byte-level} striping (consecutive bytes $\rightarrow$ different disks). \pause
+        \item I/O needs \textbf{synchronized spindles}. \pause
+        \item parity needs far less storage space. \pause
+        \item Rarely used in practice.
+    \end{itemize}
 \end{frame}
 
 
 \begin{frame}
-    \frametitle{RAID 4: Block level striping + parity}
+    \frametitle{RAID 4: Block level striping + parity ECC}
     \begin{figure}
     \includegraphics[height=0.3\paperwidth]{RAID4.pdf}
     \end{figure}
+    \begin{itemize}
+        \item Stripe data per-block (consecutive block $\rightarrow$ different disks). \pause
+        \item Block level parity needs far less storage space. \pause
+        \item Good random access read times. \pause
+        \item Bad write times: All parities in same disk.
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
-    \frametitle{RAID 5: Block level striping + distributed parity}
+    \frametitle{RAID 5: Block level striping + distributed parity ECC}
     \begin{figure}
     \includegraphics[height=0.3\paperwidth]{RAID5.pdf}
     \end{figure}
+    \begin{itemize}
+        \item Inherits the good from RAID 4. \pause
+        \item Good write times: parities distributed across disks.
+    \end{itemize}
 \end{frame}
 
 
