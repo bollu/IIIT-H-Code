@@ -46,7 +46,7 @@ main(Args) -> [IP, OP] = Args,
                io:format("IP: ~p | OP: ~p | INPUT: ~p | Self: ~p \n", [IP, OP, Input, Self]),
                sortlist(Self, Input),
                receive {Sorted} -> 
-                   io:format("OUTPUT: ~p\n", [Sorted]),
+                   io:format(OF, "~p", [Sorted]),
                    ok
                 end.
 

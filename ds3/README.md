@@ -9,3 +9,6 @@
   This is enough information to decide who to send the token to text.
 
 ## Second question: parallel merge sort
+
+Use `spawn` and `receive` to split at each sort step inside the function
+`splitsort`
