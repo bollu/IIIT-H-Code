@@ -18,7 +18,10 @@
 \end{frame}
 
 \begin{frame}
-    % spanning tree computation: why is it hard in a distributed system
+    \frametitle{Introduction}
+    \begin{itemize}
+        \item We use BFS to compute a spanning tree of a graph.
+    \end{itemize}
 \end{frame}
 
 
@@ -189,10 +192,16 @@
     \end{minted}
 \end{frame}
 
-
 \begin{frame}
-    Thank you!
+    \frametitle{Complexities}
+    \pause
+    \begin{itemize}
+        \item Local space for $a$: $|\{ v : (a, v) \in E \}|$ (\#of incident edges) \pause
+        \item $|Diameter|$ rounds. \pause
+        \item 1 or 2 messages / edge. $\text{Message complexity} \leq 2|E|$.
+    \end{itemize}
 \end{frame}
+
 
 \begin{frame}
     Thank you!
