@@ -19,6 +19,34 @@
   <defs
      id="defs4">
     <marker
+       inkscape:stockid="TriangleInM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker6350"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path6352"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1;fill:#ec407a;fill-opacity:1"
+         transform="scale(-0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleInM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleInM"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path5958"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1;fill:#ec407a;fill-opacity:1"
+         transform="scale(-0.4)" />
+    </marker>
+    <marker
        inkscape:stockid="EmptyDiamondMend"
        orient="auto"
        refY="0.0"
@@ -84,7 +112,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="345.85671"
+     inkscape:cx="226.40617"
      inkscape:cy="293.78231"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -107,7 +135,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -137,8 +165,8 @@
        id="path4291-1"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#01579b;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 130.71429,198.3622 193.57142,0"
+       style="fill:none;fill-rule:evenodd;stroke:#ec407a;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#TriangleInM)"
+       d="m 186.33033,198.3622 137.95538,0"
        id="path4291"
        inkscape:connector-curvature="0" />
     <path
@@ -152,8 +180,8 @@
        id="path4244-6-0"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#01579b;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 95.714286,228.79078 0,215.71428"
+       style="fill:none;fill-rule:evenodd;stroke:#ec407a;stroke-width:9.99999905;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker6350)"
+       d="m 95.714284,283.41969 0,161.08536"
        id="path4244"
        inkscape:connector-curvature="0" />
     <circle

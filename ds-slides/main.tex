@@ -22,62 +22,55 @@
 % algorithm explanation
 \begin{frame}
     \frametitle{Example}
-    \begin{adjustbox}{min totalsize={.5\textwidth}{.5\textheight}}
-    \begin{tikzpicture}
-        \node (A) {$A$};
-        \node (B) [right of = A] {$B$};
-        \node (C) [right of = B, color=red] {$C$};
-        \node (D) [below of = C] {$D$};
-        \node (E) [below of = B, color=blue] {$E$};
-        \node (F) [below of = A] {$F$};
-
-        \path (A) edge (B); 
-        \path (A) edge (F);
-        % 
-        \path (B) edge (C);
-        %
-        \path (C) edge (D);
-        % \path[thick] (C) edge (E);
-        %\path [->, bend left] (C) to node{bar} (E);
-        % 
-        \path (D) edge (E);
-        %
-        \path (E) edge (F);
-    \end{tikzpicture}
-    \end{adjustbox}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{base.pdf}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
     \frametitle{Example}
-    \begin{adjustbox}{min totalsize={.5\textwidth}{.5\textheight}}
-    \begin{tikzpicture}
-        \node (A) {$A$};
-        \node (B) [right of = A] {$B$};
-        \node (C) [right of = B, color=red] {$C$};
-        \node (D) [below of = C] {$D$};
-        \node (E) [below of = B, color=blue] {$E$};
-        \node (F) [below of = A] {$F$};
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round1.pdf}
+    \end{figure}
+\end{frame}
 
-        \path (A) edge (B); 
-        \path (A) edge (F);
-        % 
-        \path (B) edge (C);
-        %
-        \path (C) edge (D);
-        % \path[thick] (C) edge (E);
-        %\path [->, bend left] (C) to node{bar} (E);
-        % 
-        \path (D) edge (E);
-        %
-        \path (E) edge (F);
-        \draw[thick] (E) -- (C) 
-            node [near start, style={sloped}, anchor=south, color=blue]{3}
-            node [near end, style={sloped}, anchor=south, color=red]{3};
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round1-end.pdf}
+    \end{figure}
+\end{frame}
 
-        \draw[thick] (E) -- (D) 
-            node [near start, anchor=north, color=blue]{3};
-    \end{tikzpicture}
-    \end{adjustbox}
+
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round2.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round2-end.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round3.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round3-end.pdf}
+    \end{figure}
 \end{frame}
 
 \begin{frame}[fragile]
