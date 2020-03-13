@@ -4,7 +4,8 @@
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{adjustbox}
-\usetheme{Boadilla}
+\usepackage{turnstile}
+%\usetheme{Boadilla}
 
 \setminted{fontsize=\footnotesize}
 
@@ -21,7 +22,9 @@
 \begin{frame}
     \frametitle{Introduction}
     \begin{itemize}
-        \item We use BFS to compute a spanning tree of a graph.
+        \item We use BFS to compute a spanning tree of a graph. \pause
+        \item We can distribute the sequential algorithm assuming \textit{synchronous communication}. \pause
+        \item \textbf{Refresher:} Algorithm proceeds in rounds. All messages sent at round $i$ are received at round $i$.
     \end{itemize}
 \end{frame}
 
@@ -284,7 +287,42 @@
 \end{frame}
 
 \begin{frame}
-    % Minimum weight spanning tree: synchronous (5.5.11, Kshemkalyani)
+    \frametitle{Formal definition of synchronous processes $p$}
+    \begin{itemize}
+        \item $p \equiv (S, I, M\mathcal G, \vdash)$ \pause
+        \item $S \equiv \text{set of states}$. \pause
+        \item $I \subseteq S \equiv \text{set of initial states}$. \pause
+        \item $M\mathcal G : S \rightarrow 2^M \equiv \text{message generating \textbf{function}}$. \pause
+        \item $\vdash ~\subseteq S \times 2^M \subset S \equiv \text{transition \textbf{relation}}$. We write 
+            $(s, M) \vdash s'$ for $(s, M, s') \in \vdash$.  \pause
+        \item Process starts at state $s_0 \in I$.  
+        \pause
+        \item in state $s$, process sends a collection of messages $M\mathcal G(s)$.
+        \pause
+        \item \textbf{Before} next pulse, it receives \textit{all} messages $M$ sent to it in this pulse.
+        \pause
+        \item It then enters a state $s'$ such that $(s, M) \vdash s'$.
+        \pause
+        \item Note that $M\mathcal G$ is \textbf{deterministic}.
+                All the nondeterminism is in the relation $(s, M) \vdash s'$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Formal definition of synchronous system $\mathbb P$}
+    \begin{itemize}
+        \item $\mathbb P \equiv (p_1, p_2, \dots, p_n)$ where each $p_i \equiv (S_i, I_i, M\mathcal G_i, \vdash_i)$
+            is a synchronous process, is a synchronous system. \pause
+        \item Transition system $Tr \equiv (S, \mathcal I, \rightarrow)$. \pause
+        \item $S \equiv \prod_i S_i$ is the state space of the transition system. \pause
+        \item $\mathcal I \equiv \prod_i I_i$ is the set of initial states. \pause
+        \item $\rightarrow \subseteq S \times S$ is the transition relation.
+            \begin{align*}
+            &(s_1, s_2, \dots s_n) \rightarrow (s_1', s_2', \dots, s_n')\\
+            &\quad \text{iff} \quad\forall p_i \in \mathbb P; (s_i, \{ \text{messages to $p_i$ from $p_{-i}$} \}) \vdash s_i'
+        \end{align*}
+            
+    \end{itemize}
 \end{frame}
 
 \begin{frame}
