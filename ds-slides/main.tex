@@ -4,6 +4,7 @@
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{adjustbox}
+\usetheme{Boadilla}
 
 \setminted{fontsize=\footnotesize}
 
@@ -76,6 +77,58 @@
     \frametitle{Example}
     \begin{figure}
     \includegraphics[width=0.5\paperwidth]{round3-end.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{base.pdf}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round1.pdf}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round1.pdf}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round2.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round2-fuckup-end.pdf}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round3-fuckup.pdf}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Why Synchrony?}
+    \begin{figure}
+    \includegraphics[width=0.5\paperwidth]{round3-fuckup-end.pdf}
     \end{figure}
 \end{frame}
 
@@ -208,6 +261,29 @@
 \end{frame}
 
 \begin{frame}
+    \frametitle{Asynchronous Bounded Delay Network}
+    \begin{itemize}
+    \item All processes have physical clocks: \textbf{need not be synchronized}.
+    \item Message delivery time is bounded by constant $\mu \in \mathbb R$.
+    \end{itemize}
+    % Converting bounded delay to synchronous (Gerard Tel, Chapter 12)
+\end{frame}
+
+\begin{frame}
+    \frametitle{ABD Synchronizers: Bounded Delay $\rightarrow$ Synchronized}
+    \begin{itemize}
+    \item All processes have physical clocks: \textbf{need not be synchronized}.
+    \item Message delivery time is bounded by constant $\mu \in \mathbb R$.
+    \end{itemize}
+
+    \begin{block}{Key idea}
+        Chunk "real time" into units of $\mu$. Each $\mu$ block of time
+        behaves like a logical synchronized tick!
+    \end{block}
+    % Converting bounded delay to synchronous (Gerard Tel, Chapter 12)
+\end{frame}
+
+\begin{frame}
     % Minimum weight spanning tree: synchronous (5.5.11, Kshemkalyani)
 \end{frame}
 
@@ -215,9 +291,5 @@
     % Spanning tree computation: async version
 \end{frame}
 
-
-\begin{frame}
-    % Converting bounded delay to synchronous (Gerard Tel, Chapter 12)
-\end{frame}
 
 \end{document}
