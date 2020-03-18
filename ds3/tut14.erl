@@ -1,14 +1,9 @@
 -module(tut14).
+% -export([main/1, main/2, main/0]).
+-export([main/1]).
 
--export([main/1, say_something/2]).
 
-say_something(What, 0) ->
-    done;
-say_something(What, Times) ->
-    io:format("~p~n", [What]),
-    say_something(What, Times - 1).
-
-main(Args) ->
-    spawn(tut14, say_something, [hello, 3]),
-    spawn(tut14, say_something, [goodbye, 3]).
+main() -> io:format("A0").
+main(A1) -> io:format("A1: ~p\n", [A1]).
+main(A1, A2) -> io:format("A1: ~p | A2: ~p\n", [A1, A2]).
 

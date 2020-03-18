@@ -1,5 +1,8 @@
-#!/usr/bin/env escript
+% #!/usr/bin/env escript
+-module('20161105_1').
 -import(lists,[nth/2]). 
+-import(string,[trim/1, tokens/2]).
+-export([main/1]).
 
 
 % new_process (Total, N) -> io:format("Process ~p\n", [N]).
@@ -27,11 +30,11 @@ spawnN(Total, N) ->
     end.
 
 main(Args) -> [IP, OP] = Args,
+              io:format("IP: |~p|\t\tOP:|~p|\n", [IP, OP]),
                {ok, IF} = file:open(IP, [read]),
                {ok, OF} = file:open(OP, [write]),
                {ok, RawInput} = file:read(IF, 1024),
-               [Nproc, Tok] = [list_to_integer(T) || 
-                               T <- string:tokens(string:trim(RawInput), " ")],
+               [Nproc, Tok] = [list_to_integer(T) || T <- string:tokens([X || X <- RawInput, X =/= 10], " ")],
                % io:format("IP: ~p | OP: ~p | INPUT: ~p | Nproc: ~p | Tok: ~p\n", [IP, OP, RawInput, Nproc, Tok]),
                % spawn(fun() -> new_process() end),
                PIDs = spawnN(Nproc, 1),

@@ -1,5 +1,8 @@
-#!/usr/bin/env escript
+% #!/usr/bin/env escript
+-module('20161105_2').
 -import(lists,[nth/2, split/2]). 
+-import(string,[trim/1, tokens/2]).
+-export([main/1]).
 
 % merge operation.
 mergelist(XS, []) -> XS;
@@ -41,7 +44,7 @@ main(Args) -> [IP, OP] = Args,
                {ok, IF} = file:open(IP, [read]),
                {ok, OF} = file:open(OP, [write]),
                {ok, RawInput} = file:read(IF, 1024),
-               Input = [list_to_integer(T) || T <- string:tokens(string:trim(RawInput), " ")],
+               Input = [list_to_integer(T) || T <- string:tokens([X || X <-RawInput, X =/= 10], " ")],
                Self = self(),
                io:format("IP: ~p | OP: ~p | INPUT: ~p | Self: ~p \n", [IP, OP, Input, Self]),
                sortlist(Self, Input),

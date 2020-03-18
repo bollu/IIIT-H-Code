@@ -1,10 +1,14 @@
 .PHONY: q1 q2 zip
 
 q1:
-	escript 20161105_1.erl q1in.txt q1out.txt
+	erlc 20161105_1.erl 
+	erl -noshell -s 20161105_1 main q1in.txt q1out.txt -s init stop
+	# escript 20161105_1.erl q1in.txt q1out.txt
 
 q2:
-	escript 20161105_2.erl q2in.txt q2out.txt
+	erlc 20161105_2.erl 
+	erl -noshell -s 20161105_2 main q2in.txt q2out.txt -s init stop
+	# escript 20161105_2.erl q2in.txt q2out.txt
 zip:
 	-rm -r 20161105/
 	-rm 20161105.zip
