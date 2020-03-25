@@ -18,8 +18,10 @@ class Game:
         assert isinstance(game, Game)
         self.nplayers = copy.deepcopy(game.nplayers)
         self.full_outcomes = np.copy(game.full_outcomes)
+        self.full_outcomes.setflags(write=False)
         self.cur_outcomes = np.copy(game.cur_outcomes)
         self.player2strats = copy.deepcopy(game.player2strats)
+        self.player2strat2ix = copy.deepcopy(game.player2strat2ix)
 
     def _from_gambit(self, game):
         assert isinstance(game, gambit.Game)
@@ -39,9 +41,11 @@ class Game:
         self.cur_outcomes = np.copy(self.full_outcomes)
 
         self.player2strats = {}
+        self.player2strat2ix = {}
         for p in range(self.nplayers):
             # map player to column indexes of their strategies
             self.player2strats[p] = list(range(nstrats[p]))
+            self.player2strat2ix[p] = {i : i for i in range(nstrats[p])}
 
     def nstrats_for_player(self, playerid):
         return len(self.player2strats[playerid])
@@ -60,19 +64,32 @@ class Game:
         assert isinstance (stratix, int)
         assert stratix < len(self.player2strats[playerid])
         ixs = [playerid] + [slice(None) for _ in range(self.nplayers)]
-        ixs[playerid+1] = self.player2strats[playerid][stratix]
+        stratid =  self.player2strats[playerid][stratix]
+        ixs[playerid+1] = self.player2strat2ix[playerid][stratid]
         ixs = tuple(ixs)
         return self.cur_outcomes[ixs]
+
 
     def remove_player_strat(self, playerid, stratix):
         assert isinstance (playerid, int)
         assert isinstance (stratix, int)
         assert stratix < len(self.player2strats[playerid])
+        print("self.player2strats(before): %s" % self.player2strats)
+
         del self.player2strats[playerid][stratix]
+        print("self.player2strats(after): %s" % self.player2strats)
+
+        # rejiggle the indexing so that all strategies that are
+        # higher than the one we remove have their index decrement
+        for strat in self.player2strat2ix[playerid]:
+            if strat >= stratix:
+                self.player2strat2ix[playerid][strat] -= 1
+
+        # delete the strategy to be removed
+        del self.player2strat2ix[playerid][stratix]
 
         # recompute outcomes here
         self.cur_outcomes = self._outcomes_from_full_outcomes()
-
 
     def _outcomes_from_full_outcomes(self):
         """
@@ -82,9 +99,15 @@ class Game:
         """
         os = np.empty([self.nplayers] + self.arr_nstrats())
         for strategy_profile in itertools.product(*[self.player2strats[p] for p in range(self.nplayers)]):
+            print("p: %s | strategy_profile: %s " % (p, strategy_profile))
+            strategy_profile_ixs = []
+            for p in range(self.nplayers):
+                strategy_profile_ixs.append(self.player2strat2ix[p][strategy_profile[p]])
+            strategy_profile_ixs = tuple(strategy_profile_ixs)
+
             # print(self.full_outcomes.shape, os.shape)
             for p in range(self.nplayers):
-                os[p][strategy_profile] =  self.full_outcomes[p][strategy_profile]
+                os[p][strategy_profile_ixs] =  self.full_outcomes[p][strategy_profile]
         return os
 
     def outcomes(self):
@@ -187,7 +210,7 @@ def iterate_strong_dominance(game, playerid):
     Return list containing the unique strongly dominant strategy
     Return empty list if not found
     """
-    print("computing iterated strong dominance for player: |%s|" % playerid)
+    print("##computing iterated STRONG dominance for player: |%s| of |%s|##" % (playerid, game.nplayers))
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
@@ -240,25 +263,30 @@ def iterate_strong_dominance(game, playerid):
 def calc_strong_dominance(game):
     assert isinstance(game, Game)
     game.print_outcomes()
-    return iterate_strong_dominance(game, 0)
+    for p in range(0, game.nplayers):
+        sdom = iterate_strong_dominance(game, p)
+        if sdom: return sdom
+    return []
 
 def iterate_weak_dominance(game, playerid): 
     """
     Return list containing the unique strongly dominant strategy
     Return empty list if not found
     """
-    print("computing iterated weak dominance for player: |%s|" % playerid)
+    print("##computing iterated WEAK dominance for player: |%s| of |%s|##" % (playerid, game.nplayers))
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
 
     # we have found the dominant strategy
     if np.product(game.arr_nstrats()) == 1: 
-        yield game.arr_unique_strat()
+        return [game.arr_unique_strat()]
 
     # number of strategies for player
     n_player_strats = game.nstrats_for_player(playerid)
     print("n_player_strats: %s" % n_player_strats)
+
+    strats_list = []
 
     for cur_strat_ix in range(n_player_strats):
         cur_strat =  game.get_player_strat(playerid, cur_strat_ix)
@@ -268,7 +296,7 @@ def iterate_weak_dominance(game, playerid):
             if other_strat_ix == cur_strat_ix: continue # skip ourselves
 
             other_strat =  game.get_player_strat(playerid, other_strat_ix)
-            cur_lt_other = (cur_strat < other_strat) & (cur_strat != other_strat)
+            cur_lt_other = np.all(cur_strat <= other_strat) and not np.all(cur_strat != other_strat)
 
             print("player %s: comparing |%s=%s| with |%s=%s|: %s (all=%s)" %
                     (playerid, 
@@ -278,31 +306,50 @@ def iterate_weak_dominance(game, playerid):
                      np.all(cur_lt_other)))
 
             # if strongly dominated
-            if np.all(cur_lt_other):
+            if cur_lt_other:
                 gamecur = Game(game)
                 gamecur.remove_player_strat(playerid, cur_strat_ix)
-                yield iterate_weak_dominance(game, (playerid+1) % game.nplayers)
+                strats_list.extend(iterate_weak_dominance(gamecur, (playerid+1) % gamecur.nplayers))
+        return strats_list
     else:
         print ("##WARNING: unable to find weakly dominated strategy for player |%s|!##" % (playerid))
         game.print_outcomes()
         print ("##ENDWARNING##")
-        return  # this is the same as just "yielding"
+        return  []
 
 
 def calc_weak_dominances(game):
     assert isinstance(game, Game)
     game.print_outcomes()
-    return iterate_weak_dominance(game, 0)
+    strats = []
+
+    for p in range(0, game.nplayers):
+        strats.extend(iterate_weak_dominance(game, p))
+    return strats
 
 if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
     game = Game(g)
-    allstrats = calc_strong_dominance(game) + list(calc_weak_dominances(game))
-    print("allstrats:\n%s" % ("\n".join(map(str, allstrats))))
+    allstrats = calc_strong_dominance(game)
+    # if we do not have strongly dominant strategy eqm, then use
+    # weakly
+    allstrats += calc_weak_dominances(game)
+    # remove duplicates
+    allstrats = [strat for (strat, _) in itertools.groupby(allstrats)]
+
+
+    print("##ALL STRATEGIES##")
+    for (i, strat) in enumerate(allstrats):
+        print("STRATEGY %3s | %60s" % (i, list(strat)))
+    print("##END ALL STRATEGIES##")
 
     with open(sys.argv[2], "w") as f:
-        f.write("%s\n" % len(allstrats))
-        for strat in allstrats:
-            f.write(" ".join(map(str, strat)))
+        if len(allstrats) == 0:
+            f.write("No Dominant Strategy Equilibria exist")
+        else:
+            f.write("%s\n" % len(allstrats))
+            for strat in allstrats:
+                f.write(" ".join(map(str, strat)))
+                f.write("\n")
 
