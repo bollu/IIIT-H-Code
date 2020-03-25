@@ -32,9 +32,16 @@ class Game:
         # table of outcomes: #strat(P1) x #strat(P2) x .. x #strat(Pn) -> |Players|
         # table of outcomes: |Players| x #strat(P1) x #strat(P2) x .. x #strat(Pn)
         nstrats = [len(p.strategies) for p in game.players]
+
+        self.player2strats = {}
+        for p in range(self.nplayers):
+            # map player to column indexes of their strategies
+            self.player2strats[p] = list(range(nstrats[p]))
+
         self.full_outcomes = np.empty([len(game.players)] + nstrats)
 
-        for strategy_profile in itertools.product(*[range(player_nstrats) for player_nstrats in nstrats]):
+
+        for strategy_profile in self.strategy_profiles():
             for p in range(len(game.players)):
                 self.full_outcomes[p][strategy_profile] =  game[strategy_profile][p]
         # make data read-only
@@ -43,12 +50,23 @@ class Game:
         # a mutable copy of the full outcomes array
         self.cur_outcomes = np.copy(self.full_outcomes)
 
-        self.player2strats = {}
-        for p in range(self.nplayers):
-            # map player to column indexes of their strategies
-            self.player2strats[p] = list(range(nstrats[p]))
+
+    def strategy_profiles(self):
+        """return a strategy profile"""
+        return itertools.product(*[self.player2strats[p] for p in range(self.nplayers)])
+
+    def get_outcome_for_profile(self, profile):
+        """return the outcome for all players at a given profile"""
+        ixs = self._strat_profile_to_arrixs(profile)
+        print("=======get_outcome_for_profile======")
+        print("profile: %s" % (profile, ))
+        print("ixs: %s" % (ixs, ))
+        self.print_outcomes()
+        print("==")
+        return self.full_outcomes[tuple([slice(None)] +list(ixs))]
 
     def nstrats_for_player(self, playerid):
+        """return number of strategies for player"""
         return len(self.player2strats[playerid])
 
     def arr_nstrats(self):
@@ -56,14 +74,17 @@ class Game:
         return [self.nstrats_for_player(p) for p in range(self.nplayers)]
 
     def get_player_strat_ids(self, playerid):
+        """get the available strategies for player"""
         return copy.deepcopy(self.player2strats[playerid])
 
-    def arr_unique_strat(self):
+    def arr_unique_profile(self):
+        """get the unique profile available"""
         assert np.product(self.arr_nstrats()) == 1
         return [self.player2strats[playerid][0] for playerid in range(self.nplayers)]
 
 
-    def get_player_strat(self, playerid, stratid):
+    def get_player_subgame(self, playerid, stratid):
+        """get the strategy outcome for player at playerd, stratid"""
         assert isinstance (playerid, int)
         assert isinstance (stratid, int)
         assert stratid in self.player2strats[playerid]
@@ -172,26 +193,26 @@ def iterate_strong_dominance(game, playerid, iteration=0):
 
     # we have found the dominant strategy
     if np.product(game.arr_nstrats()) == 1: 
-        return [game.arr_unique_strat()]
+        return [game.arr_unique_profile()]
 
     # number of strategies for player
     n_player_strats = game.nstrats_for_player(playerid)
     print("n_player_strats: %s" % n_player_strats)
 
     for cur_strat_id in game.get_player_strat_ids(playerid):
-        cur_strat =  game.get_player_strat(playerid, cur_strat_id)
+        cur_outcome =  game.get_player_subgame(playerid, cur_strat_id)
 
         strongly_dominated = False
         for other_strat_id in game.get_player_strat_ids(playerid):
             if other_strat_id == cur_strat_id: continue # skip ourselves
 
-            other_strat =  game.get_player_strat(playerid, other_strat_id)
-            cur_lt_other = cur_strat < other_strat
+            other_outcome =  game.get_player_subgame(playerid, other_strat_id)
+            cur_lt_other = cur_outcome < other_outcome
 
             print("player %s: comparing |%s=%s| with |%s=%s|: %s (all=%s)" %
                     (playerid, 
-                     cur_strat_id, cur_strat, 
-                     other_strat_id, other_strat,
+                     cur_strat_id, cur_outcome, 
+                     other_strat_id, other_outcome,
                      cur_lt_other,
                      np.all(cur_lt_other)))
 
@@ -236,7 +257,7 @@ def iterate_weak_dominance(game, playerid, iteration=0):
 
     # we have found the dominant strategy
     if np.product(game.arr_nstrats()) == 1: 
-        return [game.arr_unique_strat()]
+        return [game.arr_unique_profile()]
 
     # number of strategies for player
     n_player_strats = game.nstrats_for_player(playerid)
@@ -245,18 +266,18 @@ def iterate_weak_dominance(game, playerid, iteration=0):
     strats_list = []
 
     for cur_strat_id in game.get_player_strat_ids(playerid):
-        cur_strat =  game.get_player_strat(playerid, cur_strat_id)
+        cur_outcome =  game.get_player_subgame(playerid, cur_strat_id)
 
         for other_strat_id in game.get_player_strat_ids(playerid):
             if other_strat_id == cur_strat_id: continue # skip ourselves
 
-            other_strat =  game.get_player_strat(playerid, other_strat_id)
-            cur_lt_other = np.all(cur_strat <= other_strat) and not np.all(cur_strat == other_strat)
+            other_outcome =  game.get_player_subgame(playerid, other_strat_id)
+            cur_lt_other = np.all(cur_outcome <= other_outcome) and not np.all(cur_outcome == other_outcome)
 
             print("player %s: comparing |%s=%s| with |%s=%s|: %s (all=%s)" %
                     (playerid, 
-                     cur_strat_id, cur_strat, 
-                     other_strat_id, other_strat,
+                     cur_strat_id, cur_outcome, 
+                     other_strat_id, other_outcome,
                      cur_lt_other,
                      np.all(cur_lt_other)))
 
@@ -283,14 +304,36 @@ def calc_weak_dominances(game):
         strats.extend(iterate_weak_dominance(game, p))
     return strats
 
+def calc_weakly_dominant_exhaustive_search(game):
+    # iterate over all possible strategies for all possible players
+    weakdom = []
+    for profile_cur in game.strategy_profiles():
+        outcome_cur = game.get_outcome_for_profile(profile_cur) 
+
+        strictly_better = False
+        at_least_as_good = True
+        for profile_other in game.strategy_profiles():
+            if profile_cur == profile_other: continue
+            outcome_other = game.get_outcome_for_profile(profile_other)
+
+            at_least_as_good = at_least_as_good and np.all(outcome_cur >= outcome_other)
+            strictly_better = strictly_better or np.any(outcome_cur > outcome_other)
+
+            if not (at_least_as_good and strictly_better): break
+
+        if at_least_as_good and strictly_better:
+            weakdom.append(profile_cur)
+    return weakdom
+
+
 if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
     game = Game(g)
     all_profiles = calc_strong_dominance(game)
-    # if we do not have strongly dominant strategy eqm, then use
     # weakly
-    all_profiles += calc_weak_dominances(game)
+    # all_profiles += calc_weak_dominances(game)
+    all_profiles += calc_weakly_dominant_exhaustive_search(Game(g))
     # remove duplicates
     all_profiles = [strat for (strat, _) in itertools.groupby(all_profiles)]
 
