@@ -159,12 +159,13 @@ def mkindex_player_strat(nplayers, playerid, stratid):
     return ixs
 
 
-def iterate_strong_dominance(game, playerid): 
+def iterate_strong_dominance(game, playerid, iteration=0): 
     """
     Return list containing the unique strongly dominant strategy
     Return empty list if not found
     """
-    print("##computing iterated STRONG dominance for player: |%s| of |%s|##" % (playerid, game.nplayers))
+    print("##iteration: |%s| computing iterated STRONG dominance for player: |%s| of |%s|##" % 
+            (iteration, playerid, game.nplayers))
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
@@ -205,7 +206,7 @@ def iterate_strong_dominance(game, playerid):
         print("pruned outcomes: ")
         game.print_outcomes()
         print("--")
-        return iterate_strong_dominance(game, (playerid+1) % game.nplayers)
+        return iterate_strong_dominance(game, (playerid+1) % game.nplayers, iteration+1)
     else:
         print ("##WARNING: unable to find strongly dominated strategy for player |%s|!##" % (playerid))
         game.print_outcomes()
@@ -222,12 +223,13 @@ def calc_strong_dominance(game):
         if sdom: return sdom
     return []
 
-def iterate_weak_dominance(game, playerid): 
+def iterate_weak_dominance(game, playerid, iteration=0): 
     """
     Return list containing the unique strongly dominant strategy
     Return empty list if not found
     """
-    print("##computing iterated WEAK dominance for player: |%s| of |%s|##" % (playerid, game.nplayers))
+    print("##iteration: |%s| computing iterated WEAK dominance for player: |%s| of |%s|##" % 
+            (iteration, playerid, game.nplayers))
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
@@ -245,12 +247,11 @@ def iterate_weak_dominance(game, playerid):
     for cur_strat_id in game.get_player_strat_ids(playerid):
         cur_strat =  game.get_player_strat(playerid, cur_strat_id)
 
-        strongly_dominated = False
         for other_strat_id in game.get_player_strat_ids(playerid):
             if other_strat_id == cur_strat_id: continue # skip ourselves
 
             other_strat =  game.get_player_strat(playerid, other_strat_id)
-            cur_lt_other = np.all(cur_strat <= other_strat) and not np.all(cur_strat != other_strat)
+            cur_lt_other = np.all(cur_strat <= other_strat) and not np.all(cur_strat == other_strat)
 
             print("player %s: comparing |%s=%s| with |%s=%s|: %s (all=%s)" %
                     (playerid, 
@@ -264,6 +265,7 @@ def iterate_weak_dominance(game, playerid):
                 gamecur = Game(game)
                 gamecur.remove_player_strat(playerid, cur_strat_id)
                 strats_list.extend(iterate_weak_dominance(gamecur, (playerid+1) % gamecur.nplayers))
+
         return strats_list
     else:
         print ("##WARNING: unable to find weakly dominated strategy for player |%s|!##" % (playerid))
