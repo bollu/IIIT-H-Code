@@ -75,10 +75,9 @@ class Game:
     def remove_player_strat(self, playerid, stratid):
         assert isinstance (playerid, int)
         assert isinstance (stratid, int)
-        assert stratid < len(self.player2strats[playerid])
+        assert stratid in self.player2strats[playerid]
         print("self.player2strats(before): %s" % self.player2strats)
-
-        del self.player2strats[playerid][stratid]
+        self.player2strats[playerid].remove(stratid)
         print("self.player2strats(after): %s" % self.player2strats)
 
         # recompute outcomes here
