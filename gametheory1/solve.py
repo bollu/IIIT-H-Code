@@ -287,25 +287,25 @@ if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
     game = Game(g)
-    allstrats = calc_strong_dominance(game)
+    all_profiles = calc_strong_dominance(game)
     # if we do not have strongly dominant strategy eqm, then use
     # weakly
-    allstrats += calc_weak_dominances(game)
+    all_profiles += calc_weak_dominances(game)
     # remove duplicates
-    allstrats = [strat for (strat, _) in itertools.groupby(allstrats)]
+    all_profiles = [strat for (strat, _) in itertools.groupby(all_profiles)]
 
 
     print("##ALL STRATEGIES##")
-    for (i, strat) in enumerate(allstrats):
+    for (i, strat) in enumerate(all_profiles):
         print("STRATEGY %3s | %60s" % (i, list(strat)))
     print("##END ALL STRATEGIES##")
 
     with open(sys.argv[2], "w") as f:
-        if len(allstrats) == 0:
+        if len(all_profiles) == 0:
             f.write("No Dominant Strategy Equilibria exist")
         else:
-            f.write("%s\n" % len(allstrats))
-            for strat in allstrats:
-                f.write(" ".join(map(str, strat)))
+            f.write("%s\n" % len(all_profiles))
+            for profile in all_profiles:
+                f.write(" ".join([str(strat + 1) for strat in profile]))
                 f.write("\n")
 
