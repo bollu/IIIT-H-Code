@@ -4,9 +4,24 @@ import sys
 import pulp
 import numpy as np
 import itertools
+import copy
 
 class Game:
-    def __init__(self, game):
+    def __init__(self, in_param):
+        if isinstance(in_param, gambit.Game):
+            self._from_gambit(in_param)
+        else:
+            assert isinstance(in_param, Game)
+            self._from_Game(in_param)
+    
+    def _from_Game(self, game):
+        assert isinstance(game, Game)
+        self.nplayers = copy.deepcopy(game.nplayers)
+        self.full_outcomes = np.copy(game.full_outcomes)
+        self.cur_outcomes = np.copy(game.cur_outcomes)
+        self.player2strats = copy.deepcopy(game.player2strats)
+
+    def _from_gambit(self, game):
         assert isinstance(game, gambit.Game)
         self.nplayers = len(game.players)
         # table of outcomes: #strat(P1) x #strat(P2) x .. x #strat(Pn) -> |Players|
@@ -57,6 +72,7 @@ class Game:
 
         # recompute outcomes here
         self.cur_outcomes = self._outcomes_from_full_outcomes()
+
 
     def _outcomes_from_full_outcomes(self):
         """
@@ -226,15 +242,63 @@ def calc_strong_dominance(game):
     game.print_outcomes()
     return iterate_strong_dominance(game, 0)
 
+def iterate_weak_dominance(game, playerid): 
+    """
+    Return list containing the unique strongly dominant strategy
+    Return empty list if not found
+    """
+    print("computing iterated weak dominance for player: |%s|" % playerid)
+    # assert isinstance(os, np.array)
+    assert isinstance(playerid, int)
+    assert (playerid < game.nplayers)
+
+    # we have found the dominant strategy
+    if np.product(game.arr_nstrats()) == 1: 
+        yield game.arr_unique_strat()
+
+    # number of strategies for player
+    n_player_strats = game.nstrats_for_player(playerid)
+    print("n_player_strats: %s" % n_player_strats)
+
+    for cur_strat_ix in range(n_player_strats):
+        cur_strat =  game.get_player_strat(playerid, cur_strat_ix)
+
+        strongly_dominated = False
+        for other_strat_ix in range(n_player_strats):
+            if other_strat_ix == cur_strat_ix: continue # skip ourselves
+
+            other_strat =  game.get_player_strat(playerid, other_strat_ix)
+            cur_lt_other = (cur_strat < other_strat) & (cur_strat != other_strat)
+
+            print("player %s: comparing |%s=%s| with |%s=%s|: %s (all=%s)" %
+                    (playerid, 
+                     cur_strat_ix, cur_strat, 
+                     other_strat_ix, other_strat,
+                     cur_lt_other,
+                     np.all(cur_lt_other)))
+
+            # if strongly dominated
+            if np.all(cur_lt_other):
+                gamecur = Game(game)
+                gamecur.remove_player_strat(playerid, cur_strat_ix)
+                yield iterate_weak_dominance(game, (playerid+1) % game.nplayers)
+    else:
+        print ("##WARNING: unable to find weakly dominated strategy for player |%s|!##" % (playerid))
+        game.print_outcomes()
+        print ("##ENDWARNING##")
+        return  # this is the same as just "yielding"
+
 
 def calc_weak_dominances(game):
-    return []
+    assert isinstance(game, Game)
+    game.print_outcomes()
+    return iterate_weak_dominance(game, 0)
 
 if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
     game = Game(g)
-    allstrats = calc_strong_dominance(game) + calc_weak_dominances(game)
+    allstrats = calc_strong_dominance(game) + list(calc_weak_dominances(game))
     print("allstrats:\n%s" % ("\n".join(map(str, allstrats))))
 
     with open(sys.argv[2], "w") as f:
