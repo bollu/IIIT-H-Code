@@ -35,6 +35,10 @@ class Game:
         """returns arr where arr_nstrats()[i] == #strats for player i"""
         return [self.nstrats_for_player(p) for p in range(self.nplayers)]
 
+    def arr_unique_strat(self):
+        assert np.product(self.arr_nstrats()) == 1
+        return [self.player2strats[playerid][0] for playerid in range(self.nplayers)]
+
 
     def get_player_strat(self, playerid, stratix):
         assert isinstance (playerid, int)
@@ -163,13 +167,18 @@ def old_iterate_strong_dominance(os, playerid):
         # print("---")
 
 def iterate_strong_dominance(game, playerid): 
+    """
+    Return list containing the unique strongly dominant strategy
+    Return empty list if not found
+    """
     print("computing iterated strong dominance for player: |%s|" % playerid)
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
 
     # we have found the dominant strategy
-    if np.product(game.arr_nstrats()) == 1: return game.arr_nstrats()
+    if np.product(game.arr_nstrats()) == 1: 
+        return [game.arr_unique_strat()]
 
     # number of strategies for player
     n_player_strats = game.nstrats_for_player(playerid)
@@ -205,7 +214,10 @@ def iterate_strong_dominance(game, playerid):
         print("--")
         return iterate_strong_dominance(game, (playerid+1) % game.nplayers)
     else:
-        raise RuntimeError("unable to find strongly dominated strategy for player!")
+        print ("##WARNING: unable to find strongly dominated strategy for player |%s|!##" % (playerid))
+        game.print_outcomes()
+        print ("##ENDWARNING##")
+        return []
 
 
 
@@ -215,8 +227,18 @@ def calc_strong_dominance(game):
     return iterate_strong_dominance(game, 0)
 
 
+def calc_weak_dominances(game):
+    return []
+
 if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
-    print("dominant strategy eqm: |%s|" % calc_strong_dominance(Game(g)))
+    game = Game(g)
+    allstrats = calc_strong_dominance(game) + calc_weak_dominances(game)
+    print("allstrats:\n%s" % ("\n".join(map(str, allstrats))))
+
+    with open(sys.argv[2], "w") as f:
+        f.write("%s\n" % len(allstrats))
+        for strat in allstrats:
+            f.write(" ".join(map(str, strat)))
 
