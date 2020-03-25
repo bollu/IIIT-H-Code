@@ -11,6 +11,18 @@ For strongly dominant strategies, we implement iterated dominance where we find
 a dominated row and then elimiate it. We keep doing this till we end
 with a single row.
 
+Since we remove a strategy from a player in each round, then total
+complexity is going to be:
+
+```
+O(#strat for player 1 x 
+  #strat for player 2 x 
+  ... x 
+  #strat for player n x
+  time for comparison of strategies
+  )
+```
+
 
 ```py
 def iterate_strong_dominance(game, playerid, iteration=0): 
@@ -43,13 +55,20 @@ def iterate_strong_dominance(game, playerid, iteration=0):
 ```
 
 
-# Algorithm: Weakly Dominant strategy
+# Algorithm: Weakly & Very Weakly Dominant strategy
 
 Since weakly dominant strategies cannot be detected by elimination,
 we perform the expected brute-force search through the search space. We
 iterate over all profiles, and check that the profile is "as good"
-as every other profile, and is "strictly better"  than at least
-one profile.
+as every other profile. 
+
+We decide to also take into consideration very weakly dominant
+strategies because the question says:
+
+> Print all equilibria in lexicographical order
+
+and it is only possible to have **multiple equilibria** in the case of
+very weakly dominated strategy and weaker notions of equilibria.
 
 ```py
 def calc_weakly_dominant_exhaustive_search(game):
@@ -65,12 +84,10 @@ def calc_weakly_dominant_exhaustive_search(game):
             outcome_other = game.get_outcome_for_profile(profile_other)
 
             at_least_as_good = at_least_as_good and np.all(outcome_cur >= outcome_other)
-            strictly_better = strictly_better or np.any(outcome_cur > outcome_other)
 
             if not (at_least_as_good): break
 
-        if at_least_as_good and strictly_better:
-            weakdom.append(profile_cur)
+        if at_least_as_good: weakdom.append(profile_cur)
     return weakdom
 ```
 
