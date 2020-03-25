@@ -317,11 +317,11 @@ def calc_weakly_dominant_exhaustive_search(game):
             outcome_other = game.get_outcome_for_profile(profile_other)
 
             at_least_as_good = at_least_as_good and np.all(outcome_cur >= outcome_other)
-            strictly_better = strictly_better or np.any(outcome_cur > outcome_other)
+            # strictly_better = strictly_better or np.any(outcome_cur > outcome_other)
 
             if not (at_least_as_good): break
 
-        if at_least_as_good and strictly_better:
+        if at_least_as_good: # and strictly_better:
             weakdom.append(profile_cur)
     return weakdom
 
@@ -336,6 +336,10 @@ if __name__ == "__main__":
     all_profiles += calc_weakly_dominant_exhaustive_search(Game(g))
     # remove duplicates
     all_profiles = [strat for (strat, _) in itertools.groupby(all_profiles)]
+
+    # sort in lex
+    all_profiles.sort()
+    all_profiles.sort(key=len)
 
 
     print("##ALL STRATEGIES##")
