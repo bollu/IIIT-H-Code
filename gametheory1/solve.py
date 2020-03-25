@@ -319,7 +319,7 @@ def calc_weakly_dominant_exhaustive_search(game):
             at_least_as_good = at_least_as_good and np.all(outcome_cur >= outcome_other)
             strictly_better = strictly_better or np.any(outcome_cur > outcome_other)
 
-            if not (at_least_as_good and strictly_better): break
+            if not (at_least_as_good): break
 
         if at_least_as_good and strictly_better:
             weakdom.append(profile_cur)
