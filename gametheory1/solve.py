@@ -62,7 +62,7 @@ class Game:
         """
         os = np.empty([self.nplayers] + self.arr_nstrats())
         for strategy_profile in itertools.product(*[self.player2strats[p] for p in range(self.nplayers)]):
-            print(self.full_outcomes.shape, os.shape)
+            # print(self.full_outcomes.shape, os.shape)
             for p in range(self.nplayers):
                 os[p][strategy_profile] =  self.full_outcomes[p][strategy_profile]
         return os
@@ -163,9 +163,13 @@ def old_iterate_strong_dominance(os, playerid):
         # print("---")
 
 def iterate_strong_dominance(game, playerid): 
+    print("computing iterated strong dominance for player: |%s|" % playerid)
     # assert isinstance(os, np.array)
     assert isinstance(playerid, int)
     assert (playerid < game.nplayers)
+
+    # we have found the dominant strategy
+    if np.product(game.arr_nstrats()) == 1: return game.arr_nstrats()
 
     # number of strategies for player
     n_player_strats = game.nstrats_for_player(playerid)
@@ -191,25 +195,28 @@ def iterate_strong_dominance(game, playerid):
             # if strongly dominated, quit
             if np.all(cur_lt_other):  strongly_dominated = True; break
 
-        if strongly_dominated:
-            print("--")
-            print("strategy |%s| for player |%s| is strongly_dominated. deleting strategy from outcomes..." % (cur_strat_ix, playerid))
-            game.print_outcomes()
-            game.remove_player_strat(playerid, cur_strat_ix)
-            print("pruned outcomes: ")
-            game.print_outcomes()
-            print("--")
+    if strongly_dominated:
+        print("--")
+        print("strategy |%s| for player |%s| is strongly_dominated. deleting strategy from outcomes..." % (cur_strat_ix, playerid))
+        game.print_outcomes()
+        game.remove_player_strat(playerid, cur_strat_ix)
+        print("pruned outcomes: ")
+        game.print_outcomes()
+        print("--")
+        return iterate_strong_dominance(game, (playerid+1) % game.nplayers)
+    else:
+        raise RuntimeError("unable to find strongly dominated strategy for player!")
 
 
 
 def calc_strong_dominance(game):
     assert isinstance(game, Game)
     game.print_outcomes()
-    iterate_strong_dominance(game, 0)
+    return iterate_strong_dominance(game, 0)
 
 
 if __name__ == "__main__":
     assert (len(sys.argv) == 3)
     g = gambit.Game.read_game(sys.argv[1])
-    calc_strong_dominance(Game(g))
+    print("dominant strategy eqm: |%s|" % calc_strong_dominance(Game(g)))
 
