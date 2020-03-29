@@ -23,5 +23,5 @@ airports = spark.read.csv("Dataset/airports.csv",
         inferSchema=True)
 
 df = airports.groupby("COUNTRY").count()
-df.toPandas().to_csv(args.outpath)
+df.toPandas().to_csv(args.outpath, index=False)
 
