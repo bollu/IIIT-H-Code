@@ -1,0 +1,9 @@
+AIRPORT
+ID int(11) NO PRI 0 nothing
+TYPE varchar(11) YES nothing NULL nothing
+NAME varchar(11) YES nothing NULL nothing
+LATITUDE int(11) YES nothing NULL nothing
+LONGITUDE int(11) YES nothing NULL nothing
+COUNTRY varchar(11) YES nothing NULL nothing
+REGION varchar(11) YES nothing NULL nothing
+end

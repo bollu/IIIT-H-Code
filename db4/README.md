@@ -1,0 +1,7 @@
+- Tested using Python3.6
+- https://realpython.com/pyspark-intro/#what-is-spark
+- https://spark.apache.org/docs/latest/api/python/index.html
+- aggregateByKey
+- foldByKey
+- filter
+- https://stackoverflow.com/questions/35642142/spark-finding-max-value-and-the-associated-key
