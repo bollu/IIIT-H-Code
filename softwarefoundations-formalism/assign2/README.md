@@ -1,0 +1,1 @@
+- [algorithms assigned to everyone](https://docs.google.com/spreadsheets/d/1jFFmpVBSkR9XecKrmXDrwGu8tRDP8Gj23ov0TaHz5gQ/edit#gid=0)
