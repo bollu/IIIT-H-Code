@@ -1,0 +1,14 @@
+A 4 B 4 D 5
+
+T1 4
+READ(A, t)
+t := t+2
+WRITE(A, t)
+OUTPUT(A)
+
+T2 5
+READ(A, t)
+t := t+2
+t := t-4
+WRITE(A, t)
+OUTPUT(A)
