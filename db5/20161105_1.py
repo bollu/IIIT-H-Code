@@ -91,4 +91,7 @@ def parse():
 N = int(sys.argv[2])
 inp = parse()
 
+with open("20161105_1.txt", "w") as of:
+    of.write("foobar");
+
 print(inp)
