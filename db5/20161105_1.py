@@ -85,20 +85,20 @@ def parse():
                 rhs2 = None
                 op = None
                 if rhs.find("+") != -1:
-                    rhs1 = rhs[:rhs.find("+")]
-                    rhs2 = rhs[rhs.find("+")+1:]
+                    rhs1 = rhs[:rhs.find("+")].strip()
+                    rhs2 = rhs[rhs.find("+")+1:].strip()
                     op = "+"
                 elif rhs.find("-") != -1:
-                    rhs1 = rhs[:rhs.find("-")]
-                    rhs2 = rhs[rhs.find("-")+1:]
+                    rhs1 = rhs[:rhs.find("-")].strip()
+                    rhs2 = rhs[rhs.find("-")+1:].strip()
                     op = "-"
                 elif rhs.find("*") != -1:
-                    rhs1 = rhs[:rhs.find("*")]
-                    rhs2 = rhs[rhs.find("*")+1:]
+                    rhs1 = rhs[:rhs.find("*")].strip()
+                    rhs2 = rhs[rhs.find("*")+1:].strip()
                     op = "*"
                 elif rhs.find("/") != -1:
-                    rhs1 = rhs[:rhs.find("/")]
-                    rhs2 = rhs[rhs.find("/")+1:]
+                    rhs1 = rhs[:rhs.find("/")].strip()
+                    rhs2 = rhs[rhs.find("/")+1:].strip()
                     op = "/"
                 else:
                     raise RuntimeError("expected + - * / as operation. |%s|" % (lines[i], ))
@@ -109,16 +109,15 @@ def parse():
 
                 t.add_instr(Operation(lhs, rhs1, op, rhs2))
             else:
-                actname = lines[i].split("(")[0]
+                actname = lines[i].split("(")[0].strip()
                 actps = lines[i].split("(")[1].split(")")[0].split(",")
+                actps = [a.strip() for a in actps]
                 t.add_instr(Action(actname, actps))
             i += 1
         inp.add_transaction(t)
     return inp
 
 
-N = int(sys.argv[2])
-inp = parse()
 
 class State:
     def __init__(self, disk):
@@ -129,7 +128,7 @@ class State:
         if not self.mem:
             print ("")
         else:
-            print("MEMORY")
+            # print("MEMORY")
             memks = list(self.mem)
             memks.sort()
             print(" ".join(["%s %s" % (k, self.mem[k]) for k in memks]))
@@ -138,53 +137,58 @@ class State:
         diskks.sort()
         print(" ".join(["%s %s" % (k, self.disk[k]) for k in diskks]))
 
+NRoundRobin = int(sys.argv[2])
+inp = parse()
+
+def evalop(op, mem):
+    p1 = mem[op.rhs1] if op.rhs1 in mem else int(op.rhs1)
+    p2 = mem[op.rhs2] if op.rhs2 in mem else int(op.rhs2)
+    if op.op == "+": mem[op.lhs] = p1 + p2
+    elif op.op == "-": mem[op.lhs] = p1 - p2
+    elif op.op == "*": mem[op.lhs] = p1 * p2
+    elif op.op == "/": mem[op.lhs] = p1 / p2
+    else: raise RuntimeError("unknown operation: |%s|" % (inst, ))
+
+
 with open("20161105_1.txt", "w") as of:
     of.write("foobar");
     tcursors = [0 for t in inp.transactions]
     state = State(inp.elems)
+    # import pudb; pudb.set_trace()
     while not all([tcursors[i] == len(t.instrs) + 1 for (i, t) in enumerate(inp.transactions)]):
         for tix in range(len(inp.transactions)):
-            for i in range(N):
-                transaction = inp.transactions[tix]
-                if tcursors[tix] == len(transaction.instrs): 
-                    print("<COMMIT %s>" % (transaction.name))
-                    tcursors[tix] += 1
-                elif tcursors[tix] == len(transaction.instrs) + 1: break
-                elif tcursors[tix] == 0:
-                    print("<START %s>" % (transaction.name))
+            txn = inp.transactions[tix]
+            for _ in range(NRoundRobin):
+                if tcursors[tix] == 0:
+                    print("<START %s>" % (txn.name))
                     state.print()
+
+                if tcursors[tix] == len(txn.instrs) + 1: break
+                elif tcursors[tix] == len(txn.instrs): 
+                    print("<COMMIT %s>" % (txn.name))
                     tcursors[tix] += 1
                 else:
-                    if isinstance(tcursors[tix], Operation):
-                        if tcursors[tix].op == "+":
-                            state.mem[tcursors[tix].lhs] = \
-                                    state.mem[tcursors[tix].rhs1] + state.mem[tcursors[tix].rhs2]
-                        elif tcursors[tix].op == "-":
-                            state.mem[tcursors[tix].lhs] = \
-                                    state.mem[tcursors[tix].rhs1] - state.mem[tcursors[tix].rhs2]
-                        elif tcursors[tix].op == "*":
-                            state.mem[tcursors[tix].lhs] = \
-                                    state.mem[tcursors[tix].rhs1] * state.mem[tcursors[tix].rhs2]
-                        elif tcursors[tix].op == "/":
-                            state.mem[tcursors[tix].lhs] = \
-                                    state.mem[tcursors[tix].rhs1] / state.mem[tcursors[tix].rhs2]
-                        else: raise RuntimeError("unknown operation: |%s|" % (tcursors[tix], ))
+                    inst = txn.instrs[tcursors[tix]]
+                    if isinstance(inst, Operation):
+                        evalop(inst, state.mem)
                         state.print()
-                    elif isinstance(tcursors[tix], Action):
-                        if tcursors[tix].name == "READ":
-                            var = tcursors[tix].params[0]
-                            memname = tcursor[tix].params[1] 
+                    elif isinstance(inst, Action):
+                        if inst.name == "READ":
+                            var = inst.params[0]
+                            memname = inst.params[1] 
                             state.var2mem[var] = memname
-                            state.mem[memname] = state.disk[var]
+                            state.mem[memname] = int(state.disk[var])
                             state.print()
-                        elif tcursors[tix].name == "WRITE":
-                            var = tcursors[tix].params[0]
-                            memname = tcursor[tix].params[1] 
+                        elif inst.name == "WRITE":
+                            var = inst.params[0]
+                            memname = inst.params[1] 
                             state.disk[memname] = state.mem[memname]
                             state.print()
-                        elif tcursors[tix].name == "OUTPUT":
-                            print(tcursors[tix])
-                        else: raise RuntimeError("unknown action: |%s|" % (tcursors[tix], ))
+                        elif inst.name == "OUTPUT":
+                            print(inst)
+                        else: raise RuntimeError("unknown action: |%s|" % (inst, ))
+                    else:
+                        raise RuntimeError("unknown type of instructon: |%s|" % (inst, ))
                     tcursors[tix] += 1
 
 print(inp)
