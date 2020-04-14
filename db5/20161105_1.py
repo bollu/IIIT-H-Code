@@ -1,4 +1,5 @@
 import sys
+# http://www.inf.fu-berlin.de/lehre/SS06/19513-V/Folien-etc/dbs06_12_recovery_1.pdf
 
 class Action:
     def __init__(self, name, params):
@@ -131,7 +132,8 @@ class State:
             # print("MEMORY")
             memks = list(self.mem)
             memks.sort()
-            print(" ".join(["%s %s" % (k, self.mem[k]) for k in memks]))
+            self.mem2var = { self.var2mem[var] : var for var in self.var2mem }
+            print(" ".join(["%s %s" % (self.mem2var[k], self.mem[k]) for k in memks]))
 
         diskks = list(self.disk)
         diskks.sort()
@@ -152,40 +154,44 @@ def evalop(op, mem):
 
 with open("20161105_1.txt", "w") as of:
     of.write("foobar");
-    tcursors = [0 for t in inp.transactions]
+    tcursors = [-1 for t in inp.transactions]
     state = State(inp.elems)
     # import pudb; pudb.set_trace()
     while not all([tcursors[i] == len(t.instrs) + 1 for (i, t) in enumerate(inp.transactions)]):
         for tix in range(len(inp.transactions)):
             txn = inp.transactions[tix]
             for _ in range(NRoundRobin):
-                if tcursors[tix] == 0:
+                if tcursors[tix] == -1:
                     print("<START %s>" % (txn.name))
                     state.print()
+                    tcursors[tix] += 1
 
                 if tcursors[tix] == len(txn.instrs) + 1: break
-                elif tcursors[tix] == len(txn.instrs): 
-                    print("<COMMIT %s>" % (txn.name))
-                    tcursors[tix] += 1
                 else:
                     inst = txn.instrs[tcursors[tix]]
                     if isinstance(inst, Operation):
                         evalop(inst, state.mem)
-                        state.print()
                     elif isinstance(inst, Action):
                         if inst.name == "READ":
                             var = inst.params[0]
                             memname = inst.params[1] 
                             state.var2mem[var] = memname
                             state.mem[memname] = int(state.disk[var])
-                            state.print()
                         elif inst.name == "WRITE":
                             var = inst.params[0]
+                            var_oldval = state.disk[var]
                             memname = inst.params[1] 
-                            state.disk[memname] = state.mem[memname]
+                            # state.disk[var] = state.mem[memname]
+                            print("<%s, %s, %s>" % (txn.name, var, var_oldval))
                             state.print()
-                        elif inst.name == "OUTPUT": print("OUTPUT?") #  print(inst)
+                        elif inst.name == "OUTPUT":
+                            var = inst.params[0];
+                            memname = state.var2mem[var]
+                            state.disk[var] = state.mem[memname]
                         else: raise RuntimeError("unknown action: |%s|" % (inst, ))
                     else:
                         raise RuntimeError("unknown type of instructon: |%s|" % (inst, ))
                     tcursors[tix] += 1
+                    if tcursors[tix] == len(txn.instrs): 
+                        print("<COMMIT %s>" % (txn.name)); tcursors[tix] += 1
+                        state.print()
