@@ -1,0 +1,11 @@
+A 4 B 4 D 5
+
+<START T1>
+<START T3>
+<T1, A, 8>
+<START CKPT (T1, T3)>
+<START T2>
+<COMMIT T1>
+<T3, D, 10>
+<COMMIT T3>
+<END CKPT>
