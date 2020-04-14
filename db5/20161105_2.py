@@ -36,9 +36,9 @@ class EndCkpt:
 with open(sys.argv[1], "r") as f:
     lines = f.readlines()
     words0 = [w.strip() for w in lines[0].strip().split()]
-    START = []
+    START = { }
     for i in range(0, len(words0), 2):
-        START.append((words0[i], int(words0[i+1])))
+        START[words0[i].strip()] = int(words0[i+1])
 
     commands = []
     for l in lines[2:]:
@@ -56,7 +56,7 @@ with open(sys.argv[1], "r") as f:
         elif l.find("END CKPT") != -1: commands.append(EndCkpt())
         else: # <T2, B, 10>
             [txn, var, val] = l.split(",")
-            commands.append(Txn(txn, var, val))
+            commands.append(Txn(txn.strip(), var.strip(), int(val.strip())))
 
 # print(START)
 # print(commands)
@@ -70,9 +70,14 @@ UNCOMMITEDTXNS = copy.deepcopy(ALLTXNS)
 for c in commands: 
     if isinstance(c, CommitTxn): UNCOMMITEDTXNS.remove(c.txn)
 
+# print("UNCOMMITED TRANSACTIONS: %s" % (UNCOMMITEDTXNS, ))
+
 for i in range(len(commands)-1, -1, -1): 
     c = commands[i]
     if not isinstance(c, Txn): continue
-    if c in UNCOMMITEDTXNS: ALLTXNS[c.var] = c.val
+    if c.txn in UNCOMMITEDTXNS: 
+        START[c.var] = c.val
 
-print(" ".join([" ".join([var, str(val)]) for (var, val) in START]))
+startlist = copy.deepcopy([(var, START[var]) for var in START])
+startlist.sort(key=lambda kv: kv[0])
+print(" ".join(["%s %s" % (k, v) for (k, v) in startlist]))
