@@ -184,11 +184,8 @@ with open("20161105_1.txt", "w") as of:
                             memname = inst.params[1] 
                             state.disk[memname] = state.mem[memname]
                             state.print()
-                        elif inst.name == "OUTPUT":
-                            print(inst)
+                        elif inst.name == "OUTPUT": print("OUTPUT?") #  print(inst)
                         else: raise RuntimeError("unknown action: |%s|" % (inst, ))
                     else:
                         raise RuntimeError("unknown type of instructon: |%s|" % (inst, ))
                     tcursors[tix] += 1
-
-print(inp)
