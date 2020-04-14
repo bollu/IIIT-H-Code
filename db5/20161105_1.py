@@ -123,7 +123,6 @@ def parse():
 class State:
     def __init__(self, disk):
         self.disk = disk
-        self.var2mem = {}
         self.mem = {}
     def print(self):
         if not self.mem:
@@ -132,8 +131,9 @@ class State:
             # print("MEMORY")
             memks = list(self.mem)
             memks.sort()
-            self.mem2var = { self.var2mem[var] : var for var in self.var2mem }
-            print(" ".join(["%s %s" % (self.mem2var[k], self.mem[k]) for k in memks]))
+            # only show those vars that truly live on-disk. don't show temps
+            # like `t`
+            print(" ".join(["%s %s" % (k, self.mem[k]) for k in memks if k in self.disk]))
 
         diskks = list(self.disk)
         diskks.sort()
@@ -174,20 +174,20 @@ with open("20161105_1.txt", "w") as of:
                     elif isinstance(inst, Action):
                         if inst.name == "READ":
                             var = inst.params[0]
-                            memname = inst.params[1] 
-                            state.var2mem[var] = memname
-                            state.mem[memname] = int(state.disk[var])
+                            memname = inst.params[1]
+                            if var not in state.mem:
+                                state.mem[var] = int(state.disk[var])
+                            state.mem[memname] = state.mem[var]
                         elif inst.name == "WRITE":
                             var = inst.params[0]
                             var_oldval = state.disk[var]
                             memname = inst.params[1] 
-                            # state.disk[var] = state.mem[memname]
+                            state.mem[var] = state.mem[memname]
                             print("<%s, %s, %s>" % (txn.name, var, var_oldval))
                             state.print()
                         elif inst.name == "OUTPUT":
                             var = inst.params[0];
-                            memname = state.var2mem[var]
-                            state.disk[var] = state.mem[memname]
+                            state.disk[var] = state.mem[var]
                         else: raise RuntimeError("unknown action: |%s|" % (inst, ))
                     else:
                         raise RuntimeError("unknown type of instructon: |%s|" % (inst, ))
