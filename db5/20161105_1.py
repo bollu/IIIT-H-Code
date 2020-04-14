@@ -180,7 +180,7 @@ with open("20161105_1.txt", "w") as of:
                             state.mem[memname] = state.mem[var]
                         elif inst.name == "WRITE":
                             var = inst.params[0]
-                            var_oldval = state.disk[var]
+                            var_oldval = state.mem[var]
                             memname = inst.params[1] 
                             state.mem[var] = state.mem[memname]
                             print("<%s, %s, %s>" % (txn.name, var, var_oldval))
