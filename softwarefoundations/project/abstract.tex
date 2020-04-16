@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage[colorlinks]{hyperref}
+\begin{document}
+\author{Siddharth Bhat}
+\title{Project Abstract: Formally verifying Dining Philosophers as Feedback Control}
+\date{\today}
+\maketitle
+
+We propose to formally verify the proof development as sketched in the
+paper on ArXiV: \href{https://arxiv.org/pdf/1805.02010.pdf}{Generalised Dining Philosophers as Feedback Control},
+within the Coq proof assistant.
+We will implement the proof, as laid out in sections
+1, 2, and 3 (till \emph{The One Dining Philosopher Problem}) of the document
+above.
+
+Failing to complete the proof development,
+we will lay out \emph{precisely} the point of failure in the verification, and
+the ensuing issues with either the Coq proof assistant, or the previously
+mentioned formalization. The target is conservative to hedge for things going
+awry: even the best-laid-out-proofs have been waylaid on thier first contact
+with a system as inflexible as Coq --- often, one has to massage theorem
+statements and proof to appease the proof checker, for no
+real gain or sense.
+
+If the task of formalizing the first three sections (upto, and including
+\emph{The One Dining Philosopher Problem}) proceeds faster than anticipated,
+then as a \textbf{stretch goal}, we will attempt to formalize as much
+of section 4 (\emph{N Dining Philosophers with Centralised control}) as possible).
+\end{document}
