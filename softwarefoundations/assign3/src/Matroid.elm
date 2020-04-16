@@ -1,4 +1,4 @@
-module Sort exposing (main, init, update, view)
+module Matroid exposing (main, init, update, view)
 import Browser
 import Html exposing (Html, Attribute, div, input, button, text)
 import Html.Attributes exposing (type_, value, style, disabled)
@@ -14,20 +14,18 @@ main =
 
 
 -- MODEL
-type Phase = Sorting | Matroiding
-
-type alias Model = {
-    phase: Phase
-    ix: Int,
-    istar: Array Bool, -- indicator of independence set
-    a: Array Int, -- array array
-    weights: Array Int, -- weights of each element
-    asorted : Array Int,
+-- find number x such that x < smallthan, x > 
+type Model = Model 
+  { arr: Array Int
+  , smallerthan: Int
+  , bestix: Int
+  , curix: Int,
+  , matroidarr: Array Bool
+  , basesSets: Array (Array Bool) -- contains the bases: smallest independent sets
   }
 
 init: Model
-init =
-  Model initArray -1 -1
+init = Sorting { a = initArray, smallerthan = 1000, bestix = 0, curix = 0}
 
 initArray: Array Int
 initArray =
@@ -42,24 +40,7 @@ type Msg =
   Swap
 
 update: Msg -> Model -> Model
-update msg model =
-  case msg of
-    Change k s ->
-      {model | a = Array.set k (toInt s) model.a}
-    Pick k ->
-      if k == model.i then
-        {model | i = -1}
-      else if k == model.j then
-        {model | j = -1}
-      else if model.i == -1 then
-        {model | i = k}
-      else
-        {model | j = k}
-    Swap ->
-      if model.i >=0 && model.j >=0 then
-        {model | a = arraySwap 0 model.i model.j model.a, i = -1, j = -1}
-      else
-        model
+update msg model = model
 
 
 
@@ -67,12 +48,8 @@ update msg model =
 view: Model -> Html Msg
 view model =
   div styleBody [
-    div [] (Array.toList (Array.indexedMap
-      (\i v -> viewNum v (Change i) (Pick i) (i==model.i || i==model.j))
-      model.a
-    )),
     div styleSubmit [
-      viewBtn (model.i<0 || model.j<0) Swap
+      viewBtn  True Swap
     ]
   ]
 
@@ -117,16 +94,3 @@ styleBtn: List (Attribute m)
 styleBtn = [
     style "font-size" "1.5em"
   ]
-
-
-
--- UTIL
-toInt: String -> Int
-toInt s =
-  Maybe.withDefault 0 (String.toInt s)
-
-arraySwap: a -> Int -> Int -> Array a -> Array a
-arraySwap d i j x =
-  let a = Maybe.withDefault d (Array.get i x)
-      b = Maybe.withDefault d (Array.get j x)
-  in Array.set i b (Array.set j a x)
