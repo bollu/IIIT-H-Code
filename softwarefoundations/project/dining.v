@@ -136,30 +136,30 @@ Definition trans_table_2 (n: nat): cmd * choice * the :=
   end.
     
   
-Example valid_trace_system35_step0:
+Example valid_trace_table2_step0:
   ValidTrace system35 states_table_2 trans_table_2 0.
 Proof.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+  repeat (try constructor; simpl; try apply valid_trace_table2_step1; try apply tabuada_start).
 Qed.
 
-Example valid_trace_system35_step1   : ValidTrace system35 states_table_2 trans_table_2 1.
+Example valid_trace_table2_step1   : ValidTrace system35 states_table_2 trans_table_2 1.
 Proof.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+  repeat (try constructor; simpl; try apply valid_trace_table2_step1; try apply tabuada_start).
 Qed.
 
-Example valid_trace_system35_step2   : ValidTrace system35 states_table_2 trans_table_2 2.
+Example valid_trace_table2_step2   : ValidTrace system35 states_table_2 trans_table_2 2.
 Proof.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+  repeat (try constructor; simpl; try apply valid_trace_table2_step1).
 Qed.
 
-Example valid_trace_system35_step3   : ValidTrace system35 states_table_2 trans_table_2 3.
+Example valid_trace_table2_step3   : ValidTrace system35 states_table_2 trans_table_2 3.
 Proof.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+  repeat (try constructor; simpl; try apply valid_trace_table2_step1).
 Qed.
 
-Example valid_trace_system35_step4   : ValidTrace system35 states_table_2 trans_table_2 4.
+Example valid_trace_table2_step4   : ValidTrace system35 states_table_2 trans_table_2 4.
 Proof.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+  repeat (try constructor; simpl; try apply valid_trace_table2_step1).
 Qed.
 
 (* Table 2 has been checked.  *)
@@ -168,12 +168,17 @@ Qed.
 (* section 3.7: slower philosopher *)
 Inductive maybe (T: Type) := just: T -> maybe T | nothing: maybe T.
 
+(* TODO: understand this ordering *)
+(* PROBLEM: in paper, this is written as "pattern matching syntax" due to the overlapping
+   patterns. This should be _very clearly stated_ *)
 Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
   match u with
-  | (cmd_pass, nothing _) => s
-  | (cmd_pass, just _ ch) => trans32fn s ch
+  | (_, nothing _) => s (* this looks fishy! what if I send !0 / !1? I don't trust this :(. Indeed, moving this down 
+                           to be below cmd_bang0, cmd_bang1 breaks things *)
   | (cmd_bang0, _) => s
   | (cmd_bang1, _) => next s
+  | (cmd_pass, just _ ch) => trans32fn s ch
+
   end.
 
 Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
@@ -206,7 +211,7 @@ Definition states_table_3 (n: nat):  the * cmd :=
   | 7 => (e, cmd_pass) 
   | 8 => (e, cmd_pass) 
   | 9 => (e, cmd_pass) 
-  | 10 => (e, cmd_pass) 
+  | 10 => (t, cmd_pass) 
   | _ => (t, cmd_pass) (* default *)
   end.
 
@@ -226,9 +231,34 @@ Definition trans_table_3 (n: nat): cmd * maybe choice  * the :=
   | _ => (cmd_pass,  nothing _,      t) (* default *)
   end.
 
-Check (system38).
- 
-                                  
+Example valid_trace_table3_step0: ValidTrace system38 states_table_3 trans_table_3 0.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step1: ValidTrace system38 states_table_3 trans_table_3 1.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step2: ValidTrace system38 states_table_3 trans_table_3 2.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step3: ValidTrace system38 states_table_3 trans_table_3 3.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step4: ValidTrace system38 states_table_3 trans_table_3 4.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step5: ValidTrace system38 states_table_3 trans_table_3 5.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step6: ValidTrace system38 states_table_3 trans_table_3 6.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+(* elided 7, 8 *)
+Example valid_trace_table3_step9: ValidTrace system38 states_table_3 trans_table_3 9.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+Example valid_trace_table3_step10: ValidTrace system38 states_table_3 trans_table_3 10.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
 
 Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
       state_phil sys m = eating.
