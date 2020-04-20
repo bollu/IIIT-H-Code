@@ -1,4 +1,4 @@
-
+Require Import Nat.
 Require Import List.
 
 
@@ -61,10 +61,10 @@ Definition next(s: the): the :=
   | t => h | h => e | e => t
   end.
 
-Inductive choice := stay | switch.
+Inductive choice := choice_0 | choice_1.
 Definition trans32fn (s: the) (c: choice): the :=
   match c with
-  | stay => s | switch => next s
+  | choice_0 => s | choice_1 => next s
   end.
 Definition isthinking (s: the): Prop := s = t.
 Definition phil32 := mksystem the choice  isthinking  (fun s u s' => trans32fn s u = s').
@@ -76,29 +76,29 @@ Definition phil32 := mksystem the choice  isthinking  (fun s u s' => trans32fn s
 *)
 
 (* 3.3 Interfacing control *)
-Inductive cmd := pass | bang0 | bang1.
+Inductive cmd := cmd_pass | cmd_bang0 | cmd_bang1.
 (* composition *)
 Definition trans33fn (s: the) (u: cmd * choice): the :=
   match u with
-  | (pass, ch) => trans32fn s ch
-  | (bang0, _) => s
-  | (bang1, _) => next s
+  | (cmd_pass, ch) => trans32fn s ch
+  | (cmd_bang0, _) => s
+  | (cmd_bang1, _) => next s
   end.
 
 Definition phil33 := mksystem the (cmd * choice) isthinking  (fun s u s' => trans33fn s u = s').
 
 (* 3.4 Controller *)
-Definition ispass (c: cmd):Prop := c = pass.
+Definition ispass (c: cmd):Prop := c = cmd_pass.
 Definition trans34fn (s: cmd) (u: the): cmd :=
   match u with
-  | h => bang1 | e => pass | t => pass
+  | h => cmd_bang1 | e => cmd_pass | t => cmd_pass
   end.
 Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u = s').
 
 (* feedback composition: we shall define tabuada composition here *)
 Check (phil33).
 Inductive connect34: the * cmd ->
-                     (cmd * choice) * the -> Prop :=
+                     cmd * choice * the -> Prop :=
   | mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch), sx).
 
 (* This will do the wrong thing, since it will connect my *current state* with the *transition action*?
@@ -108,10 +108,62 @@ Definition system35 := tabuada phil33 controller34 connect34.
 
 (* relation is checked upto: [0-1, 1-2, ...(n-1)-n] *)
 (* states, choices *)
-Inductive ValidTrace {X U: Type} (trans: X -> U -> X -> Prop): (nat -> X) -> (nat -> U) -> nat -> Prop :=
-| Start: forall (xs: nat -> X) (us: nat -> U), ValidTrace trans xs us  0
-| Cons: forall (xs: nat -> X) (us: nat -> U) (n: nat) (TILLN: ValidTrace trans xs us  n) (ATN: trans (xs n) (us n) (xs (S n))),
-    ValidTrace trans xs us (S n).
+Inductive ValidTrace {X U: Set} (s: system X U) (xs: nat -> X) (us: nat -> U): nat -> Prop :=
+| Start: forall  (VALID: (isx0 X U s) (xs 0)) , ValidTrace s xs us 0
+| Cons: forall (n: nat) (TILLN: ValidTrace s xs us n) (ATN: trans X U s (xs n) (us n) (xs (S n))),
+    ValidTrace s xs us (S n).
+
+Hint Unfold tabuada_start.
+
+(* Table 2 reproduction *)
+Definition states_eg_1 (n: nat):  the * cmd :=
+  match n with
+  | 0 => (t, cmd_pass)
+  | 1 => (h, cmd_pass)
+  | 2 => (h, cmd_bang1)
+  | 3 => (e, cmd_bang1)
+  | 4 => (t, cmd_pass) 
+  | _ => (t, cmd_pass) (* default *)
+  end.
+
+Definition trans_eg_1 (n: nat): cmd * choice * the :=
+  match n with
+  | 0 => (cmd_pass, choice_1, t)
+  | 1 => (cmd_pass, choice_0,h) 
+  | 2 => (cmd_bang1, choice_0,h) 
+  | 3 => (cmd_bang1, choice_0,e) 
+  | _ => (cmd_pass, choice_1, t) (* default *)
+  end.
+    
+  
+Example valid_trace_system35_step0:
+  ValidTrace system35 states_eg_1 trans_eg_1 0.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+Qed.
+
+Example valid_trace_system35_step1   : ValidTrace system35 states_eg_1 trans_eg_1 1.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+Qed.
+
+Example valid_trace_system35_step2   : ValidTrace system35 states_eg_1 trans_eg_1 2.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+Qed.
+
+Example valid_trace_system35_step3   : ValidTrace system35 states_eg_1 trans_eg_1 3.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+Qed.
+
+Example valid_trace_system35_step4   : ValidTrace system35 states_eg_1 trans_eg_1 4.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1).
+Qed.
+
+(* Table 2 has been checked.  *)
+
 
 
 Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
