@@ -34,20 +34,16 @@ Definition tabuada_start {X Y: Type} (isx0: X -> Prop) (isy0: Y -> Prop) (x: X *
   isx0 (fst  x) /\ isy0 (snd x).
 
 (* transition fn for tabuada composition *)
-Definition tabuada_trans {X Y: Type} {UX UY: Type} (connect: X*Y -> X*Y -> Prop) (transx: X -> UX -> X -> Prop) (transy: Y -> UY -> Y -> Prop)
+Definition tabuada_trans {X Y: Type} {UX UY: Type} (connect: X*Y->UX*UY->Prop) (transx: X -> UX -> X -> Prop) (transy: Y -> UY -> Y -> Prop)
            (s: X*Y) (u: UX*UY) (s': X*Y): Prop :=
   transx (fst s) (fst u) (fst s') /\
   transy (snd s) (snd u) (snd s') /\
-  (connect s s').
+  (connect s u).
 
 (* tabuada connection new system *)
-Definition tabuada (X Y UX UY: Set) (sx: system X UX) (sy: system Y UY) (connect: X*Y -> X*Y -> Prop): system (X*Y) (UX*UY) :=
+Definition tabuada {X Y UX UY: Set} (sx: system X UX) (sy: system Y UY) (connect: X*Y->UX*UY->Prop): system (X*Y) (UX*UY) :=
   mksystem (X*Y) (UX*UY) (tabuada_start (isx0 X UX sx) (isx0 Y UY sy))
            (tabuada_trans connect (trans X UX sx) (trans Y UY sy)).
-
-  
-  
-      
 
 Inductive star := mkstar.
 
@@ -97,9 +93,17 @@ Definition trans34fn (s: cmd) (u: the): cmd :=
   match u with
   | h => bang1 | e => pass | t => pass
   end.
-Definition controller := mksystem cmd the ispass (fun s u s' => trans34fn s u = s').
+Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u = s').
 
 (* feedback composition: we shall define tabuada composition here *)
+Check (phil33).
+Inductive connect34: the * cmd ->
+                     (cmd * choice) * the -> Prop :=
+  | mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch), sx).
+
+(* This will do the wrong thing, since it will connect my *current state* with the *transition action*?
+   but the transition action is attempting to dictate my *next state* *)
+Definition system35 := tabuada phil33 controller34 connect34.
 
 
 (* relation is checked upto: [0-1, 1-2, ...(n-1)-n] *)
@@ -109,7 +113,7 @@ Inductive ValidTrace {X U: Type} (trans: X -> U -> X -> Prop): (nat -> X) -> (na
 | Cons: forall (xs: nat -> X) (us: nat -> U) (n: nat) (TILLN: ValidTrace trans xs us  n) (ATN: trans (xs n) (us n) (xs (S n))),
     ValidTrace trans xs us (S n).
 
-Fixpoint state_phil(sys: system) (n: nat): state := hungry.          
+
 Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
       state_phil sys m = eating.
 Proof. Admitted.
