@@ -99,7 +99,7 @@ Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u 
 Check (phil33).
 Inductive connect34: the * cmd ->
                      cmd * choice * the -> Prop :=
-  | mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch), sx).
+  | mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch  ), sx).
 
 (* This will do the wrong thing, since it will connect my *current state* with the *transition action*?
    but the transition action is attempting to dictate my *next state* *)
@@ -116,7 +116,7 @@ Inductive ValidTrace {X U: Set} (s: system X U) (xs: nat -> X) (us: nat -> U): n
 Hint Unfold tabuada_start.
 
 (* Table 2 reproduction *)
-Definition states_eg_1 (n: nat):  the * cmd :=
+Definition states_table_2 (n: nat):  the * cmd :=
   match n with
   | 0 => (t, cmd_pass)
   | 1 => (h, cmd_pass)
@@ -126,7 +126,7 @@ Definition states_eg_1 (n: nat):  the * cmd :=
   | _ => (t, cmd_pass) (* default *)
   end.
 
-Definition trans_eg_1 (n: nat): cmd * choice * the :=
+Definition trans_table_2 (n: nat): cmd * choice * the :=
   match n with
   | 0 => (cmd_pass, choice_1, t)
   | 1 => (cmd_pass, choice_0,h) 
@@ -137,27 +137,27 @@ Definition trans_eg_1 (n: nat): cmd * choice * the :=
     
   
 Example valid_trace_system35_step0:
-  ValidTrace system35 states_eg_1 trans_eg_1 0.
+  ValidTrace system35 states_table_2 trans_table_2 0.
 Proof.
   repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
 Qed.
 
-Example valid_trace_system35_step1   : ValidTrace system35 states_eg_1 trans_eg_1 1.
+Example valid_trace_system35_step1   : ValidTrace system35 states_table_2 trans_table_2 1.
 Proof.
   repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
 Qed.
 
-Example valid_trace_system35_step2   : ValidTrace system35 states_eg_1 trans_eg_1 2.
+Example valid_trace_system35_step2   : ValidTrace system35 states_table_2 trans_table_2 2.
 Proof.
   repeat (try constructor; simpl; try apply valid_trace_system35_step1).
 Qed.
 
-Example valid_trace_system35_step3   : ValidTrace system35 states_eg_1 trans_eg_1 3.
+Example valid_trace_system35_step3   : ValidTrace system35 states_table_2 trans_table_2 3.
 Proof.
   repeat (try constructor; simpl; try apply valid_trace_system35_step1).
 Qed.
 
-Example valid_trace_system35_step4   : ValidTrace system35 states_eg_1 trans_eg_1 4.
+Example valid_trace_system35_step4   : ValidTrace system35 states_table_2 trans_table_2 4.
 Proof.
   repeat (try constructor; simpl; try apply valid_trace_system35_step1).
 Qed.
@@ -165,7 +165,72 @@ Qed.
 (* Table 2 has been checked.  *)
 
 
+(* section 3.7: slower philosopher *)
+Inductive maybe (T: Type) := just: T -> maybe T | nothing: maybe T.
+
+Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
+  match u with
+  | (cmd_pass, nothing _) => s
+  | (cmd_pass, just _ ch) => trans32fn s ch
+  | (cmd_bang0, _) => s
+  | (cmd_bang1, _) => next s
+  end.
+
+Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
+
+
+(* 3.8: the new interconnect *)
+(* TODO: make this modular; call it connect_slowed_left *)
+Inductive connect38: the * cmd ->
+                     cmd * (maybe choice) * the -> Prop :=
+| mkconnect38: forall (sx: the) (sy: cmd) (mch: maybe choice), connect38 (sx, sy) ((sy, mch), sx).
+
+
+
+(* PROBLEM: we assume that the choice 
+input to the philosopher alternates between
+absent (\bot) and present (0 or 1). Why
+is this legal? *)
+Definition system38 := tabuada phil37 controller34 connect38.
+
+(* Verify table 3 *)
+Definition states_table_3 (n: nat):  the * cmd :=
+  match n with
+  | 0 => (t, cmd_pass)
+  | 1 => (t, cmd_pass)
+  | 2 => (h, cmd_pass)
+  | 3 => (h, cmd_bang1)
+  | 4 => (e, cmd_bang1) 
+  | 5 => (e, cmd_pass) 
+  | 6 => (e, cmd_pass) 
+  | 7 => (e, cmd_pass) 
+  | 8 => (e, cmd_pass) 
+  | 9 => (e, cmd_pass) 
+  | 10 => (e, cmd_pass) 
+  | _ => (t, cmd_pass) (* default *)
+  end.
+
+Definition trans_table_3 (n: nat): cmd * maybe choice  * the :=
+  match n with
+  | 0 => (cmd_pass,  nothing _,       t)
+  | 1 => (cmd_pass,  just _ choice_1, t) 
+  | 2 => (cmd_pass,  nothing _,       h) 
+  | 3 => (cmd_bang1, just _ choice_0, h) 
+  | 4 => (cmd_bang1, nothing _,       e) 
+  | 5 => (cmd_pass,  just _ choice_0, e) 
+  | 6 => (cmd_pass,  nothing _,       e) 
+  | 7 => (cmd_pass,  just _ choice_0, e) 
+  | 8 => (cmd_pass,  nothing _,       e) 
+  | 9 => (cmd_pass,  just _ choice_1, e) 
+  |10 => (cmd_pass,  nothing _,       t) 
+  | _ => (cmd_pass,  nothing _,      t) (* default *)
+  end.
+
+Check (system38).
+ 
+                                  
 
 Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
       state_phil sys m = eating.
 Proof. Admitted.
+
