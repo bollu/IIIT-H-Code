@@ -190,6 +190,8 @@ Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
 
 Print trans37fnDEPR.
 
+(* PROBLEM: due to composition, this needs to be carried as tuples.
+   pattern matching is hell *)
 Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
     match fst u with
     | cmd_bang0 => s
@@ -213,7 +215,18 @@ Proof.
   unfold trans37fn.
   destruct u; destruct c; simpl in *; subst; auto.
 Qed.
-  
+
+Lemma trans37_cmd_pass_trans32:
+  forall (s: the) (u: cmd * maybe choice)
+         (c: choice) (C: snd u = just choice c)
+         (CMD_PASSS: fst u = cmd_pass),
+    trans37fn s u = trans32fn s c.
+Proof.
+  intros.
+  unfold trans37fn.
+  destruct u; destruct c; simpl in *; subst; auto.
+Qed.
+
 Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
 
 
@@ -302,7 +315,7 @@ Example valid_trace_table3_step10: ValidTrace system38 states_table_3 trans_tabl
 Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
 
 
-(* Helper to rewrite ss in terms of ts for cmd *)
+(* Helper:  rewrite ss in terms of ts for cmd *)
 Lemma system38_s_cmd_to_t_cmd: 
   forall (n: nat)
          (ss: nat -> the * cmd)
@@ -323,7 +336,7 @@ Proof.
   rewrite H0. auto.
 Qed.
 
-(* Helper to rewrite ss in terms of ts for the *)
+(* Helper:  rewrite ss in terms of ts for the *)
 Lemma system38_s_the_to_t_the: 
   forall (n: nat)
          (ss: nat -> the * cmd)
@@ -344,7 +357,7 @@ Proof.
   rewrite H. auto.
 Qed.
 
-(* in an even state, if we feel hungry, then the controller
+(* Helper: in an even state, if we feel hungry, then the controller
    will order a !1 *)
 Lemma system38_phil_hungry_then_next_controller_bang1:
   forall (n: nat)
@@ -364,46 +377,185 @@ Proof.
   reflexivity.
 Qed.
 
-(* in an even state, if we feel hungry, then we wil continue to be hungry *)
-Lemma system38_phil_hungry_then_next_phil_hungry:
+
+(* Helper: in an even state, if we feel hungry, then we wil continue to be hungry *)
+Lemma system38_phil_even_state_next_state:
   forall (n: nat)
          (ss: nat -> the * cmd)
          (ts: nat -> cmd * maybe choice * the)
          (TRACE_SN: ValidTrace system38 ss ts ((S n)))
-         (BOTTOM_EVEN: forall (i: nat) (IEVEN: i mod 2 = 0), snd (fst (ts i)) = nothing choice)
-         (NEVEN: n mod 2 = 0)
-         (HUNGRY: fst (ss n) = h),
-    fst (ss (S n)) = h.
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
+         (NEVEN: even n = true),
+    fst (ss (S n)) = fst (ss n).
 Proof.
   intros.
   inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
   inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
   inversion AT_N_PHIL as [AT_N_PHIL_TRANS].
-  rewrite HUNGRY.
   apply trans37_choice_nothing.
   apply BOTTOM_EVEN.
   apply NEVEN.
 Qed.
 
+(* Helper: reason about even/odd *)
+Lemma even_n_odd_Sn: forall (n: nat), (even n = true) <-> (odd (S n) = true).
+Proof.
+  intros; split.
+  - intros; rewrite  Nat.odd_succ; auto.
+  - intros. rewrite <- Nat.odd_succ; auto.
+Qed.
 
-(* in an even state, if we feel hungry, then we will be eating 
-Lemma system_phil_hungry_then_next_2_phil_eating:
-  
-  
-  
-(* do I really want to do this to myself? :( *)
-(* 3.10: polled dyanmics *)
-(* Definition odd_polled {A: Type} (f: nat -> A) (n: nat) := f (n * 2 + 1). *)
-Definition time_to_odd_time (n: nat): nat := 2 * n + 1.
+(* Helper: reason about even/odd *)
+Lemma odd_n_even_Sn: forall (n: nat), (odd n = true) <-> (even (S n) = true).
+Proof.
+  intros; split.
+  - intros; rewrite  Nat.even_succ; auto.
+  - intros. rewrite <- Nat.even_succ; auto.
+Qed.
+
+(* Helper: Prove that the state at an odd time point is the same as the previous state  *)
+Lemma system38_phil_odd_state_prev_state:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SN: ValidTrace system38 ss ts ((S n)))
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
+         (SNODD: odd (S n) = true),
+    fst (ss n) = fst (ss (S n)).
+Proof.
+  intros.
+  inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
+  inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
+  inversion AT_N_PHIL as [AT_N_PHIL_TRANS].
+  rewrite trans37_choice_nothing; auto.
+  apply BOTTOM_EVEN. apply even_n_odd_Sn; auto.
+Qed.
+
+
+(* TODO: write down assumption that philosopher on odd times will always send state *)
+(* Helper: Prove that the state after an odd point is the transfer function aplied *)
+
+Lemma system38_odd_state_next_phil_state:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SN: ValidTrace system38 ss ts ((S n)))
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
+         (SNODD: odd n = true),
+    fst (ss (S n)) = trans37fn  (fst (ss n)) (fst (ts n)). 
+Proof.
+  intros.
+  inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
+  inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
+  inversion AT_N_PHIL as [AT_N_PHIL_TRANS].
+  reflexivity.
+Qed.
+
+
+
+(* HELPER *)
+Lemma system38_phil_not_hungry_then_next_controller_pass:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SN: ValidTrace system38 ss ts (S n))
+         (NOTHUNGRY: fst (ss n) <> h),
+    snd (ss (S n)) = cmd_pass.
+Proof.
+  intros.
+  inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
+  assert (TSN_NOT_HUNGRY: snd (ts n) <> h). erewrite  system38_s_the_to_t_the; auto; try (apply NOTHUNGRY); try (apply TRACE_SN).
+   
+  inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
+  inversion AT_N_CONTROL as [AT_N_CONTROL_TRANS].
+
+  set (tsn := ts n) in *.
+  destruct tsn as [[tsn_cmd  tsn_mchoice]  tsn_the].
+  simpl in *.
+  destruct tsn_the; try contradiction; auto.
+Qed.
+
+
 
 
 (* 3.11: correctness *)
+(* in an even state, if we DO NOT feel hungry, then the controller
+   will order a pass *)
+
+(* PROBLEM: if a /= h, then a' = f_P ( a, b ):
+   Should be: if a /= h, then a' = f_P ( a, b' ):
+                                
+   The statement assumes that a choice called b exists. That is, 
+   it assumes that we will not have `nothing` choice on the odd states.
+   This is not made explicit
+    PAST: n [even]
+       |
+       v 
+      CURRENT: S n = n + 1 [odd]
+       |
+      EVEN S n = n + 2 [even]
+       | 
+      NEXT ODD: S (S (S n))) = n + 3 [odd]
+
+   reason about past. 
+   - KEY LEMMA: states only change from ODD -> EVEN transition.
+
+   - Since n is even , it will have same state (n+1)
+   - since we are not hungry at (n+1), we are not hungry at (n)
+   - since we are not hungry at (n), controller will emit (pass)
+   - this means that at (n+1), we can apply our action.
+   - at (n+2), we will have applied our action.
+   - at (n+3), we will have the same state as (n+2).
+ *) 
+Lemma system_38_phil_not_hungry_then_next_philo_choice:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (c: choice) 
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SSSN: ValidTrace system38 ss ts (S (S (S n))))
+         (NOTHUNGRY: fst (ss (S n)) <> h)
+         (CHOICE: snd (fst (ts (S n))) = just choice c)
+         (NEVEN: even n = true)
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice),
+    fst (ss (S (S  (S n)))) = trans32fn (fst (ss (S n))) c.
+Proof.
+  intros.
+  assert (STATE_PREV: fst (ss n) = fst (ss (S n))).
+  erewrite system38_phil_odd_state_prev_state; eauto.
+  inversion TRACE_SSSN. inversion TILLN. auto.
+  apply even_n_odd_Sn; auto.
+  assert (STATE_PREV_NOT_HUNGRY: fst  (ss n) <> h).
+  rewrite STATE_PREV. exact NOTHUNGRY.
+  assert (CMD_CUR_PASS: snd (ss (S n)) = cmd_pass).
+  eapply system38_phil_not_hungry_then_next_controller_pass; eauto.
+  inversion TRACE_SSSN. inversion TILLN. exact TILLN0.
+
+  assert (CUR_TO_NEXT_TRANSITION_TRANS37: fst (ss (S (S n))) = trans37fn  (fst (ss (S n))) (fst (ts (S n)))).
+  apply system38_odd_state_next_phil_state; auto.
+  inversion TRACE_SSSN; auto.
+  apply even_n_odd_Sn; auto.
+
+  assert (CUR_TO_NEXT_TRANSITION_TRANS32: fst (ss (S (S n))) = trans32fn  (fst (ss (S n))) c).
+  erewrite <- trans37_cmd_pass_trans32; eauto.
+  rewrite <- CMD_CUR_PASS.
+  eapply system38_s_cmd_to_t_cmd; eauto.
+  inversion TRACE_SSSN; auto.
+
+  assert (NEXT_TO_NEXT_NEXT: fst (ss (S (S (S n)))) = fst (ss (S (S n))) ).
+  eapply system38_phil_even_state_next_state; eauto.
+  congruence.
+Qed.
+
+  
+  
+
+  
 (* TODO: add assumption that on even cycle, our choice is NOTHING *)
 Lemma system38_polled_if_hungy_then_eat:
   forall (ss: nat -> the * cmd)
          (ts: nat -> cmd * maybe choice * the)
          (TRACE3: ValidTrace system38 ss ts 3)
-         (BOTTOM_EVEN: forall (i: nat) (IEVEN: i mod 2 = 0), snd (fst (ts i)) = nothing choice)
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
          (HUNGRY: fst (ss 1) = h),
     fst (ss 3) = e.
 Proof.
