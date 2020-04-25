@@ -1,6 +1,6 @@
 Require Import Nat.
 Require Import List.
-
+Require Import Omega.
 
 (* Problem: Starvation freedom is not formally defined! *)
 (* Problem: Algebra of traces being used is not defined *)
@@ -97,9 +97,16 @@ Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u 
 
 (* feedback composition: we shall define tabuada composition here *)
 Check (phil33).
+(*
 Inductive connect34: the * cmd ->
                      cmd * choice * the -> Prop :=
-  | mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch  ), sx).
+| mkconnect34: forall (sx: the) (sy: cmd) (ch: choice), connect34 (sx, sy) ((sy, ch  ), sx).
+*)
+
+
+Definition connect34 (xy: the * cmd)
+                        (ux_uy: cmd * choice * the): Prop :=
+  (fst xy) = (snd ux_uy) /\ (snd xy = fst (fst ux_uy)).
 
 (* This will do the wrong thing, since it will connect my *current state* with the *transition action*?
    but the transition action is attempting to dictate my *next state* *)
@@ -181,16 +188,33 @@ Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
 
   end.
 
+Definition trans37fn' (s: the) (u: cmd * maybe choice): the :=
+  match snd u   with
+  | nothing _ => s (* this looks fishy! what if I send !0 / !1? I don't trust this :(. Indeed, moving this down 
+                           to be below cmd_bang0, cmd_bang1 breaks things *)
+  | just _ ch  => match fst u with
+         | cmd_bang0 => s
+         | cmd_bang1 => s
+         | cmd_pass => trans32fn s ch
+                  end
+  end.
+
 Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
 
 
 (* 3.8: the new interconnect *)
 (* TODO: make this modular; call it connect_slowed_left *)
+(* 
 Inductive connect38: the * cmd ->
                      cmd * (maybe choice) * the -> Prop :=
 | mkconnect38: forall (sx: the) (sy: cmd) (mch: maybe choice), connect38 (sx, sy) ((sy, mch), sx).
+*)
 
 
+Definition connect38 (xy: the * cmd)
+                     (ux_uy: cmd * (maybe choice) * the): Prop :=
+  (fst xy) = (snd ux_uy) /\ (snd xy = fst (fst ux_uy)).
+  
 
 (* PROBLEM: we assume that the choice 
 input to the philosopher alternates between
@@ -258,6 +282,97 @@ Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try
 
 Example valid_trace_table3_step10: ValidTrace system38 states_table_3 trans_table_3 10.
 Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+
+(* do I really want to do this to myself? :( *)
+(* 3.10: polled dyanmics *)
+(* Definition odd_polled {A: Type} (f: nat -> A) (n: nat) := f (n * 2 + 1). *)
+Definition time_to_odd_time (n: nat): nat := 2 * n + 1.
+
+
+(* 3.11: correctness *)
+Lemma system38_polled_if_hungy_then_eat:
+  forall (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts 3)
+         (HUNGRY: fst (ss 1) = h),
+    fst (ss 3) = e.
+Proof.
+  intros.
+  inversion TRACE.
+  inversion TILLN.
+  simpl in *.
+  unfold tabuada_trans in *.
+  destruct ATN0 as [P1 [Q1 R1]].
+  destruct ATN as [P2 [Q2 R2]].
+  subst.
+  rewrite <- P2.
+  unfold trans37fn.
+  inversion R2.
+  simpl.
+
+  xx
+  
+  
+  
+  
+ 
+(* 3.11 : correctness *)
+Lemma system38_polled_if_hungy_then_eat:
+  forall (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts 3)
+         (HUNGRY: fst (ss 1) = h),
+    fst (ss 3) = e.
+Proof.
+  intros.
+  inversion TRACE as [TRACE0 | npred TRACE_PRED].
+  subst.
+  inversion TRACE_PRED as [TRACE0 | npredpred TRACE_PRED_PRED].
+  subst.
+  unfold trans in ATN, ATN0.
+  unfold system38 in ATN, ATN0.
+  unfold tabuada in ATN, ATN0.
+  unfold tabuada_trans in ATN, ATN0.
+  (* destruct ATN0 as [TRANS_PHIL_1 [TRANS_CONTROLLER_1 TRANS_CONNECT_1]].
+  simpl in *. 
+  inversion TRANS_CONNECT_1; subst.
+  *)
+  set (s2 := ss 2) in *. set (t2 := ts 2) in *.
+  destruct s2; subst. destruct t2; subst.
+  simpl in *.
+  destruct ATN as [TRANS_PHIL_2 [TRANS_CONTROLLER_2 TRANS_CONNECT_2]].
+  unfold trans in TRANS_PHIL_2.
+  unfold phil37 in TRANS_PHIL_2.
+  (* OK, we got the goal in a useful shape *)
+  rewrite <- TRANS_PHIL_2.
+  (* we now need t0, p *)
+  unfold trans37fn.
+  inversion TRANS_CONNECT_2;subst.
+  (* now we need c *)
+  destruct ATN0 as [TRANS_PHIL_1 [TRANS_CONTROLLER_1 TRANS_CONNECT_1]].
+  rewrite <- TRANS_CONTROLLER_1.
+  unfold trans34fn.
+  (* now we need (ts 1) *)
+  inversion TRANS_CONNECT_1; subst; simpl in *.
+  set (s1 := ss 1) in *. destruct s1; simpl in *; inversion H0; subst.
+  set (t1 := ts 1) in *. destruct t1; simpl in *; inversion H; subst.
+  destruct mch; simpl in *.
+
+
+
+  
+  
+    
+   
+
+Abort.
+  
+
+
+
+
+
+  
 
 
 Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
