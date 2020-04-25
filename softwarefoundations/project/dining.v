@@ -1,7 +1,7 @@
 Require Import Nat.
 Require Import List.
 Require Import Omega.
-
+Require Import Coq.Logic.FunctionalExtensionality.
 (* Problem: Starvation freedom is not formally defined! *)
 (* Problem: Algebra of traces being used is not defined *)
 (* how do we formally state philosopher does not remain hungry forever? *)
@@ -202,7 +202,20 @@ Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
     end
   end.
 
+(* We will use this to make sure that on the even cycle, our choice
+  is always nothing *)
+Lemma trans37_choice_nothing:
+  forall (s: the) (u: cmd * maybe choice)
+         (CHOICENOTHING: snd u = nothing choice),
+    trans37fn s u = s.
+Proof.
+  intros.
+  unfold trans37fn.
+  destruct u; destruct c; simpl in *; subst; auto.
+Qed.
+  
 Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
+
 
 
 (* 3.8: the new interconnect *)
@@ -288,6 +301,96 @@ Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try
 Example valid_trace_table3_step10: ValidTrace system38 states_table_3 trans_table_3 10.
 Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
 
+
+(* Helper to rewrite ss in terms of ts for cmd *)
+Lemma system38_s_cmd_to_t_cmd: 
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+    fst (fst (ts n)) = snd(ss n).
+Proof.
+  intros.
+  inversion TRACE as [TRACE1 | npred TRACE1 AT1].
+  subst.
+  inversion AT1 as [AT11 [AT12 AT13]].
+  set (s1 := ss 1) in *.
+  destruct s1 as [s1_the s1_cmd].
+  set (t1 := ts 1) in *.
+  destruct t1 as [[t1_cmd t1_mchoice] t1_the].
+  simpl in *.
+  inversion AT13; simpl in *.
+  rewrite H0. auto.
+Qed.
+
+(* Helper to rewrite ss in terms of ts for the *)
+Lemma system38_s_the_to_t_the: 
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+    snd (ts n) = fst (ss n).
+Proof.
+  intros.
+  inversion TRACE as [TRACE1 | npred TRACE1 AT1].
+  subst.
+  inversion AT1 as [AT11 [AT12 AT13]].
+  set (s1 := ss 1) in *.
+  destruct s1 as [s1_the s1_cmd].
+  set (t1 := ts 1) in *.
+  destruct t1 as [[t1_cmd t1_mchoice] t1_the].
+  simpl in *.
+  inversion AT13; simpl in *.
+  rewrite H. auto.
+Qed.
+
+(* in an even state, if we feel hungry, then the controller
+   will order a !1 *)
+Lemma system38_phil_hungry_then_next_controller_bang1:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SN: ValidTrace system38 ss ts (S n))
+         (HUNGRY: fst (ss n) = h),
+    snd (ss (S n)) = cmd_bang1.
+Proof.
+  intros.
+  inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
+  assert (TSN_HUNGRY: snd (ts n) = h). rewrite <- HUNGRY. apply system38_s_the_to_t_the; auto.
+  inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
+  inversion AT_N_CONTROL as [AT_N_CONTROL_TRANS].
+  rewrite TSN_HUNGRY.
+  simpl.
+  reflexivity.
+Qed.
+
+(* in an even state, if we feel hungry, then we wil continue to be hungry *)
+Lemma system38_phil_hungry_then_next_phil_hungry:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SN: ValidTrace system38 ss ts ((S n)))
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: i mod 2 = 0), snd (fst (ts i)) = nothing choice)
+         (NEVEN: n mod 2 = 0)
+         (HUNGRY: fst (ss n) = h),
+    fst (ss (S n)) = h.
+Proof.
+  intros.
+  inversion TRACE_SN as [_ | n' TRACE_N AT_N]; subst.
+  inversion AT_N as [AT_N_PHIL [AT_N_CONTROL AT_N_TABU]].
+  inversion AT_N_PHIL as [AT_N_PHIL_TRANS].
+  rewrite HUNGRY.
+  apply trans37_choice_nothing.
+  apply BOTTOM_EVEN.
+  apply NEVEN.
+Qed.
+
+
+(* in an even state, if we feel hungry, then we will be eating 
+Lemma system_phil_hungry_then_next_2_phil_eating:
+  
+  
+  
 (* do I really want to do this to myself? :( *)
 (* 3.10: polled dyanmics *)
 (* Definition odd_polled {A: Type} (f: nat -> A) (n: nat) := f (n * 2 + 1). *)
@@ -295,37 +398,61 @@ Definition time_to_odd_time (n: nat): nat := 2 * n + 1.
 
 
 (* 3.11: correctness *)
+(* TODO: add assumption that on even cycle, our choice is NOTHING *)
 Lemma system38_polled_if_hungy_then_eat:
   forall (ss: nat -> the * cmd)
          (ts: nat -> cmd * maybe choice * the)
-         (TRACE: ValidTrace system38 ss ts 3)
+         (TRACE3: ValidTrace system38 ss ts 3)
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: i mod 2 = 0), snd (fst (ts i)) = nothing choice)
          (HUNGRY: fst (ss 1) = h),
     fst (ss 3) = e.
 Proof.
   intros.
-  inversion TRACE.
-  inversion TILLN.
+  inversion TRACE3 as [TRACE0 | npred TRACE2 AT3]; subst.
+  inversion TRACE2 as [TRACE0 | npref TRACE1 AT2]; subst.
+  inversion AT3 as [AT31 [AT32 AT33]].
+  inversion AT2 as [AT21 [AT22 AT23]].
+
+  inversion AT31. inversion AT32. inversion AT33.
+  inversion AT21. inversion AT22. inversion AT23.
+  rewrite HUNGRY in *.
+
+  assert (TS2NOTHING: snd (fst (ts 2)) = nothing choice); auto.
+
+  set (ts2 := ts 2) in *.   set (ts1 := ts 1) in *.
+  set (ss2 := ss 2) in *. set (ss1 := ss 1) in *.
+  destruct ss1 as [s1_the1 s1_cmd]; simpl in *.
+  destruct ss2 as [s2_the1 s2_cmd]; simpl in *.
+  destruct ts2  as  [[t2_cmd t2_mchoice] t2_the]; simpl in *.
+  destruct ts1 as [[t1_cmd t1_mchoice] t1_the]; simpl in *.
   simpl in *.
-  unfold tabuada_trans in *.
-  destruct ATN0 as [P1 [Q1 R1]].
-  destruct ATN as [P2 [Q2 R2]].
-  subst.
-  rewrite <- P2.
+  rewrite TS2NOTHING in *.
   unfold trans37fn.
-  inversion R2.
   simpl.
-  rewrite <- H0.
-  rewrite <- Q1.
-  unfold trans34fn.
-  inversion R1.
-  rewrite <- H1.
-  rewrite HUNGRY.
-  rewrite H.
-  destruct (snd (fst (ts 2))).
-  rewrite <- H.
-  rewrite <- P1.
-  rewrite HUNGRY.
-  unfold trans37fn.
+  unfold trans37fn in H4.
+  simpl in H4.
+
+  destruct t2_cmd; destruct t1_cmd; destruct t1_mchoice;simpl; auto.
+  - destruct c; simpl; auto.
+    subst.
+    simpl in *.
+    unfold trans37fn in *.
+    simpl in *.
+    subst.
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
 
   
   
