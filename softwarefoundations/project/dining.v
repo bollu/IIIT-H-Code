@@ -547,132 +547,57 @@ Proof.
 Qed.
 
   
-  
 
+(*
+    PAST: n [even] -> hungry, will send !1 to current.
+       |
+       v 
+      CURRENT: S n = n + 1 [odd] -> hungry, !1 sent, will transition.
+       |
+      EVEN S n = n + 2 [even] -> transitioned to eating.
+       | 
+      NEXT ODD: S (S (S n))) = n + 3 [odd] -> state copied.
+
+*)
   
 (* TODO: add assumption that on even cycle, our choice is NOTHING *)
 Lemma system38_polled_if_hungy_then_eat:
-  forall (ss: nat -> the * cmd)
+  forall (n: nat)
+         (NODD: odd (S n) = true)
+         (ss: nat -> the * cmd)
          (ts: nat -> cmd * maybe choice * the)
-         (TRACE3: ValidTrace system38 ss ts 3)
+         (TRACE_SSSN: ValidTrace system38 ss ts (S (S (S n))))
          (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
-         (HUNGRY: fst (ss 1) = h),
-    fst (ss 3) = e.
+         (NOT_BOTTOM_ODD: forall (i: nat) (IODD: odd i = true),  snd(fst (ts i)) <> nothing choice)
+         (HUNGRY: fst (ss (S n)) = h),
+    fst (ss (S (S (S n)))) = e.
 Proof.
   intros.
-  inversion TRACE3 as [TRACE0 | npred TRACE2 AT3]; subst.
-  inversion TRACE2 as [TRACE0 | npref TRACE1 AT2]; subst.
-  inversion AT3 as [AT31 [AT32 AT33]].
-  inversion AT2 as [AT21 [AT22 AT23]].
+  assert (PREV_STATE_H: fst (ss n) = h).
+  erewrite system38_phil_odd_state_prev_state; eauto.
+  inversion TRACE_SSSN. inversion TILLN. auto.
 
-  inversion AT31. inversion AT32. inversion AT33.
-  inversion AT21. inversion AT22. inversion AT23.
-  rewrite HUNGRY in *.
+  assert (CUR_CMD_BANG1: snd (ss (S n)) = cmd_bang1).
+  eapply system38_phil_hungry_then_next_controller_bang1; eauto.
+  inversion TRACE_SSSN; inversion TILLN;  eauto.
 
-  assert (TS2NOTHING: snd (fst (ts 2)) = nothing choice); auto.
+  
+  assert (NEXT_STATE: fst (ss (S (S n))) = trans37fn  (fst (ss (S n))) (fst (ts (S n)))).
+  eapply system38_odd_state_next_phil_state; eauto.  inversion TRACE_SSSN; auto.
+  
+  assert (NEXT_NEXT_STATE_EQ_NEXT_STATE: fst (ss (S (S (S n)))) = fst (ss (S (S n))) ).
+  eapply system38_phil_even_state_next_state; eauto.
+  apply odd_n_even_Sn; auto.
 
-  set (ts2 := ts 2) in *.   set (ts1 := ts 1) in *.
-  set (ss2 := ss 2) in *. set (ss1 := ss 1) in *.
-  destruct ss1 as [s1_the1 s1_cmd]; simpl in *.
-  destruct ss2 as [s2_the1 s2_cmd]; simpl in *.
-  destruct ts2  as  [[t2_cmd t2_mchoice] t2_the]; simpl in *.
-  destruct ts1 as [[t1_cmd t1_mchoice] t1_the]; simpl in *.
-  simpl in *.
-  rewrite TS2NOTHING in *.
+  assert (CHOICE_NEXT: snd (fst (ts (S n))) <> nothing choice).
+  apply NOT_BOTTOM_ODD. apply NODD.
+  
+  rewrite NEXT_NEXT_STATE_EQ_NEXT_STATE.
+  rewrite NEXT_STATE.
   unfold trans37fn.
-  simpl.
-  unfold trans37fn in H4.
-  simpl in H4.
-
-  destruct t2_cmd; destruct t1_cmd; destruct t1_mchoice;simpl; auto.
-  - destruct c; simpl; auto.
-    subst.
-    simpl in *.
-    unfold trans37fn in *.
-    simpl in *.
-    subst.
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-
-  
-  
-  
-  
-  
-  
- 
-(* 3.11 : correctness *)
-Lemma system38_polled_if_hungy_then_eat:
-  forall (ss: nat -> the * cmd)
-         (ts: nat -> cmd * maybe choice * the)
-         (TRACE: ValidTrace system38 ss ts 3)
-         (HUNGRY: fst (ss 1) = h),
-    fst (ss 3) = e.
-Proof.
-  intros.
-  inversion TRACE as [TRACE0 | npred TRACE_PRED].
-  subst.
-  inversion TRACE_PRED as [TRACE0 | npredpred TRACE_PRED_PRED].
-  subst.
-  unfold trans in ATN, ATN0.
-  unfold system38 in ATN, ATN0.
-  unfold tabuada in ATN, ATN0.
-  unfold tabuada_trans in ATN, ATN0.
-  (* destruct ATN0 as [TRANS_PHIL_1 [TRANS_CONTROLLER_1 TRANS_CONNECT_1]].
-  simpl in *. 
-  inversion TRANS_CONNECT_1; subst.
-  *)
-  set (s2 := ss 2) in *. set (t2 := ts 2) in *.
-  destruct s2; subst. destruct t2; subst.
-  simpl in *.
-  destruct ATN as [TRANS_PHIL_2 [TRANS_CONTROLLER_2 TRANS_CONNECT_2]].
-  unfold trans in TRANS_PHIL_2.
-  unfold phil37 in TRANS_PHIL_2.
-  (* OK, we got the goal in a useful shape *)
-  rewrite <- TRANS_PHIL_2.
-  (* we now need t0, p *)
-  unfold trans37fn.
-  inversion TRANS_CONNECT_2;subst.
-  (* now we need c *)
-  destruct ATN0 as [TRANS_PHIL_1 [TRANS_CONTROLLER_1 TRANS_CONNECT_1]].
-  rewrite <- TRANS_CONTROLLER_1.
-  unfold trans34fn.
-  (* now we need (ts 1) *)
-  inversion TRANS_CONNECT_1; subst; simpl in *.
-  set (s1 := ss 1) in *. destruct s1; simpl in *; inversion H0; subst.
-  set (t1 := ts 1) in *. destruct t1; simpl in *; inversion H; subst.
-  destruct mch; simpl in *.
-
-
-
-  
-  
-    
-   
-
-Abort.
-  
-
-
-
-
-
-  
-
-
-Theorem starvation_free: forall (sys: system) (n: nat), exists (m: nat) (MGTN: m > n) (hungry_at_n: state_phil sys n = hungry),
-      state_phil sys m = eating.
-Proof. Admitted.
-
+  erewrite system38_s_cmd_to_t_cmd with (ss := ss); auto.
+  rewrite CUR_CMD_BANG1.
+  rewrite HUNGRY.
+  destruct (snd (fst (ts (S n)))); auto; try contradiction.
+  inversion TRACE_SSSN; auto.
+Qed.
