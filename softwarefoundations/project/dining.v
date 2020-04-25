@@ -178,7 +178,7 @@ Inductive maybe (T: Type) := just: T -> maybe T | nothing: maybe T.
 (* TODO: understand this ordering *)
 (* PROBLEM: in paper, this is written as "pattern matching syntax" due to the overlapping
    patterns. This should be _very clearly stated_ *)
-Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
+Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
   match u with
   | (_, nothing _) => s (* this looks fishy! what if I send !0 / !1? I don't trust this :(. Indeed, moving this down 
                            to be below cmd_bang0, cmd_bang1 breaks things *)
@@ -188,15 +188,18 @@ Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
 
   end.
 
-Definition trans37fn' (s: the) (u: cmd * maybe choice): the :=
-  match snd u   with
-  | nothing _ => s (* this looks fishy! what if I send !0 / !1? I don't trust this :(. Indeed, moving this down 
+Print trans37fnDEPR.
+
+Definition trans37fn (s: the) (u: cmd * maybe choice): the :=
+    match fst u with
+    | cmd_bang0 => s
+    | cmd_bang1 => match snd u  with | just _ _ => next s | nothing _ => s end
+    | cmd_pass => 
+      match snd u   with
+      | nothing _ => s (* this looks fishy! what if I send !0 / !1? I don't trust this :(. Indeed, moving this down 
                            to be below cmd_bang0, cmd_bang1 breaks things *)
-  | just _ ch  => match fst u with
-         | cmd_bang0 => s
-         | cmd_bang1 => s
-         | cmd_pass => trans32fn s ch
-                  end
+      | just _ ch   => trans32fn s ch
+    end
   end.
 
 Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
@@ -268,7 +271,9 @@ Example valid_trace_table3_step3: ValidTrace system38 states_table_3 trans_table
 Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
 
 Example valid_trace_table3_step4: ValidTrace system38 states_table_3 trans_table_3 4.
-Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+Proof.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+Qed.
 
 Example valid_trace_table3_step5: ValidTrace system38 states_table_3 trans_table_3 5.
 Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
@@ -309,8 +314,21 @@ Proof.
   unfold trans37fn.
   inversion R2.
   simpl.
+  rewrite <- H0.
+  rewrite <- Q1.
+  unfold trans34fn.
+  inversion R1.
+  rewrite <- H1.
+  rewrite HUNGRY.
+  rewrite H.
+  destruct (snd (fst (ts 2))).
+  rewrite <- H.
+  rewrite <- P1.
+  rewrite HUNGRY.
+  unfold trans37fn.
 
-  xx
+  
+  
   
   
   
