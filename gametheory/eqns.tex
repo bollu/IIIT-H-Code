@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\begin{document}
+\begin{itemize}
+\item $f(a) \equiv \sum_{i \in N} k_i \hat p_{i, a} + C_a$
+\item $t_i(\hat u) \equiv [f_{-i}(a_{-i}^*) - f_{-i}(a^*)]/k$
+\end{itemize}
+
+
+\begin{itemize}
+    \item (C1): $\forall i \in \mathbb N, U_{||} \subset U_i$ [All domains contain parallel domain]
+    \item (C2): At least $n-1$ agents: $U_{||} \subsetneq U_i$ [(n-1) domains are larger than $U_{||}$]
+    \item Build $\tilde U_i \equiv U_i \cap U_{||}$, $\tilde {\mathcal U_i} \equiv \prod_i \tilde U_i$
+    \item Robert's thm to $\tilde{ \mathcal U_i}$: $x(u) = \arg \underset{ a \in A}{\max} \sum_{i=1}^n k_i p_{i, a} + C_a$
+          for some $k_i$, $C_a$.
+    \item If only one $k_i$ nonzero, done [that $i$ is dictator]
+    \item Assume $k_{i_1}, k_{i_2}$ nonzero. Allows (C2) to kick in: one of $i_1, i_2$
+        must be $U_{||} \subsetneq U_{i^*}$, $i^* \in \{i_1, i_2\}$.
+    \item This $U_i\star$ cannot be modeled in terms of linear.
+    \item This eventually leads to contradiction: Key idea is that non-linear space
+          cannot be modeled by linear fn.
+    \item (Technical: This will break \emph{agent-maximising} property of DSIC).
+\end{itemize}
+\end{document}                                                  
