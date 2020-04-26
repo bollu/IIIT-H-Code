@@ -601,3 +601,67 @@ Proof.
   destruct (snd (fst (ts (S n)))); auto; try contradiction.
   inversion TRACE_SSSN; auto.
 Qed.
+
+(* HELPER: reason about previous trace *)
+Lemma ValidTrace_valid_pred:
+  forall {X U: Set} (s: system X U) (ss: nat -> X) (ts: nat -> U)
+         (n: nat) (VALID: ValidTrace s ss ts (S n)),
+    ValidTrace s ss ts n.
+Proof.
+  intros.
+  inversion VALID; auto.
+Qed.
+
+
+    
+
+
+
+(* TODO: add assumption that on even cycle, our choice is NOTHING *)
+Lemma system38_starvation_free:
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SSSN: ValidTrace system38 ss ts (S (S (S n))))
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
+         (NOT_BOTTOM_ODD: forall (i: nat) (IODD: odd i = true),  snd(fst (ts i)) <> nothing choice)
+         (HUNGRY: fst (ss n) = h),
+    exists (m: nat),  m > n /\  fst (ss m) = e.
+Proof.
+  intros.
+  assert(N_EVEN_OR_N_ODD: even n = true \/ odd n = true).
+  rewrite  <- Bool.orb_true_iff.
+  apply Nat.orb_even_odd.
+
+  destruct N_EVEN_OR_N_ODD as [N_EVEN | N_ODD].
+
+  - assert(NEXT_STATE_HUNGRY: fst (ss (S n)) = h).
+    erewrite system38_phil_even_state_next_state; eauto.
+    repeat (apply ValidTrace_valid_pred; try auto).
+      
+    assert (SN_ODD: odd (S n) = true).
+    eapply even_n_odd_Sn; auto.
+
+    assert(NEXT_NEXT_STATE_EATING: fst (ss (S (S (S n)))) = e).
+    eapply system38_polled_if_hungy_then_eat; eauto.
+
+    exists (S (S (S n))).
+    split; try omega; auto.
+
+  - (* odd *)
+    assert (N_NOT_FIRST_STATE: exists npred,  n = S npred).
+    destruct n. cut (odd 0 = false). intros. congruence. apply Nat.odd_0.
+    eauto.
+
+    destruct N_NOT_FIRST_STATE as [npred NPRED].
+
+    assert(NEXT_STATE_EATING: fst (ss (S (S n))) = e).
+    rewrite NPRED.
+    eapply system38_polled_if_hungy_then_eat; eauto.
+    rewrite <- NPRED.
+    apply ValidTrace_valid_pred.
+    eapply TRACE_SSSN.
+    congruence.
+
+    exists (S (S n)); split; try omega; auto.
+Qed.
