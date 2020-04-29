@@ -242,6 +242,29 @@ Definition connect38 (xy: the * cmd)(ux_uy: cmd * (maybe choice) * the): Prop :=
 
 
 \begin{frame}[fragile]
+\frametitle{The theorem statement}
+\begin{minted}{coq}
+Lemma system38_starvation_free:
+  forall (n: nat) (ss: nat -> the * cmd)
+   (ts: nat -> cmd * maybe choice * the)
+   (TRACE_SSSN: ValidTrace system38 ss ts (S(S(S n))))
+   (BOTTOM_EVEN: 
+      forall (i: nat) (IEVEN: even i = true), 
+      snd (fst (ts i)) = nothing choice)
+   (NOT_BOTTOM_ODD: 
+      forall (i: nat) (IODD: odd i = true),
+      snd(fst (ts i)) <> nothing choice)
+   (HUNGRY: fst (ss n) = h),
+  exists (m: nat),  m > n /\  fst (ss m) = e.
+Proof.
+    (* 30 lines of proof, 
+       200 lines of supporting lemmas ommitted *)
+Qed.
+\end{minted}
+\end{frame}
+
+
+\begin{frame}[fragile]
 \frametitle{Pain point: Non determinism}
 Functions are \textbf{computational}; Relations are not.
 \pause
