@@ -153,21 +153,6 @@ Definition tabuada_trans {X Y: Type} {UX UY: Type}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{The definitions}
-    \begin{minted}{coq}
-        XXX
-    \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Pain point: Modularity}
-    \begin{itemize}
-            \item Modularity makes for complicated analysis.
-    \end{itemize}
-\end{frame}
-
-
-\begin{frame}[fragile]
 \frametitle{Pain point: Non determinism}
     \begin{itemize}
             \item Coq has computational ability.
@@ -198,6 +183,48 @@ Proof.
   try reflexivity. (* Does not work! Not computational *)
   unfold x2y_rel. left. auto.
 Qed.
+\end{minted}
+}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Pain point: Modularity}
+{\tiny
+  \begin{minted}[linenos]{coq}
+(* Helper:  rewrite ss in terms of ts for the *)
+Lemma system38_s_the_to_t_the: 
+  forall (n: nat) (ss: nat -> the * cmd) (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+    snd (ts n) = fst (ss n).
+Proof.
+  intros.
+  inversion TRACE as [TRACE1 | npred TRACE1 AT1].
+  subst.
+  inversion AT1 as [AT11 [AT12 AT13]].
+  set (s1 := ss 1) in *.
+  destruct s1 as [s1_the s1_cmd].
+  set (t1 := ts 1) in *.
+  destruct t1 as [[t1_cmd t1_mchoice] t1_the].
+  simpl in *.
+  inversion AT13; simpl in *. (* step where we can see useful info *)
+\end{minted}
+\pause
+\begin{minted}[linenos]{coq}
+n : nat
+ss : nat -> the * cmd
+ts : nat -> cmd * maybe choice * the
+TRACE : ValidTrace system38 ss ts (S n)
+TRACE1 : ValidTrace system38 ss ts n
+AT1 : trans (the * cmd) (cmd * maybe choice * the) system38 (ss n) (ts n) (ss (S n))
+AT11 : trans the (cmd * maybe choice) phil37 (fst (ss n)) (fst (ts n)) (fst (ss (S n)))
+AT12 : trans cmd the controller34 (snd (ss n)) (snd (ts n)) (snd (ss (S n)))
+AT13 : connect38 (ss n) (ts n)
+s1_the : the
+s1_cmd, t1_cmd : cmd
+t1_mchoice : maybe choice
+t1_the : the
+============================
+snd (ts n) = fst (ss n)
 \end{minted}
 }
 \end{frame}
