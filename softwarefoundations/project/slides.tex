@@ -98,7 +98,37 @@ Record system (X: Set) (U: Set) :=
 
 
 \begin{frame}[fragile]
-\frametitle{The definitions: Tabuada Connection}
+\frametitle{Running a System: Valid Traces}
+
+{\tiny
+\begin{minted}{coq}
+Record system (X: Set) (U: Set) := 
+  mksystem { isx0: X -> Prop; 
+           trans: X -> U -> X -> Prop }.
+\end{minted}
+}
+\pause
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{validtrace.png}
+\end{figure}
+\pause
+{\tiny
+\begin{minted}{coq}
+(* ValidTrace s xs us n: trace suggested by xs, us is valid for n steps *)
+Inductive ValidTrace {X U: Set} (s: system X U) (xs: nat -> X) (us: nat -> U): nat -> Prop :=
+| Start: forall  (VALID: (isx0 X U s) (xs 0)) , ValidTrace s xs us 0
+| Cons: forall (n: nat) (TILLN: ValidTrace s xs us n) (ATN: trans X U s (xs n) (us n) (xs (S n))),
+ValidTrace s xs us (S n).
+\end{minted}
+}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Composing Systems: Tabuada Connection}
 
 {\tiny
 The sets: 
@@ -153,18 +183,65 @@ Definition tabuada_trans {X Y: Type} {UX UY: Type}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Valid traces}
+\frametitle{One diner system}
+\pause
 {\tiny
 \begin{minted}{coq}
-Record system (X: Set) (U: Set) := 
-  mksystem { isx0: X -> Prop; 
-           trans: X -> U -> X -> Prop }.
+(* 2.1: system specifcation *)
+Record system (X: Set) (U: Set) := mksystem { isx0: X -> Prop; trans: X -> U -> X -> Prop }.
+\end{minted}
+\pause
+\begin{minted}{coq}
+Definition system38 : system := tabuada phil37 controller34 connect38.
+\end{minted}
+\pause
 
-(* ValidTrace s xs us n: trace suggested by xs, us is valid for n steps *)
-Inductive ValidTrace {X U: Set} (s: system X U) (xs: nat -> X) (us: nat -> U): nat -> Prop :=
-| Start: forall  (VALID: (isx0 X U s) (xs 0)) , ValidTrace s xs us 0
-| Cons: forall (n: nat) (TILLN: ValidTrace s xs us n) (ATN: trans X U s (xs n) (us n) (xs (S n))),
-ValidTrace s xs us (S n).
+\begin{minted}{coq}
+Definition phil37 := mksystem the (cmd * maybe choice) isthinking  (fun s u s' => trans37fn s u = s').
+Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u = s').
+\end{minted}
+\pause
+\begin{minted}{coq}
+(* Philosopher spec *)
+Definition isthinking (s: the): Prop := s = t.
+
+Inductive cmd := cmd_pass | cmd_bang0 | cmd_bang1.
+
+Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
+  match u with
+  | (_, nothing _) => s (* this looks fishy! I don't trust this :(. Indeed, moving this down 
+                           to be below cmd_bang0, cmd_bang1 breaks things *)
+  | (cmd_bang0, _) => s | (cmd_bang1, _) => next s | (cmd_pass, just _ ch) => trans32fn s ch
+  end.
+\end{minted}
+\pause
+\begin{minted}{coq}
+Inductive choice := choice_0 | choice_1.
+Definition trans32fn (s: the) (c: choice): the :=
+  match c with
+  | choice_0 => s | choice_1 => next s
+  end.
+
+\end{minted}
+
+\pause
+
+\begin{minted}{coq}
+(* Controller spec *)
+Definition ispass (c: cmd):Prop := c = cmd_pass.
+Definition trans34fn (s: cmd) (u: the): cmd :=
+  match u with
+  | h => cmd_bang1 | e => cmd_pass | t => cmd_pass
+  end.
+\end{minted}
+
+\pause
+\begin{minted}{coq}
+(* Connection Spec *)
+Definition connect38 (xy: the * cmd)
+                     (ux_uy: cmd * (maybe choice) * the): Prop :=
+  (fst xy) = (snd ux_uy) /\ (snd xy = fst (fst ux_uy)).
+
 \end{minted}
 }
 \end{frame}
@@ -334,6 +411,23 @@ Lemma odd_state_next_phil_state:
     {\tiny
     \color{blue}{\url{https://github.com/bollu/IIIT-H-code/tree/master/softwarefoundations/project}}
     }
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Phrasing of the Tabuada connection}
+
+Phrased as: $$\mathcal{I} \subseteq S_X \times S_Y \times U_X \times U_Y$$
+\pause
+This definition has no sense of the \emph{causality} inherent to the notion
+of \texttt{ValidTrace}.
+\pause
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{validtrace.png}
+\end{figure}
+\pause
+Better definition:
+$$\mathcal{I}: S_X \times S_Y \rightarrow  2^{U_X \times U_Y}$$
 
 \end{frame}
 
