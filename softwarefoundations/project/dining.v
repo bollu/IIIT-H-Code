@@ -664,3 +664,15 @@ Proof.
 
     exists (S (S n)); split; try omega; auto.
 Qed.
+
+(* Helper:  rewrite ss in terms of ts for the *)
+Lemma system38_s_the_to_t_the_tactics: 
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+    snd (ts n) = fst (ss n).
+Proof.
+  intros.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+Abort.

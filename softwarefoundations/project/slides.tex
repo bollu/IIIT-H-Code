@@ -2,7 +2,7 @@
 \usepackage{minted}
 
 %Information to be included in the title page:
-\title{Sample title}
+\title{The story of a proof: From paper to kernel.}
 \author{Siddharth Bhat}
 \institute{IIIT Hyderabad}
 \date{April 29, 2020}
@@ -240,6 +240,7 @@ Definition connect38 (xy: the * cmd)(ux_uy: cmd * (maybe choice) * the): Prop :=
 }
 \end{frame}
 
+
 \begin{frame}[fragile]
 \frametitle{Pain point: Non determinism}
 Functions are \textbf{computational}; Relations are not.
@@ -260,6 +261,8 @@ Lemma x1_to_y1_fn: x2y_fn X1 = Y1. Proof. reflexivity. Qed.
 \end{minted}
 \pause
 
+
+
 \begin{minted}{coq}
 Definition x2y_rel (x: X) (y: Y): Prop :=
   (x = X1 /\ y = Y1) \/ (x = X2 /\ y = Y2) \/  (x = X3 /\ y = Y3).
@@ -278,8 +281,20 @@ Record system (X: Set) (U: Set) :=
 }
 \end{frame}
 
+
 \begin{frame}[fragile]
 \frametitle{Pain point: Modularity}
+{ \footnotesize
+$$
+\texttt{ValidTrace} \mapsto
+\texttt{system38} \mapsto
+\texttt{tabuada} \mapsto 
+\texttt{phil37} \mapsto
+\texttt{trans37}  \mapsto 
+\texttt{trans32}
+$$
+}
+\pause
 {\tiny
   \begin{minted}[linenos]{coq}
 Lemma system38_s_the_to_t_the: 
@@ -298,14 +313,16 @@ Proof.
 Qed.
 \end{minted}
 \pause
-\begin{minted}[linenos]{coq}  
+}
+{\fontsize{2.5}{4}
+\begin{minted}[escapeinside=||]{text}  
 n : nat
 ss : nat -> the * cmd
 ts : nat -> cmd * maybe choice * the
-TRACE : ValidTrace system38 ss ts (S n)
-TRACE1 : ValidTrace system38 ss ts n
-AT1 : tabuada_trans connect38
-        (fun (s : the) (u : cmd * maybe choice) (s' : the) => trans37fn s u = s')
+TRACE : |\color{blue}{ValidTrace}| system38 ss ts (S n)
+TRACE1 : ValidTrace |\color{blue}{system38}| ss ts n
+AT1 : |\color{blue}{tabuada\_trans}| connect38
+        (fun (s : the) (u : cmd * maybe choice) (s' : the) => |\color{blue}{trans37fn}| s u = s')
         (fun (s : cmd) (u : the) (s' : cmd) => trans34fn s u = s') (ss n) 
         (ts n) (ss (S n))
 AT11 : trans37fn (fst (ss n)) (fst (ts n)) = fst (ss (S n))
@@ -315,13 +332,103 @@ s1_the : the
 s1_cmd, t1_cmd : cmd
 t1_mchoice : maybe choice
 t1_the : the
-H : fst (ss n) = snd (ts n)
+H : |\color{blue}{fst (ss n) = snd (ts n)}|
 H0 : snd (ss n) = fst (fst (ts n))
 ============================
 snd (ts n) = fst (ss n)
 \end{minted}
 }
 \end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{What about tactics?!}
+\pause
+
+Tactics work for $\texttt{LHS} = \texttt{RHS}$:
+\pause
+
+\begin{columns}[T] % align columns
+\begin{column}{.25\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{table-3.png}
+\end{figure}
+\end{column}
+\begin{column}{.3\textwidth}
+{\fontsize{2.5}{4}\selectfont
+\begin{minted}{coq}
+(* Verify table 3 *)
+Definition states_table_3
+  (n: nat):  the * cmd :=
+  match n with
+  | 0 => (t, cmd_pass)
+  | 1 => (t, cmd_pass)
+  | 2 => (h, cmd_pass)
+  | 3 => (h, cmd_bang1)
+  | 4 => (e, cmd_bang1) 
+  | 5 => (e, cmd_pass) 
+  | 6 => (e, cmd_pass) 
+  | 7 => (e, cmd_pass) 
+  | 8 => (e, cmd_pass) 
+  | 9 => (e, cmd_pass) 
+  | 10 => (t, cmd_pass) 
+  | _ =>  (t, cmd_pass)
+  end.
+ \end{minted}
+ }
+\end{column}
+\begin{column}{.4\textwidth}
+{\fontsize{2.5}{4}\selectfont
+\begin{minted}{coq}
+Definition trans_table_3
+  (n: nat): cmd * maybe choice  * the :=
+  match n with
+  | 0 => (cmd_pass,  nothing _,       t)
+  | 1 => (cmd_pass,  just _ choice_1, t) 
+  | 2 => (cmd_pass,  nothing _,       h) 
+  | 3 => (cmd_bang1, just _ choice_0, h) 
+  | 4 => (cmd_bang1, nothing _,       e) 
+  | 5 => (cmd_pass,  just _ choice_0, e) 
+  | 6 => (cmd_pass,  nothing _,       e) 
+  | 7 => (cmd_pass,  just _ choice_0, e) 
+  | 8 => (cmd_pass,  nothing _,       e) 
+  | 9 => (cmd_pass,  just _ choice_1, e) 
+  |10 => (cmd_pass,  nothing _,       t) 
+  | _ => (cmd_pass,  nothing _,       t)
+  end.
+\end{minted}
+}
+\end{column}
+\end{columns}
+{\fontsize{2.5}{4}\selectfont
+\begin{minted}{coq}
+Example valid_trace_table3_step10: ValidTrace system38 states_table_3 trans_table_3 10.
+Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start). Qed.
+\end{minted}
+}
+\pause
+... Not for \textbf{derive a proof}:
+\pause
+{\fontsize{2.5}{4}\selectfont
+
+\begin{minted}{coq}
+Lemma system38_s_the_to_t_the_tactics: 
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+    snd (ts n) = fst (ss n).
+Proof.
+  intros.
+  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+Abort.
+\end{minted}
+}
+
+\end{frame}
+
 
 \begin{frame}[fragile]
 \frametitle{Lemmas to drive reasoning}
@@ -400,6 +507,14 @@ Lemma odd_state_next_phil_state:
 \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Takeaways}
+\begin{itemize}
+	\item Coq is no silver bullet. \pause
+	\item Non-determinism + Modularity $\implies$ Coq's metatheory is useless. \pause
+	\item N-diner will be \textit{extremely} painful, is my estimate.
+\end{itemize}
+\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Thank you}
@@ -410,6 +525,30 @@ Lemma odd_state_next_phil_state:
     }
 
 \end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Proof structure}
+\begin{minted}{coq}
+Lemma system38_starvation_free:
+  forall (n: nat) (ss: nat -> the * cmd)
+   (ts: nat -> cmd * maybe choice * the)
+   (TRACE_SSSN: ValidTrace system38 ss ts (S(S(S n))))
+   (BOTTOM_EVEN: 
+      forall (i: nat) (IEVEN: even i = true), 
+      snd (fst (ts i)) = nothing choice)
+   (NOT_BOTTOM_ODD: 
+      forall (i: nat) (IODD: odd i = true),
+      snd(fst (ts i)) <> nothing choice)
+   (HUNGRY: fst (ss n) = h),
+  exists (m: nat),  m > n /\  fst (ss m) = e.
+Proof.
+    (* 30 lines of proof, 
+       200 lines of supporting lemmas ommitted *)
+Qed.
+\end{minted}
+\end{frame}
+
+
 
 \begin{frame}[fragile]
 \frametitle{Phrasing of the Tabuada connection}
