@@ -185,6 +185,11 @@ Definition tabuada_trans {X Y: Type} {UX UY: Type}
 \begin{frame}[fragile]
 \frametitle{One diner system}
 \pause
+\includegraphics[width=0.3\textwidth]{phil-controller-connection.png}
+\includegraphics[width=0.3\textwidth]{phil-transition.png}
+\includegraphics[width=0.3\textwidth]{controller-transition.png}
+
+\pause
 {\tiny
 \begin{minted}{coq}
 (* 2.1: system specifcation *)
@@ -204,9 +209,7 @@ Definition controller34 := mksystem cmd the ispass (fun s u s' => trans34fn s u 
 \begin{minted}{coq}
 (* Philosopher spec *)
 Definition isthinking (s: the): Prop := s = t.
-
 Inductive cmd := cmd_pass | cmd_bang0 | cmd_bang1.
-
 Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
   match u with
   | (_, nothing _) => s (* this looks fishy! I don't trust this :(. Indeed, moving this down 
@@ -218,10 +221,7 @@ Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
 \begin{minted}{coq}
 Inductive choice := choice_0 | choice_1.
 Definition trans32fn (s: the) (c: choice): the :=
-  match c with
-  | choice_0 => s | choice_1 => next s
-  end.
-
+  match c with | choice_0 => s | choice_1 => next s end.
 \end{minted}
 
 \pause
@@ -230,18 +230,14 @@ Definition trans32fn (s: the) (c: choice): the :=
 (* Controller spec *)
 Definition ispass (c: cmd):Prop := c = cmd_pass.
 Definition trans34fn (s: cmd) (u: the): cmd :=
-  match u with
-  | h => cmd_bang1 | e => cmd_pass | t => cmd_pass
-  end.
+  match u with | h => cmd_bang1 | e => cmd_pass | t => cmd_pass end.
 \end{minted}
 
 \pause
 \begin{minted}{coq}
 (* Connection Spec *)
-Definition connect38 (xy: the * cmd)
-                     (ux_uy: cmd * (maybe choice) * the): Prop :=
-  (fst xy) = (snd ux_uy) /\ (snd xy = fst (fst ux_uy)).
-
+Definition connect38 (xy: the * cmd)(ux_uy: cmd * (maybe choice) * the): Prop := 
+ (fst xy) = (snd ux_uy) /\ (snd xy = fst (fst ux_uy)).
 \end{minted}
 }
 \end{frame}
