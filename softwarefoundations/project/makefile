@@ -1,5 +1,5 @@
 slides.pdf: slides.tex
-	pdflatex -shell-escape slides.tex
+	pdflatex -halt-on-error -shell-escape slides.tex 
 
 abstract.pdf: abstract.tex
-	pdflatex -shell-escape abstract.tex -o abstract.pdf
+	pdflatex -halt-on-error -shell-escape abstract.tex -o abstract.pdf 

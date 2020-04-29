@@ -28,7 +28,6 @@ that we can decompose on!
 Record system (X: Set) (U: Set) := mksystem { isx0: X -> Prop; trans: X -> U -> X -> Prop }.
 
 
-
 (* 2.2: system composition *)
 Definition tabuada_start {X Y: Type} (isx0: X -> Prop) (isy0: Y -> Prop) (x: X * Y): Prop :=
   isx0 (fst  x) /\ isy0 (snd x).
