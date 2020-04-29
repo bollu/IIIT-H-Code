@@ -184,11 +184,10 @@ Definition tabuada_trans {X Y: Type} {UX UY: Type}
 
 \begin{frame}[fragile]
 \frametitle{One diner system}
-\pause
-\includegraphics[width=0.3\textwidth]{phil-controller-connection.png}
-\includegraphics[width=0.3\textwidth]{phil-transition.png}
-\includegraphics[width=0.3\textwidth]{controller-transition.png}
 
+\begin{figure}\centering
+\includegraphics[width=0.8\textwidth]{transitions-combined.png}
+\end{figure}
 \pause
 {\tiny
 \begin{minted}{coq}
@@ -212,8 +211,7 @@ Definition isthinking (s: the): Prop := s = t.
 Inductive cmd := cmd_pass | cmd_bang0 | cmd_bang1.
 Definition trans37fnDEPR (s: the) (u: cmd * maybe choice): the :=
   match u with
-  | (_, nothing _) => s (* this looks fishy! I don't trust this :(. Indeed, moving this down 
-                           to be below cmd_bang0, cmd_bang1 breaks things *)
+  | (_, nothing _) => s (* this looks fishy! This is order-sensitive *)
   | (cmd_bang0, _) => s | (cmd_bang1, _) => next s | (cmd_pass, just _ ch) => trans32fn s ch
   end.
 \end{minted}
@@ -244,14 +242,8 @@ Definition connect38 (xy: the * cmd)(ux_uy: cmd * (maybe choice) * the): Prop :=
 
 \begin{frame}[fragile]
 \frametitle{Pain point: Non determinism}
-    \begin{itemize}
-            \item Coq has computational ability.
-            \item Functions are computational; Relations are not.
-            \item Lose a lot of proof automation.
-    \end{itemize}
-
+Functions are \textbf{computational}; Relations are not.
 \pause
-
 {\footnotesize
 \begin{minted}{coq}
 Inductive X: Set := X1 | X2 | X3.  Inductive Y: Set := Y1 | Y2 | Y3. 
@@ -260,6 +252,9 @@ Inductive X: Set := X1 | X2 | X3.  Inductive Y: Set := Y1 | Y2 | Y3.
 \begin{minted}{coq}
 Definition x2y_fn (x: X): Y :=
   match x with | X1 => Y1 | X2 => Y2 | X3 => Y3 end.
+\end{minted}
+\pause
+\begin{minted}{coq}
 (* Works; computational *)
 Lemma x1_to_y1_fn: x2y_fn X1 = Y1. Proof. reflexivity. Qed.
 \end{minted}
@@ -273,6 +268,12 @@ Proof.
   try reflexivity. (* Does not work! Not computational *)
   unfold x2y_rel. left. auto.
 Qed.
+\end{minted}
+\pause
+\begin{minted}{coq}
+(* 2.1: system specifcation *)
+Record system (X: Set) (U: Set) := 
+  mksystem { isx0: X -> Prop; trans: X -> U -> X -> Prop }.
 \end{minted}
 }
 \end{frame}

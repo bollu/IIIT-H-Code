@@ -1,0 +1,790 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="301.84641mm"
+   height="69.12854mm"
+   viewBox="0 0 1069.5345 244.94364"
+   id="svg33030"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="transitions-combined.svg">
+  <defs
+     id="defs33032">
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker36226"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path36228"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#ec407a;fill-opacity:1;fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker36060"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path36062"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#ec407a;fill-opacity:1;fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker35864"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#42a5f5;fill-opacity:1;fill-rule:evenodd;stroke:#42a5f5;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path35866"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker35728"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM"
+       inkscape:collect="always">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#42a5f5;fill-opacity:1;fill-rule:evenodd;stroke:#42a5f5;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path35730"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker35592"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path35594"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#ec407a;fill-opacity:1;fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker35474"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path35476"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#ec407a;fill-opacity:1;fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker35362"
+       style="overflow:visible"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         inkscape:connector-curvature="0"
+         id="path35364"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#90a4ae;fill-opacity:1;fill-rule:evenodd;stroke:#90a4ae;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker34230"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path34232"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker34142"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path34144"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker34060"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path34062"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker33972"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path33974"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker33740"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM"
+       inkscape:collect="always">
+      <path
+         transform="scale(0.4,0.4)"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         id="path33742"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutL"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutL"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path4308"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.8,0.8)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM-7-7"
+       style="overflow:visible"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4311-2-9"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM-7"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4311-2"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker13685"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path13687"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM-72"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4311-5"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM-7-4"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4311-2-1"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path4311"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#78909c;fill-opacity:1;fill-rule:evenodd;stroke:#78909c;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker6845"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path6847"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#42a5f5;fill-opacity:1;fill-rule:evenodd;stroke:#42a5f5;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker5698"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path5700"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#90a4ae;fill-opacity:1;fill-rule:evenodd;stroke:#90a4ae;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker5392"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path5394"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#ec407a;fill-opacity:1;fill-rule:evenodd;stroke:#ec407a;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="TriangleOutM-1"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path4385"
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         style="fill:#42a5f5;fill-opacity:1;fill-rule:evenodd;stroke:#42a5f5;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.4,0.4)"
+         inkscape:connector-curvature="0" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="271.446"
+     inkscape:cy="28.642185"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1855"
+     inkscape:window-height="1176"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     fit-margin-top="2"
+     fit-margin-left="2"
+     fit-margin-right="2"
+     fit-margin-bottom="2" />
+  <metadata
+     id="metadata33035">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(235.1857,-502.03323)">
+    <ellipse
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path10801"
+       cx="-206.66275"
+       cy="638.86932"
+       rx="19.936338"
+       ry="19.919645" />
+    <ellipse
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path10801-7"
+       cx="-49.051514"
+       cy="640.88275"
+       rx="19.936338"
+       ry="19.919645" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7887125px;line-height:1000%;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-216.78195"
+       y="644.09827"
+       id="text10824-8"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6"
+         x="-216.78195"
+         y="644.09827"
+         style="fill:#ec407a;fill-opacity:1">!1</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:2.99999928;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker33740)"
+       d="m -63.78131,653.65958 -118.62989,0"
+       id="path10864-3"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-134.74393"
+       y="670.71838"
+       id="text10824-8-6"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8"
+         x="-134.74393"
+         y="670.71838"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'"><tspan
+           style="fill:#42a5f5;fill-opacity:1"
+           id="tspan23937">h</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7887125px;line-height:1000%;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-63.56665"
+       y="644.12769"
+       id="text10824-8-0"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-1"
+         x="-63.56665"
+         y="644.12769"
+         style="fill:#ec407a;fill-opacity:1">pass</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleOutM-7-7)"
+       d="m -190.67454,625.37373 119.30161,0"
+       id="path10864-3-1"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-141.79495"
+       y="618.80737"
+       id="text10824-8-6-03"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-5"
+         x="-141.79495"
+         y="618.80737"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#42a5f5;fill-opacity:1">t|e</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.81278515px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-173.47141"
+       y="642.99127"
+       id="text32002"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan32004"
+         x="-173.47141"
+         y="642.99127">controller</tspan></text>
+    <ellipse
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path10801-6"
+       cx="458.45987"
+       cy="687.25818"
+       rx="19.936338"
+       ry="19.919645" />
+    <ellipse
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path10801-4"
+       cx="617.49963"
+       cy="530.53949"
+       rx="19.936338"
+       ry="19.919645" />
+    <ellipse
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path10801-7-1"
+       cx="616.07104"
+       cy="689.27161"
+       rx="19.936338"
+       ry="19.919645" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.27750015px;line-height:1000%;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="609.55341"
+       y="540.28809"
+       id="text10824"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826"
+         x="609.55341"
+         y="540.28809">t</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.27750015px;line-height:1000%;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="449.83691"
+       y="693.83466"
+       id="text10824-8-68"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-70"
+         x="449.83691"
+         y="693.83466">e</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:25.27750015px;line-height:1000%;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="609.5415"
+       y="699.38763"
+       id="text10824-8-3"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-7"
+         x="609.5415"
+         y="699.38763">h</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker33972)"
+       d="m 615.71325,551.7994 0,108.31734"
+       id="path10864"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker34230)"
+       d="m 594.55556,691.33415 -106.69784,0"
+       id="path10864-3-4"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:2.99999928;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker34060)"
+       d="m 470.12682,670.20919 123.75,-123.74999"
+       id="path10864-37"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="495.37869"
+       y="736.25012"
+       id="text10824-8-6-9"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-6"
+         x="495.37869"
+         y="736.25012"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">(<tspan
+   style="fill:#ec407a;fill-opacity:1"
+   id="tspan23931">pass</tspan>, <tspan
+   style="fill:#42a5f5;fill-opacity:1"
+   id="tspan23937-9">just 1</tspan>)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="495.7189"
+       y="716.77008"
+       id="text10824-8-6-1"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-3"
+         x="495.7189"
+         y="716.77008"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">(<tspan
+   style="fill:#ec407a;fill-opacity:1"
+   id="tspan23925">!1</tspan>, _)</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker34142)"
+       d="m 629.63463,675.2101 c 42.10757,-55.50568 78.30946,35.66068 13.16171,28.11096"
+       id="path13683"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="685.00128"
+       y="674.80847"
+       id="text10824-8-6-1-4"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-3-0"
+         x="685.00128"
+         y="674.80847"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">(<tspan
+   style="fill:#ec407a;fill-opacity:1"
+   id="tspan23925-3">!0</tspan>, _)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="685.58563"
+       y="652.3031"
+       id="text10824-8-6-0"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-9"
+         x="685.58563"
+         y="652.3031"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">(_, <tspan
+   style="fill:#42a5f5;fill-opacity:1"
+   id="tspan24009">nothing</tspan>)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="683.51099"
+       y="696.74982"
+       id="text10824-8-6-02"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan10826-6-8-4"
+         x="683.51099"
+         y="696.74982"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.5px;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">(<tspan
+   style="fill:#ec407a;fill-opacity:1"
+   id="tspan23931-9">pass</tspan>, <tspan
+   style="fill:#42a5f5;fill-opacity:1"
+   id="tspan23937-0">just 0</tspan>)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.81278515px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="514.34906"
+       y="645.8988"
+       id="text32002-5"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan32004-1"
+         x="514.34906"
+         y="645.8988">philosopher</tspan></text>
+    <rect
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#90a4ae;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect4136"
+       width="135.97914"
+       height="35.995857"
+       x="105.49097"
+       y="641.46936" />
+    <rect
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#90a4ae;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect4136-4"
+       width="135.97914"
+       height="35.995857"
+       x="104.87254"
+       y="598.34009" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="134.28828"
+       y="693.47321"
+       id="text4153"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155"
+         x="134.28828"
+         y="693.47321"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">controller</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="131.19783"
+       y="588.73071"
+       id="text4153-6"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2"
+         x="131.19783"
+         y="588.73071"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">philosopher</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="158.89995"
+       y="612.97711"
+       id="text4153-6-6"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7"
+         x="158.89995"
+         y="612.97711"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#42a5f5;fill-opacity:1">the</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ec407a;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="156.91895"
+       y="672.69806"
+       id="text4153-6-6-5"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7-6"
+         x="156.91895"
+         y="672.69806"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#ec407a;fill-opacity:1">cmd</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#42a5f5;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker35728)"
+       d="m 241.44288,617.1033 64.1889,0 0,42.59669 -56.16528,0"
+       id="path4234"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="307.77478"
+       y="646.12341"
+       id="text4153-6-6-9"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7-8"
+         x="307.77478"
+         y="646.12341"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#42a5f5;fill-opacity:1">the</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#ec407a;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker36226)"
+       d="m 104.28131,660.63439 -51.520046,0 0,-39.09861 45.18562,0"
+       id="path5340"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#90a4ae;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker35362)"
+       d="m 53.183567,564.73261 0,41.74677 44.341017,0"
+       id="path5696"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="5.4233217"
+       y="566.83398"
+       id="text4153-6-6-7"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7-2"
+         x="5.4233217"
+         y="566.83398"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline'">maybe choice</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ec407a;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="15.473248"
+       y="648.35999"
+       id="text4153-6-6-5-8"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7-6-2"
+         x="15.473248"
+         y="648.35999"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#ec407a;fill-opacity:1">cmd</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#42a5f5;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker35864)"
+       d="m 243.99259,616.84422 101.52671,0"
+       id="path6843"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.94440269px;line-height:1000%;font-family:'Anonymous Pro for Powerline';-inkscape-font-specification:'Anonymous Pro for Powerline, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#42a5f5;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="351.80557"
+       y="621.6366"
+       id="text4153-6-6-9-9"
+       sodipodi:linespacing="1000%"><tspan
+         sodipodi:role="line"
+         id="tspan4155-2-7-8-9"
+         x="351.80557"
+         y="621.6366"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Meslo LG L DZ for Powerline';-inkscape-font-specification:'Meslo LG L DZ for Powerline';fill:#42a5f5;fill-opacity:1">the</tspan></text>
+  </g>
+</svg>

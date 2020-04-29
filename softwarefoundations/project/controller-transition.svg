@@ -9,13 +9,16 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="114.55737mm"
-   height="69.551872mm"
-   viewBox="0 0 405.91193 246.44364"
+   width="60.581005mm"
+   height="22.424543mm"
+   viewBox="0 0 214.65709 79.457042"
    id="svg10253"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="controller-transition.svg">
+   sodipodi:docname="controller-transition.svg"
+   inkscape:export-filename="/home/bollu/work/IIIT-H-Code/softwarefoundations/project/controller-transition.png"
+   inkscape:export-xdpi="314.45001"
+   inkscape:export-ydpi="314.45001">
   <defs
      id="defs10255">
     <marker
@@ -101,9 +104,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8"
-     inkscape:cx="91.856164"
-     inkscape:cy="86.149292"
+     inkscape:zoom="1.4"
+     inkscape:cx="186.0651"
+     inkscape:cy="-2.3246221"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -115,7 +118,8 @@
      fit-margin-top="2"
      fit-margin-left="2"
      fit-margin-right="2"
-     fit-margin-bottom="2" />
+     fit-margin-bottom="2"
+     units="px" />
   <metadata
      id="metadata10258">
     <rdf:RDF>
@@ -132,16 +136,16 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-206.71524,-105.13275)">
+     transform="translate(-208.21524,-251.33633)">
     <ellipse
-       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999964;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="path10801"
        cx="236.73819"
        cy="291.85773"
        rx="19.936338"
        ry="19.919645" />
     <ellipse
-       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999964;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="opacity:0.98306304;fill:none;fill-opacity:1;stroke:#78909c;stroke-width:2.99999952;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="path10801-7"
        cx="394.3494"
        cy="293.87112"
