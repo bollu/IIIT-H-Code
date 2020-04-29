@@ -363,16 +363,16 @@ Tactics work for $\texttt{LHS} = \texttt{RHS}$:
 Definition states_table_3
   (n: nat):  the * cmd :=
   match n with
-  | 0 => (t, cmd_pass)
-  | 1 => (t, cmd_pass)
-  | 2 => (h, cmd_pass)
-  | 3 => (h, cmd_bang1)
-  | 4 => (e, cmd_bang1) 
-  | 5 => (e, cmd_pass) 
-  | 6 => (e, cmd_pass) 
-  | 7 => (e, cmd_pass) 
-  | 8 => (e, cmd_pass) 
-  | 9 => (e, cmd_pass) 
+  | 0 =>  (t, cmd_pass)
+  | 1 =>  (t, cmd_pass)
+  | 2 =>  (h, cmd_pass)
+  | 3 =>  (h, cmd_bang1)
+  | 4 =>  (e, cmd_bang1) 
+  | 5 =>  (e, cmd_pass) 
+  | 6 =>  (e, cmd_pass) 
+  | 7 =>  (e, cmd_pass) 
+  | 8 =>  (e, cmd_pass) 
+  | 9 =>  (e, cmd_pass) 
   | 10 => (t, cmd_pass) 
   | _ =>  (t, cmd_pass)
   end.
@@ -382,6 +382,7 @@ Definition states_table_3
 \begin{column}{.4\textwidth}
 {\fontsize{2.5}{4}\selectfont
 \begin{minted}{coq}
+(* Verify table 3 *)
 Definition trans_table_3
   (n: nat): cmd * maybe choice  * the :=
   match n with
@@ -556,25 +557,71 @@ Lemma odd_state_next_phil_state:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Proof structure}
-\begin{minted}{coq}
-Lemma system38_starvation_free:
-  forall (n: nat) (ss: nat -> the * cmd)
-   (ts: nat -> cmd * maybe choice * the)
-   (TRACE_SSSN: ValidTrace system38 ss ts (S(S(S n))))
-   (BOTTOM_EVEN: 
-      forall (i: nat) (IEVEN: even i = true), 
-      snd (fst (ts i)) = nothing choice)
-   (NOT_BOTTOM_ODD: 
-      forall (i: nat) (IODD: odd i = true),
-      snd(fst (ts i)) <> nothing choice)
-   (HUNGRY: fst (ss n) = h),
-  exists (m: nat),  m > n /\  fst (ss m) = e.
+\begin{figure}[H]
+\centering
+\frametitle{Proof structure: By-hand}
+\end{figure}
+\begin{columns}[T]
+
+\begin{column}{0.3\textwidth}
+\includegraphics[width=\textwidth]{table-3.png}
+\end{column}
+\begin{column}{0.7\textwidth}
+
+{\tiny
+\begin{minted}{text}
+PAST EVEN: n   (s| phil: h);
+ |  [phil sends pass]
+CURRENT ODD: n + 1  (s| phil: h, cont: !1); [cont receives h]
+ | [cont sends !1]
+NEXT EVEN: n + 2 (s| phil: e)
+ |  [phil sends pass]
+NEXT NEXT ODD: n + 3 (s| phil: e)
+\end{minted}
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Proof structure: Coq}
+{\tiny
+\begin{minted}[linenos]{coq}
+Lemma system38_polled_if_hungy_odd_state_then_eat:
+  forall (n: nat)
+         (NODD: odd (S n) = true)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE_SSSN: ValidTrace system38 ss ts (S (S (S n))))
+         (BOTTOM_EVEN: forall (i: nat) (IEVEN: even i = true), snd (fst (ts i)) = nothing choice)
+         (NOT_BOTTOM_ODD: forall (i: nat) (IODD: odd i = true),  snd(fst (ts i)) <> nothing choice)
+         (HUNGRY: fst (ss (S n)) = h),
+    fst (ss (S (S (S n)))) = e.
 Proof.
-    (* 30 lines of proof, 
-       200 lines of supporting lemmas ommitted *)
+  intros.
+  assert (PREV_STATE_H: fst (ss n) = h). ... (* prev state same as cur state *)
+  assert (CUR_CMD_BANG1: snd (ss (S n)) = cmd_bang1).
+  eapply system38_phil_hungry_then_next_controller_bang1; ...
+
+  assert (NEXT_STATE: fst (ss (S (S n))) = trans37fn  (fst (ss (S n))) (fst (ts (S n)))).
+  eapply system38_odd_state_next_phil_state; ...
+
+  assert (NEXT_NEXT_STATE_EQ_NEXT_STATE: fst (ss (S (S (S n)))) = fst (ss (S (S n))) ).
+  eapply system38_phil_even_state_next_state; ...
+
+  assert (CHOICE_NEXT: snd (fst (ts (S n))) <> nothing choice). ...
+  
+  rewrite NEXT_NEXT_STATE_EQ_NEXT_STATE.
+  rewrite NEXT_STATE.
+  rewrite CUR_CMD_BANG1.
+  rewrite HUNGRY.
+  (* prove what the value of the transition will be using case analysis. *)
+  destruct (snd (fst (ts (S n)))); auto; try contradiction.
+  inversion TRACE_SSSN; auto.
 Qed.
 \end{minted}
+}
 \end{frame}
 
 
