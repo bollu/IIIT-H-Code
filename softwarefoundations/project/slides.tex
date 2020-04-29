@@ -409,10 +409,11 @@ Proof. repeat (try constructor; simpl; try apply valid_trace_system35_step1; try
 \end{minted}
 }
 \pause
-... Not for \textbf{derive a proof}:
+... Not to \textbf{derive a proof}:
 \pause
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
 {\fontsize{2.5}{4}\selectfont
-
 \begin{minted}{coq}
 Lemma system38_s_the_to_t_the_tactics: 
   forall (n: nat)
@@ -422,16 +423,44 @@ Lemma system38_s_the_to_t_the_tactics:
     snd (ts n) = fst (ss n).
 Proof.
   intros.
-  repeat (try constructor; simpl; try apply valid_trace_system35_step1; try apply tabuada_start).
+  repeat (try constructor;
+   simpl;
+   try apply valid_trace_system35_step1;
+   try apply tabuada_start).
 Abort.
 \end{minted}
 }
+\end{column}
+\begin{column}{0.5\textwidth}
+{\fontsize{2.5}{4}\selectfont
+\begin{minted}{coq}
+Lemma system38_s_the_to_t_the: 
+  forall (n: nat)
+         (ss: nat -> the * cmd)
+         (ts: nat -> cmd * maybe choice * the)
+         (TRACE: ValidTrace system38 ss ts (S n)),
+  snd (ts n) = fst (ss n).
+Proof.
+  intros.
+  inversion TRACE as [TRACE1 | npred TRACE1 AT1]. subst. (* 1 *)
+  inversion AT1 as [AT11 [AT12 AT13]]. (* 2 *)
+  set (s1 := ss 1) in *.
+  destruct s1 as [s1_the s1_cmd].
+  set (t1 := ts 1) in *.
+  destruct t1 as [[t1_cmd t1_mchoice] t1_the]. simpl in *.
+  inversion AT13; simpl in *. (* 3;  useful info *)
+  auto.
+Qed.
+\end{minted}
+}
+\end{column}
+\end{columns}
 
 \end{frame}
 
 
 \begin{frame}[fragile]
-\frametitle{Lemmas to drive reasoning}
+\frametitle{Hand-write Lemmas to drive reasoning}
 
 \begin{columns}[T] % align columns
 \begin{column}{.48\textwidth}
