@@ -153,6 +153,23 @@ Definition tabuada_trans {X Y: Type} {UX UY: Type}
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Valid traces}
+{\tiny
+\begin{minted}{coq}
+Record system (X: Set) (U: Set) := 
+  mksystem { isx0: X -> Prop; 
+           trans: X -> U -> X -> Prop }.
+
+(* ValidTrace s xs us n: trace suggested by xs, us is valid for n steps *)
+Inductive ValidTrace {X U: Set} (s: system X U) (xs: nat -> X) (us: nat -> U): nat -> Prop :=
+| Start: forall  (VALID: (isx0 X U s) (xs 0)) , ValidTrace s xs us 0
+| Cons: forall (n: nat) (TILLN: ValidTrace s xs us n) (ATN: trans X U s (xs n) (us n) (xs (S n))),
+ValidTrace s xs us (S n).
+\end{minted}
+}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Pain point: Non determinism}
     \begin{itemize}
             \item Coq has computational ability.
