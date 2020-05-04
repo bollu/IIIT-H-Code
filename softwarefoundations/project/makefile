@@ -1,3 +1,6 @@
+report.pdf: report.tex
+	pdflatex -halt-on-error -shell-escape report.tex 
+
 slides.pdf: slides.tex
 	pdflatex -halt-on-error -shell-escape slides.tex 
 
